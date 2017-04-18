@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 )
 
-func ReadConfig(data []byte) (*ConfigType, error) {
-	var config ConfigType
+func ReadConfig(data []byte) (*Config, error) {
+	var config Config
 
 	err := json.Unmarshal(data, &config)
 
 	return &config, err
 }
 
-func ReadConfigFile(path string) (*ConfigType, error) {
+func ReadConfigFile(path string) (*Config, error) {
 	data, err := ioutil.ReadFile(path)
 
 	if err != nil {

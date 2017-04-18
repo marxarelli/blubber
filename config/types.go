@@ -1,21 +1,34 @@
 package config
 
-type ConfigType struct {
+type Config struct {
+	*CommonConfig
+	Variants []VariantConfig `json:variants`
+}
+
+type CommonConfig struct {
 	Base string `json:base`
-	Dependencies DependenciesType `json:dependencies`
-	Build BuildVariantType `json:build`
-	Test TestVariantType `json:test`
+	Apt AptConfig `json:apt`
+	Npm NpmConfig `json:npm`
+	EntryPoint []string `json:entrypoint`
 }
 
-type BuildVariantType struct {
-	Dependencies DependenciesType `json:dependencies`
+type AptConfig struct {
+	Packages []string `json:packages`
 }
 
-type TestVariantType struct {
-	Dependencies DependenciesType `json:dependencies`
+type NpmConfig struct {
+  Use string `json:use`
 }
 
-type DependenciesType struct {
-	Apt []string `json:apt`
-	NpmInclude string `json:npminclude`
+type VariantConfig struct {
+	Name string `json:name`
+	Includes []string `json:includes`
+	Artifacts []ArtifactsConfig `json:artifacts`
+	*CommonConfig
+}
+
+type ArtifactsConfig struct {
+	From string `json:name`
+	Source string `json:source`
+	Destination string `json:destination`
 }
