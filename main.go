@@ -8,11 +8,16 @@ import (
 )
 
 func main() {
-	config, err := config.ReadConfigFile("./blubber.json")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: blubber config.json")
+		os.Exit(1)
+	}
+
+	config, err := config.ReadConfigFile(os.Args[1])
 
 	if err != nil {
 		fmt.Println("Error reading config:\n", err)
-		os.Exit(1)
+		os.Exit(2)
 	} 
 
 	spew.Dump(config)
