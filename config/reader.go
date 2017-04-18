@@ -5,6 +5,13 @@ import (
 	"encoding/json"
 )
 
+//func ExpandConfig(config *Config) {
+//	for i := range config.Variants {
+//		if config.Variants
+//		config.Variants[i].
+//	}
+//}
+
 func ReadConfig(data []byte) (*Config, error) {
 	var config Config
 

@@ -2,7 +2,7 @@ package config
 
 type Config struct {
 	*CommonConfig
-	Variants []VariantConfig `json:variants`
+	Variants map[string]VariantConfig `json:variants`
 }
 
 type CommonConfig struct {
@@ -21,14 +21,13 @@ type NpmConfig struct {
 }
 
 type VariantConfig struct {
-	Name string `json:name`
 	Includes []string `json:includes`
 	Artifacts []ArtifactsConfig `json:artifacts`
 	*CommonConfig
 }
 
 type ArtifactsConfig struct {
-	From string `json:name`
+	From string `json:from`
 	Source string `json:source`
 	Destination string `json:destination`
 }

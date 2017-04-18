@@ -2,19 +2,17 @@
   "base": "debian:jessie-slim",
   "apt": { "packages": ["libjpeg", "libyaml"] },
   "npm": { "use": "package.json" },
-  "variants": [
-    {
-      "name": "development",
+  "variants": {
+    "development": {
       "apt": { "packages": ["libjpeg-dev", "libyaml-dev", "chromium"] }
     },
-    {
-      "name": "test",
-      "includes": ["dev"],
+    "test": {
+      "includes": ["development"],
       "entrypoint": ["npm", "test"]
     },
-    {
-      "name": "production",
-      "artifacts": [{ "from": "dev", "source": ".", "destination": "." }]
+    "production": {
+      "artifacts": [{ "from": "test", "source": ".", "destination": "." }],
+      "entrypoint": ["npm", "start"]
     }
-  ]
+  }
 }

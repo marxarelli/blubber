@@ -11,12 +11,3 @@ func Compile(cfg config.ConfigType, variant string) []byte {
 
 	buffer.WriteString("FROM ")
 }
-
-func Compile(base config.Base) []byte {
-
-}
-
-func Quote(arg string) {
-}
-
-func Write()
