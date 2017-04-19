@@ -1,5 +1,5 @@
 {
-  "base": "debian:jessie-slim",
+  "base": "debian:jessie",
   "apt": { "packages": ["libjpeg", "libyaml"] },
   "npm": { "install": true },
   "run": { "in": "/srv/service", "as": "runuser", "uid": 666, "gid": 666 },
@@ -14,6 +14,7 @@
       "entrypoint": ["npm", "test"]
     },
     "production": {
+      "base": "debian:jessie-slim",
       "npm": { "env": "production" },
       "artifacts": [{ "from": "test", "source": "/srv/service", "destination": "." }],
       "entrypoint": ["npm", "start"]
