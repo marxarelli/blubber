@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/marxarelli/blubber/config"
+	"github.com/marxarelli/blubber/docker"
 )
 
 func main() {
@@ -20,12 +20,5 @@ func main() {
 		os.Exit(2)
 	} 
 
-	variant, err := config.ExpandVariant(cfg, os.Args[2])
-
-	if err != nil {
-		fmt.Println("Error reading config:\n", err)
-		os.Exit(2)
-	}
-
-	spew.Dump(variant)
+	docker.Compile(cfg, os.Args[2]).WriteTo(os.Stdout)
 }

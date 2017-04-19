@@ -1,7 +1,8 @@
 {
   "base": "debian:jessie-slim",
   "apt": { "packages": ["libjpeg", "libyaml"] },
-  "npm": { "use": "package.json" },
+  "npm": { "install": true },
+  "run": { "in": "/srv/service", "as": "runuser", "uid": 666, "gid": 666 },
   "variants": {
     "development": {
       "apt": { "packages": ["libjpeg-dev", "libyaml-dev"] }
@@ -12,6 +13,7 @@
       "entrypoint": ["npm", "test"]
     },
     "production": {
+      "npm": { "env": "production" },
       "artifacts": [{ "from": "test", "source": ".", "destination": "." }],
       "entrypoint": ["npm", "start"]
     }

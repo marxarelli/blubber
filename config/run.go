@@ -1,0 +1,44 @@
+package config
+
+import (
+	"strconv"
+	"strings"
+)
+
+type RunConfig struct {
+	In string `json:in`
+	As string `json:as`
+	Uid int `json:uid`
+	Gid int `json:gid`
+}
+
+func (run *RunConfig) Merge(run2 RunConfig) {
+	if run2.In != "" { run.In = run2.In }
+	if run2.As != "" { run.As = run2.As }
+	if run2.Uid != 0 { run.Uid = run2.Uid }
+	if run2.Gid != 0 { run.Gid = run2.Gid }
+}
+
+func (run RunConfig) Commands() []string {
+	cmds := []string{}
+
+	if run.In != "" {
+		cmds = append(cmds, strings.Join([]string{"mkdir -p", run.In}, " "))
+	}
+
+	if run.As != "" {
+		cmd := []string{
+			"groupadd -o -g", strconv.Itoa(run.Gid), "-r", run.As, "&&",
+			"useradd -o -m -r -g", run.As, "-u", strconv.Itoa(run.Uid), run.As,
+		}
+
+		cmds = append(cmds, strings.Join(cmd, " "))
+
+		if run.In != "" {
+			owner := strings.Join([]string{run.As, ":", run.As}, "")
+			cmds = append(cmds, strings.Join([]string{"chown", owner, run.In}, " "))
+		}
+	}
+
+	return cmds
+}
