@@ -5,7 +5,7 @@ import (
 )
 
 type NpmConfig struct {
-  Install bool `json:install`
+	Install bool `json:install`
 	Env string `json:env`
 }
 
