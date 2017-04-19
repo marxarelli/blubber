@@ -1,7 +1,7 @@
 package config
 
 type Config struct {
-	*CommonConfig
+	CommonConfig
 	Variants map[string]VariantConfig `json:variants`
 }
 
@@ -23,11 +23,32 @@ type NpmConfig struct {
 type VariantConfig struct {
 	Includes []string `json:includes`
 	Artifacts []ArtifactsConfig `json:artifacts`
-	*CommonConfig
+	CommonConfig
 }
 
 type ArtifactsConfig struct {
 	From string `json:from`
 	Source string `json:source`
 	Destination string `json:destination`
+}
+
+func (vc1 *VariantConfig) Merge(vc2 VariantConfig) {
+	vc1.Artifacts = append(vc1.Artifacts, vc2.Artifacts...)
+	vc1.CommonConfig.Merge(vc2.CommonConfig)
+}
+
+func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
+	if cc1.Base == "" {
+		cc1.Base = cc2.Base
+	}
+
+	cc1.Apt.Packages = append(cc1.Apt.Packages, cc2.Apt.Packages...)
+
+	if cc1.Npm.Use == "" {
+		cc1.Npm.Use = cc2.Npm.Use
+	}
+
+	if len(cc1.EntryPoint) < 1 {
+		cc1.EntryPoint = cc2.EntryPoint
+	}
 }

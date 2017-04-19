@@ -8,17 +8,24 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: blubber config.json")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: blubber config.json variant")
 		os.Exit(1)
 	}
 
-	config, err := config.ReadConfigFile(os.Args[1])
+	cfg, err := config.ReadConfigFile(os.Args[1])
 
 	if err != nil {
 		fmt.Println("Error reading config:\n", err)
 		os.Exit(2)
 	} 
 
-	spew.Dump(config)
+	variant, err := config.ExpandVariant(cfg, os.Args[2])
+
+	if err != nil {
+		fmt.Println("Error reading config:\n", err)
+		os.Exit(2)
+	}
+
+	spew.Dump(variant)
 }

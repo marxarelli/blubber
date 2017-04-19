@@ -4,10 +4,11 @@
   "npm": { "use": "package.json" },
   "variants": {
     "development": {
-      "apt": { "packages": ["libjpeg-dev", "libyaml-dev", "chromium"] }
+      "apt": { "packages": ["libjpeg-dev", "libyaml-dev"] }
     },
     "test": {
       "includes": ["development"],
+      "apt": { "packages": ["chromium"] },
       "entrypoint": ["npm", "test"]
     },
     "production": {
