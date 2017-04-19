@@ -5,6 +5,7 @@ type CommonConfig struct {
 	Apt AptConfig `json:apt`
 	Npm NpmConfig `json:npm`
 	Run RunConfig `json:run`
+	CopiesTree bool `json:copiestree`
 	EntryPoint []string `json:entrypoint`
 }
 
@@ -16,6 +17,8 @@ func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
 	cc1.Apt.Merge(cc2.Apt)
 	cc1.Npm.Merge(cc2.Npm)
 	cc1.Run.Merge(cc2.Run)
+
+	cc1.CopiesTree = cc1.CopiesTree || cc2.CopiesTree
 
 	if len(cc1.EntryPoint) < 1 {
 		cc1.EntryPoint = cc2.EntryPoint

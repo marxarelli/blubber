@@ -44,6 +44,10 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 		Writeln(buffer, "WORKDIR ", vcfg.Run.In)
 	}
 
+	if vcfg.CopiesTree {
+		Writeln(buffer, "COPY . .")
+	}
+
 	CompileToCommands(buffer, vcfg.Npm)
 
 	// Artifact copying

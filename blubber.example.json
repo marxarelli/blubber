@@ -10,11 +10,12 @@
     "test": {
       "includes": ["development"],
       "apt": { "packages": ["chromium"] },
+      "copiestree": true,
       "entrypoint": ["npm", "test"]
     },
     "production": {
       "npm": { "env": "production" },
-      "artifacts": [{ "from": "test", "source": ".", "destination": "." }],
+      "artifacts": [{ "from": "test", "source": "/srv/service", "destination": "." }],
       "entrypoint": ["npm", "start"]
     }
   }

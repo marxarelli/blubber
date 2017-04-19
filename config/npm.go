@@ -27,10 +27,8 @@ func (npm NpmConfig) Commands() []string {
 	buffer.WriteString("npm install")
 
 	if npm.Env == "production" {
-		buffer.WriteString(" --production")
+		buffer.WriteString(" --production && npm dedupe")
 	}
-
-	buffer.WriteString(" && npm dedupe")
 
 	return []string{buffer.String()}
 }
