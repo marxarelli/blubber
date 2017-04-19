@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"strings"
 	"github.com/marxarelli/blubber/config"
 )
 
@@ -59,6 +60,10 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 		}
 
 		Writeln(buffer, artifact.Source, " ", artifact.Destination)
+	}
+
+	if len(vcfg.EntryPoint) > 0 {
+		Writeln(buffer, "ENTRYPOINT [\"", strings.Join(vcfg.EntryPoint, "\", \""), "\"]")
 	}
 }
 
