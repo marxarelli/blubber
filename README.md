@@ -1,4 +1,4 @@
-![Blubber](http://tyler.zone/blubber.svg)
+![Blubber](http://tyler.zone/blubber.png)
 
 **Very experimental proof of concept.**
 
