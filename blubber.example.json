@@ -5,12 +5,12 @@
   "run": { "in": "/srv/service", "as": "runuser", "uid": 666, "gid": 666 },
   "variants": {
     "development": {
-      "apt": { "packages": ["libjpeg-dev", "libyaml-dev"] }
+      "apt": { "packages": ["libjpeg-dev", "libyaml-dev"] },
+      "sharedvolume": true
     },
     "test": {
       "includes": ["development"],
       "apt": { "packages": ["chromium"] },
-      "copiestree": true,
       "entrypoint": ["npm", "test"]
     },
     "production": {

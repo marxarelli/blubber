@@ -45,8 +45,10 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 		Writeln(buffer, "WORKDIR ", vcfg.Run.In)
 	}
 
-	if vcfg.CopiesTree {
-		Writeln(buffer, "COPY . .")
+	if vcfg.SharedVolume {
+		Writeln(buffer, "VOLUME [\"", vcfg.Run.In, "\"]")
+  } else {
+		Writeln(buffer, "COPY . \"", vcfg.Run.In, "\"")
 	}
 
 	CompileToCommands(buffer, vcfg.Npm)
