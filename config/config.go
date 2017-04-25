@@ -1,8 +1,8 @@
 package config
 
 type Config struct {
-	CommonConfig
-	Variants map[string]VariantConfig `json:variants`
+	CommonConfig `yaml:",inline"`
+	Variants map[string]VariantConfig `yaml:"variants"`
 }
 
 type CommandCompileable interface {

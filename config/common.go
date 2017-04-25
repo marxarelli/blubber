@@ -1,12 +1,12 @@
 package config
 
 type CommonConfig struct {
-	Base string `json:base`
-	Apt AptConfig `json:apt`
-	Npm NpmConfig `json:npm`
-	Run RunConfig `json:run`
-	SharedVolume bool `json:sharedvolume`
-	EntryPoint []string `json:entrypoint`
+	Base string `yaml:"base"`
+	Apt AptConfig `yaml:"apt"`
+	Npm NpmConfig `yaml:"npm"`
+	Run RunConfig `yaml:"run"`
+	SharedVolume bool `yaml:"sharedvolume"`
+	EntryPoint []string `yaml:"entrypoint"`
 }
 
 func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: blubber config.json variant")
+		fmt.Println("Usage: blubber config.yaml variant")
 		os.Exit(1)
 	}
 

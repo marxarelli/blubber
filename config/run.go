@@ -6,10 +6,10 @@ import (
 )
 
 type RunConfig struct {
-	In string `json:in`
-	As string `json:as`
-	Uid int `json:uid`
-	Gid int `json:gid`
+	In string `yaml:"in"`
+	As string `yaml:"as"`
+	Uid int `yaml:"uid"`
+	Gid int `yaml:"uid"`
 }
 
 func (run *RunConfig) Merge(run2 RunConfig) {

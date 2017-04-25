@@ -6,7 +6,7 @@ import (
 )
 
 type AptConfig struct {
-	Packages []string `json:packages`
+	Packages []string `yaml:"packages"`
 }
 
 func (apt *AptConfig) Merge(apt2 AptConfig) {

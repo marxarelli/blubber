@@ -5,8 +5,8 @@ import (
 )
 
 type NpmConfig struct {
-	Install bool `json:install`
-	Env string `json:env`
+	Install bool `yaml:"install"`
+	Env string `yaml:"env"`
 }
 
 func (npm *NpmConfig) Merge(npm2 NpmConfig) {

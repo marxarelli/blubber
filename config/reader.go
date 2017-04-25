@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"io/ioutil"
-	"encoding/json"
+	"gopkg.in/yaml.v2"
 )
 
 func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
@@ -29,7 +29,7 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 func ReadConfig(data []byte) (*Config, error) {
 	var config Config
 
-	err := json.Unmarshal(data, &config)
+	err := yaml.Unmarshal(data, &config)
 
 	return &config, err
 }

@@ -10,30 +10,39 @@ running ad-hoc commands.
 
 ## Example configuration
 
-```json
-{
-  "base": "debian:jessie",
-  "apt": { "packages": ["libjpeg", "libyaml"] },
-  "npm": { "install": true },
-  "run": { "in": "/srv/service", "as": "runuser", "uid": 666, "gid": 666 },
-  "variants": {
-    "development": {
-      "apt": { "packages": ["libjpeg-dev", "libyaml-dev"] }
-    },
-    "test": {
-      "includes": ["development"],
-      "apt": { "packages": ["chromium"] },
-      "copiestree": true,
-      "entrypoint": ["npm", "test"]
-    },
-    "production": {
-      "base": "debian:jessie-slim",
-      "npm": { "env": "production" },
-      "artifacts": [{ "from": "test", "source": "/srv/service", "destination": "." }],
-      "entrypoint": ["npm", "start"]
-    }
-  }
-}
+```yaml
+base: debian:jessie
+apt:
+  packages: [libjpeg, libyaml]
+npm:
+  install: true
+run:
+  in: /srv/service
+  as: runuser
+  uid: 666
+  gid: 666
+
+variants:
+  development:
+    apt:
+      packages: [libjpeg-dev, libyaml-dev]
+    sharedvolume: true
+
+  test:
+    includes: [development]
+    apt:
+      packages: [chromium]
+    entrypoint: [npm, test]
+
+  production:
+    base: debian:jessie-slim
+    npm:
+      env: production
+    artifacts:
+      - from: test
+        source: /srv/service
+        destination: .
+    entrypoint: [npm, start]
 ```
 
 ## Variants
@@ -52,15 +61,18 @@ properties, like `apt:packages` are combined when inherited or included.
 In the example configuration, the `test` variant when expanded effectively
 becomes:
 
-```json
-{
-  "base": "debian:jessie",
-  "apt": { "packages": ["libjpeg", "libyaml", "libjpeg-dev", "libyaml-dev", "chromium"] },
-  "npm": { "install": true },
-  "run": { "in": "/srv/service", "as": "runuser", "uid": 666, "gid": 666 },
-  "copiestree": true,
-  "entrypoint": ["npm", "test"]
-}
+```yaml
+base: debian:jessie
+apt:
+  packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]
+npm:
+  install: true
+run:
+  in: /srv/service
+  as: runuser
+  uid: 666
+  gid: 666
+entrypoint: [npm, test]
 ```
 
 ## Artifacts
@@ -82,12 +94,12 @@ be copied over from the result of building the `test` image.
 Running the `blubber` command will be produce `Dockerfile` output for the
 given variant.
 
-    blubber config.json variant
+    blubber config.yaml variant
 
 You can see the result of the example configuration by cloning this repo and
 running (assuming you have go and your GOPATH set up properly):
 
     go build
-    ./blubber blubber blubber.example.json development
-    ./blubber blubber blubber.example.json test
-    ./blubber blubber blubber.example.json production
+    ./blubber blubber blubber.example.yaml development
+    ./blubber blubber blubber.example.yaml test
+    ./blubber blubber blubber.example.yaml production
