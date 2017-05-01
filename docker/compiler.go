@@ -35,20 +35,20 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 	Writeln(buffer, "USER root")
 	Writeln(buffer, "WORKDIR /srv")
 	CompileToCommands(buffer, vcfg.Apt)
-	CompileToCommands(buffer, vcfg.Run)
+	CompileToCommands(buffer, vcfg.Runs)
 
-	if vcfg.Run.As != "" {
-		Writeln(buffer, "USER ", vcfg.Run.As)
+	if vcfg.Runs.As != "" {
+		Writeln(buffer, "USER ", vcfg.Runs.As)
 	}
 
-	if vcfg.Run.In != "" {
-		Writeln(buffer, "WORKDIR ", vcfg.Run.In)
+	if vcfg.Runs.In != "" {
+		Writeln(buffer, "WORKDIR ", vcfg.Runs.In)
 	}
 
 	if vcfg.SharedVolume {
-		Writeln(buffer, "VOLUME [\"", vcfg.Run.In, "\"]")
+		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
   } else {
-		Writeln(buffer, "COPY . \"", vcfg.Run.In, "\"")
+		Writeln(buffer, "COPY . \"", vcfg.Runs.In, "\"")
 	}
 
 	CompileToCommands(buffer, vcfg.Npm)

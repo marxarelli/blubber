@@ -16,7 +16,7 @@ apt:
   packages: [libjpeg, libyaml]
 npm:
   install: true
-run:
+runs:
   in: /srv/service
   as: runuser
   uid: 666
@@ -67,7 +67,7 @@ apt:
   packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]
 npm:
   install: true
-run:
+runs:
   in: /srv/service
   as: runuser
   uid: 666

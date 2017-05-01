@@ -4,7 +4,7 @@ apt:
   packages: [libjpeg, libyaml]
 npm:
   install: true
-run:
+runs:
   in: /srv/service
   as: runuser
   uid: 666
