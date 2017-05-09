@@ -2,7 +2,7 @@ package config
 
 import (
 	"strconv"
-	"strings"
+	"github.com/marxarelli/blubber/build"
 )
 
 type RunsConfig struct {
@@ -19,26 +19,32 @@ func (run *RunsConfig) Merge(run2 RunsConfig) {
 	if run2.Gid != 0 { run.Gid = run2.Gid }
 }
 
-func (run RunsConfig) Commands() []string {
-	cmds := []string{}
+func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
+	ins := []build.Instruction{}
 
-	if run.In != "" {
-		cmds = append(cmds, strings.Join([]string{"mkdir -p", run.In}, " "))
-	}
-
-	if run.As != "" {
-		cmd := []string{
-			"groupadd -o -g", strconv.Itoa(run.Gid), "-r", run.As, "&&",
-			"useradd -o -m -r -g", run.As, "-u", strconv.Itoa(run.Uid), run.As,
-		}
-
-		cmds = append(cmds, strings.Join(cmd, " "))
-
+	switch phase {
+	case build.PhasePrivileged:
 		if run.In != "" {
-			owner := strings.Join([]string{run.As, ":", run.As}, "")
-			cmds = append(cmds, strings.Join([]string{"chown", owner, run.In}, " "))
+			ins = append(ins, []build.Instruction{{build.Run, []string{"mkdir -p ", run.In}}}...)
+		}
+
+		if run.As != "" {
+			ins = append(ins, []build.Instruction{
+				{build.Run, []string{
+					"groupadd -o -g ", strconv.Itoa(run.Gid), " -r ", run.As, " && ",
+					"useradd -o -m -r -g ", run.As, " -u ", strconv.Itoa(run.Uid), " ", run.As,
+				}},
+			}...)
+
+			if run.In != "" {
+				ins = append(ins, []build.Instruction{
+					{build.Run, []string{
+						"chown ", run.As, ":", run.As, " ", run.In,
+					}},
+				}...)
+			}
 		}
 	}
 
-	return cmds
+	return ins
 }

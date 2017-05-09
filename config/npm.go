@@ -2,7 +2,11 @@ package config
 
 import (
 	"bytes"
+	"path"
+	"github.com/marxarelli/blubber/build"
 )
+
+const TempNpmInstallDir = "/tmp/node-deps/"
 
 type NpmConfig struct {
 	Install bool `yaml:"install"`
@@ -17,18 +21,29 @@ func (npm *NpmConfig) Merge(npm2 NpmConfig) {
 	}
 }
 
-func (npm NpmConfig) Commands() []string {
-	if !npm.Install {
-		return []string{}
+func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction{
+	if npm.Install {
+		switch phase {
+		case build.PhasePreInstall:
+			npmCmd := new(bytes.Buffer)
+
+			npmCmd.WriteString("npm install")
+
+			if npm.Env == "production" {
+				npmCmd.WriteString(" --production && npm dedupe")
+			}
+
+			return []build.Instruction{
+				{build.Run, []string{"mkdir -p ", TempNpmInstallDir}},
+				{build.Copy, []string{"package.json", TempNpmInstallDir}},
+				{build.Run, []string{"cd ", TempNpmInstallDir, " && ", npmCmd.String()}},
+			}
+		case build.PhasePostInstall:
+			return []build.Instruction{
+				{build.Run, []string{"mv ", path.Join(TempNpmInstallDir, "node_modules"), " ./"}},
+			}
+		}
 	}
 
-	buffer := new(bytes.Buffer)
-
-	buffer.WriteString("npm install")
-
-	if npm.Env == "production" {
-		buffer.WriteString(" --production && npm dedupe")
-	}
-
-	return []string{buffer.String()}
+	return []build.Instruction{}
 }

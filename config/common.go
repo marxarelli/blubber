@@ -1,5 +1,9 @@
 package config
 
+import (
+	"github.com/marxarelli/blubber/build"
+)
+
 type CommonConfig struct {
 	Base string `yaml:"base"`
 	Apt AptConfig `yaml:"apt"`
@@ -23,4 +27,19 @@ func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
 	if len(cc1.EntryPoint) < 1 {
 		cc1.EntryPoint = cc2.EntryPoint
 	}
+}
+
+
+func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
+	return []build.PhaseCompileable{cc.Apt, cc.Npm, cc.Runs}
+}
+
+func (cc *CommonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
+	instructions := []build.Instruction{}
+
+	for _, phaseCompileable := range cc.PhaseCompileableConfig() {
+		instructions = append(instructions, phaseCompileable.InstructionsForPhase(phase)...)
+	}
+
+	return instructions
 }

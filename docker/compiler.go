@@ -3,6 +3,7 @@ package docker
 import (
 	"bytes"
 	"strings"
+	"github.com/marxarelli/blubber/build"
 	"github.com/marxarelli/blubber/config"
 )
 
@@ -33,25 +34,26 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 	Writeln(buffer, "FROM ", vcfg.Base, " AS ", stage)
 
 	Writeln(buffer, "USER root")
-	Writeln(buffer, "WORKDIR /srv")
-	CompileToCommands(buffer, vcfg.Apt)
-	CompileToCommands(buffer, vcfg.Runs)
+
+	CompilePhase(buffer, vcfg, build.PhasePrivileged)
 
 	if vcfg.Runs.As != "" {
 		Writeln(buffer, "USER ", vcfg.Runs.As)
 	}
 
+	CompilePhase(buffer, vcfg, build.PhasePrivilegeDropped)
+
 	if vcfg.Runs.In != "" {
 		Writeln(buffer, "WORKDIR ", vcfg.Runs.In)
 	}
+
+	CompilePhase(buffer, vcfg, build.PhasePreInstall)
 
 	if vcfg.SharedVolume {
 		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
   } else {
 		Writeln(buffer, "COPY . \"", vcfg.Runs.In, "\"")
 	}
-
-	CompileToCommands(buffer, vcfg.Npm)
 
 	// Artifact copying
 	for _, artifact := range vcfg.Artifacts {
@@ -64,14 +66,25 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 		Writeln(buffer, artifact.Source, " ", artifact.Destination)
 	}
 
+	CompilePhase(buffer, vcfg, build.PhasePostInstall)
+
 	if len(vcfg.EntryPoint) > 0 {
 		Writeln(buffer, "ENTRYPOINT [\"", strings.Join(vcfg.EntryPoint, "\", \""), "\"]")
 	}
 }
 
-func CompileToCommands(buffer *bytes.Buffer, compileable config.CommandCompileable) {
-	for _, command := range compileable.Commands() {
-		Writeln(buffer, "RUN ", command)
+func CompilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
+	for _, instruction := range vcfg.InstructionsForPhase(phase) {
+		CompileInstruction(buffer, instruction)
+	}
+}
+
+func CompileInstruction(buffer *bytes.Buffer, instruction build.Instruction) {
+	switch instruction.Type {
+	case build.Run:
+		Writeln(buffer, append([]string{"RUN "}, instruction.Arguments...)...)
+	case build.Copy:
+		Writeln(buffer, "COPY \"", instruction.Arguments[0], "\" \"", instruction.Arguments[1], "\"")
 	}
 }
 
