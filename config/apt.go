@@ -2,7 +2,7 @@ package config
 
 import (
 	"strings"
-	"github.com/marxarelli/blubber/build"
+	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 type AptConfig struct {

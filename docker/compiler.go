@@ -3,8 +3,8 @@ package docker
 import (
 	"bytes"
 	"strings"
-	"github.com/marxarelli/blubber/build"
-	"github.com/marxarelli/blubber/config"
+	"phabricator.wikimedia.org/source/blubber.git/build"
+	"phabricator.wikimedia.org/source/blubber.git/config"
 )
 
 func Compile(cfg *config.Config, variant string) *bytes.Buffer {

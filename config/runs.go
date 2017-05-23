@@ -2,7 +2,7 @@ package config
 
 import (
 	"strconv"
-	"github.com/marxarelli/blubber/build"
+	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 type RunsConfig struct {

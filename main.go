@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"github.com/marxarelli/blubber/config"
-	"github.com/marxarelli/blubber/docker"
+	"phabricator.wikimedia.org/source/blubber.git/config"
+	"phabricator.wikimedia.org/source/blubber.git/docker"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package config
 import (
 	"bytes"
 	"path"
-	"github.com/marxarelli/blubber/build"
+	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 const TempNpmInstallDir = "/tmp/node-deps/"

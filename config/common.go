@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/marxarelli/blubber/build"
+	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 type CommonConfig struct {
