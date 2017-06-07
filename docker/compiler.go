@@ -49,7 +49,7 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 	CompilePhase(buffer, vcfg, build.PhasePreInstall)
 
-	if vcfg.SharedVolume {
+	if vcfg.SharedVolume.True {
 		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
   } else {
 		Writeln(buffer, "COPY . \"", vcfg.Runs.In, "\"")
