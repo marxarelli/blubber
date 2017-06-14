@@ -13,9 +13,14 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 	vcfg, err := config.ExpandVariant(cfg, variant)
 
 	if err == nil {
+		// omit the main stage name unless multi-stage is required below
+		mainStage := ""
+
 		// write multi-stage sections for each artifact dependency
 		for _, artifact := range vcfg.Artifacts {
 			if artifact.From != "" {
+				mainStage = variant
+
 				dependency, err := config.ExpandVariant(cfg, artifact.From)
 
 				if err == nil {
@@ -24,14 +29,20 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 			}
 		}
 
-		CompileStage(buffer, variant, vcfg)
+		CompileStage(buffer, mainStage, vcfg)
 	}
 
 	return buffer
 }
 
 func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig) {
-	Writeln(buffer, "FROM ", vcfg.Base, " AS ", stage)
+	baseAndStage := vcfg.Base
+
+	if stage != "" {
+		baseAndStage += " AS " + stage
+	}
+
+	Writeln(buffer, "FROM ", baseAndStage)
 
 	Writeln(buffer, "USER root")
 
