@@ -63,7 +63,7 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 	if vcfg.SharedVolume.True {
 		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
   } else {
-		Writeln(buffer, "COPY . \"", vcfg.Runs.In, "\"")
+		Writeln(buffer, "COPY . .")
 	}
 
 	// Artifact copying
@@ -74,7 +74,7 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 			Write(buffer, "--from=", artifact.From, " ")
 		}
 
-		Writeln(buffer, artifact.Source, " ", artifact.Destination)
+		Writeln(buffer, "[\"", artifact.Source, "\", \"", artifact.Destination, "\"]")
 	}
 
 	CompilePhase(buffer, vcfg, build.PhasePostInstall)
@@ -95,7 +95,7 @@ func CompileInstruction(buffer *bytes.Buffer, instruction build.Instruction) {
 	case build.Run:
 		Writeln(buffer, append([]string{"RUN "}, instruction.Arguments...)...)
 	case build.Copy:
-		Writeln(buffer, "COPY \"", instruction.Arguments[0], "\" \"", instruction.Arguments[1], "\"")
+		Writeln(buffer, "COPY [\"", instruction.Arguments[0], "\", \"", instruction.Arguments[1], "\"]")
 	}
 }
 
