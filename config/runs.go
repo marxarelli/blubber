@@ -25,24 +25,28 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 	switch phase {
 	case build.PhasePrivileged:
 		if run.In != "" {
-			ins = append(ins, []build.Instruction{{build.Run, []string{"mkdir -p ", run.In}}}...)
+			ins = append(ins, build.Instruction{build.Run, []string{"mkdir -p ", run.In}})
 		}
 
 		if run.As != "" {
-			ins = append(ins, []build.Instruction{
-				{build.Run, []string{
-					"groupadd -o -g ", strconv.Itoa(run.Gid), " -r ", run.As, " && ",
-					"useradd -o -m -r -g ", run.As, " -u ", strconv.Itoa(run.Uid), " ", run.As,
-				}},
-			}...)
+			ins = append(ins, build.Instruction{build.Run, []string{
+				"groupadd -o -g ", strconv.Itoa(run.Gid), " -r ", run.As, " && ",
+				"useradd -o -m -d /home/", run.As, " -r -g ", run.As,
+				" -u ", strconv.Itoa(run.Uid), " ", run.As,
+			}})
 
 			if run.In != "" {
-				ins = append(ins, []build.Instruction{
-					{build.Run, []string{
-						"chown ", run.As, ":", run.As, " ", run.In,
-					}},
-				}...)
+				ins = append(ins, build.Instruction{build.Run, []string{
+					"chown ", run.As, ":", run.As, " ", run.In,
+
+				}})
 			}
+		}
+	case build.PhasePrivilegeDropped:
+		if run.As != "" {
+			ins = append(ins, build.Instruction{build.Env, []string{
+				"HOME=\"/home/" + run.As + "\"",
+			}})
 		}
 	}
 

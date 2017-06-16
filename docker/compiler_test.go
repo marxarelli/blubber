@@ -52,3 +52,12 @@ func TestCompileInstructionCopy(t *testing.T) {
 
 	assert.Equal(t, "COPY [\"foo\", \"bar\"]\n", buffer.String())
 }
+
+func TestCompileInstructionEnv(t *testing.T) {
+	buffer := new(bytes.Buffer)
+	instruction := build.Instruction{build.Env, []string{"foo=bar", "baz=qux"}}
+
+	docker.CompileInstruction(buffer, instruction)
+
+	assert.Equal(t, "ENV foo=bar baz=qux\n", buffer.String())
+}

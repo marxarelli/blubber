@@ -96,6 +96,8 @@ func CompileInstruction(buffer *bytes.Buffer, instruction build.Instruction) {
 		Writeln(buffer, append([]string{"RUN "}, instruction.Arguments...)...)
 	case build.Copy:
 		Writeln(buffer, "COPY [\"", instruction.Arguments[0], "\", \"", instruction.Arguments[1], "\"]")
+	case build.Env:
+		Writeln(buffer, "ENV ", strings.Join(instruction.Arguments, " "))
 	}
 }
 
