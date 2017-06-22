@@ -21,6 +21,9 @@ runs:
   as: runuser
   uid: 666
   gid: 666
+  environment:
+    FOO: bar
+    BAR: baz
 
 variants:
   development:

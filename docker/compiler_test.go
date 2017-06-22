@@ -12,10 +12,9 @@ import (
 
 func TestSingleStageHasNoName(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-base: foo/bar
-variants:
-  development: {}
-`))
+    base: foo/bar
+    variants:
+      development: {}`))
 
 	assert.Nil(t, err)
 
@@ -26,15 +25,14 @@ variants:
 
 func TestMultiStageIncludesStageNames(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-base: foo/bar
-variants:
-  build: {}
-  production:
-    artifacts:
-      - from: build
-        source: .
-        destination: .
-`))
+    base: foo/bar
+    variants:
+      build: {}
+      production:
+        artifacts:
+          - from: build
+            source: .
+            destination: .`))
 
 	assert.Nil(t, err)
 
@@ -59,5 +57,5 @@ func TestCompileInstructionEnv(t *testing.T) {
 
 	docker.CompileInstruction(buffer, instruction)
 
-	assert.Equal(t, "ENV foo=bar baz=qux\n", buffer.String())
+	assert.Equal(t, "ENV foo=bar \\\n    baz=qux\n", buffer.String())
 }

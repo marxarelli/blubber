@@ -7,18 +7,14 @@ import (
 	"phabricator.wikimedia.org/source/blubber.git/config"
 )
 
-const yaml = `---
-npm: { install: true }
-sharedvolume: false
-
-variants:
-  development:
-    sharedvolume: true
-    npm: { install: false }
-`
-
 func TestFlagOverwrite(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(yaml))
+	cfg, err := config.ReadConfig([]byte(`---
+    npm: { install: true }
+    sharedvolume: false
+    variants:
+      development:
+        sharedvolume: true
+        npm: { install: false }`))
 
 	assert.Nil(t, err)
 
