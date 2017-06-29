@@ -9,6 +9,6 @@ const (
 )
 
 type Instruction struct {
-	Type InstructionType
+	Type      InstructionType
 	Arguments []string
 }

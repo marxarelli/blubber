@@ -8,8 +8,8 @@ import (
 const tempNpmInstallDir = "/tmp/node-deps/"
 
 type NpmConfig struct {
-	Install Flag `yaml:"install"`
-	Env string `yaml:"env"`
+	Install Flag   `yaml:"install"`
+	Env     string `yaml:"env"`
 }
 
 func (npm *NpmConfig) Merge(npm2 NpmConfig) {
@@ -20,7 +20,7 @@ func (npm *NpmConfig) Merge(npm2 NpmConfig) {
 	}
 }
 
-func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction{
+func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	if npm.Install.True {
 		switch phase {
 		case build.PhasePreInstall:

@@ -2,10 +2,10 @@ package config
 
 type Flag struct {
 	True bool
-	set bool
+	set  bool
 }
 
-func (flag *Flag) UnmarshalYAML(unmarshal func(interface {}) error) error {
+func (flag *Flag) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&flag.True); err != nil {
 		return err
 	}

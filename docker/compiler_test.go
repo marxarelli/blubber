@@ -3,6 +3,7 @@ package docker_test
 import (
 	"bytes"
 	"testing"
+
 	"gopkg.in/stretchr/testify.v1/assert"
 
 	"phabricator.wikimedia.org/source/blubber.git/build"

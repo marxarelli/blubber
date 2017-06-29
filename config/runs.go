@@ -3,22 +3,31 @@ package config
 import (
 	"sort"
 	"strconv"
+
 	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 type RunsConfig struct {
-	In string `yaml:"in"`
-	As string `yaml:"as"`
-	Uid int `yaml:"uid"`
-	Gid int `yaml:"gid"`
+	In          string            `yaml:"in"`
+	As          string            `yaml:"as"`
+	Uid         int               `yaml:"uid"`
+	Gid         int               `yaml:"gid"`
 	Environment map[string]string `yaml:"environment"`
 }
 
 func (run *RunsConfig) Merge(run2 RunsConfig) {
-	if run2.In != "" { run.In = run2.In }
-	if run2.As != "" { run.As = run2.As }
-	if run2.Uid != 0 { run.Uid = run2.Uid }
-	if run2.Gid != 0 { run.Gid = run2.Gid }
+	if run2.In != "" {
+		run.In = run2.In
+	}
+	if run2.As != "" {
+		run.As = run2.As
+	}
+	if run2.Uid != 0 {
+		run.Uid = run2.Uid
+	}
+	if run2.Gid != 0 {
+		run.Gid = run2.Gid
+	}
 
 	if run.Environment == nil {
 		run.Environment = make(map[string]string)
@@ -48,7 +57,7 @@ func (run RunsConfig) EnvironmentDefinitions() []string {
 	sort.Strings(names)
 
 	for _, name := range names {
-		defs = append(defs, name + "=" + strconv.Quote(run.Environment[name]))
+		defs = append(defs, name+"="+strconv.Quote(run.Environment[name]))
 	}
 
 	return defs
@@ -75,7 +84,6 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 			if run.In != "" {
 				ins = append(ins, build.Instruction{build.Run, []string{
 					"chown ", run.As, ":", run.As, " ", run.In,
-
 				}})
 			}
 		}

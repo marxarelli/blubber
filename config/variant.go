@@ -1,8 +1,8 @@
 package config
 
 type VariantConfig struct {
-	Includes []string `yaml:"includes"`
-	Artifacts []ArtifactsConfig `yaml:"artifacts"`
+	Includes     []string          `yaml:"includes"`
+	Artifacts    []ArtifactsConfig `yaml:"artifacts"`
 	CommonConfig `yaml:",inline"`
 }
 

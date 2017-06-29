@@ -5,12 +5,12 @@ import (
 )
 
 type CommonConfig struct {
-	Base string `yaml:"base"`
-	Apt AptConfig `yaml:"apt"`
-	Npm NpmConfig `yaml:"npm"`
-	Runs RunsConfig `yaml:"runs"`
-	SharedVolume Flag `yaml:"sharedvolume"`
-	EntryPoint []string `yaml:"entrypoint"`
+	Base         string     `yaml:"base"`
+	Apt          AptConfig  `yaml:"apt"`
+	Npm          NpmConfig  `yaml:"npm"`
+	Runs         RunsConfig `yaml:"runs"`
+	SharedVolume Flag       `yaml:"sharedvolume"`
+	EntryPoint   []string   `yaml:"entrypoint"`
 }
 
 func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
@@ -27,7 +27,6 @@ func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
 		cc1.EntryPoint = cc2.EntryPoint
 	}
 }
-
 
 func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
 	return []build.PhaseCompileable{cc.Apt, cc.Npm, cc.Runs}

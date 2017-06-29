@@ -3,6 +3,7 @@ package docker
 import (
 	"bytes"
 	"strings"
+
 	"phabricator.wikimedia.org/source/blubber.git/build"
 	"phabricator.wikimedia.org/source/blubber.git/config"
 )
@@ -62,7 +63,7 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 	if vcfg.SharedVolume.True {
 		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
-  } else {
+	} else {
 		Writeln(buffer, "COPY . .")
 	}
 

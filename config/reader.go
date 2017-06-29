@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+
 	"gopkg.in/yaml.v2"
 )
 

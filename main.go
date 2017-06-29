@@ -18,7 +18,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Error reading config:\n", err)
 		os.Exit(2)
-	} 
+	}
 
 	docker.Compile(cfg, os.Args[2]).WriteTo(os.Stdout)
 }
