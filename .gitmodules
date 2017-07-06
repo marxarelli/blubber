@@ -1,0 +1,3 @@
+[submodule "vendor/arcanist-go"]
+	path = vendor/arcanist-go
+	url = https://github.com/kalbasit/arcanist-go.git

@@ -1,0 +1,17 @@
+{
+  "exclude": "(^vendor/)",
+  "linters": {
+    "golint": {
+      "type": "golint",
+      "include": "(\\.go$)"
+    },
+    "govet": {
+      "type": "govet",
+      "include": "(\\.go$)"
+    },
+    "gofmt": {
+      "type": "gofmt",
+      "include": "(\\.go$)"
+    }
+  }
+}
