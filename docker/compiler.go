@@ -87,18 +87,8 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 func CompilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
 	for _, instruction := range vcfg.InstructionsForPhase(phase) {
-		CompileInstruction(buffer, instruction)
-	}
-}
-
-func CompileInstruction(buffer *bytes.Buffer, instruction build.Instruction) {
-	switch instruction.Type {
-	case build.Run:
-		Writeln(buffer, append([]string{"RUN "}, instruction.Arguments...)...)
-	case build.Copy:
-		Writeln(buffer, "COPY [\"", instruction.Arguments[0], "\", \"", instruction.Arguments[1], "\"]")
-	case build.Env:
-		Writeln(buffer, "ENV ", strings.Join(instruction.Arguments, " \\\n    "))
+		dockerInstruction, _ := NewDockerInstruction(instruction)
+		Writeln(buffer, dockerInstruction.Compile())
 	}
 }
 
