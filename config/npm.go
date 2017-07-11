@@ -31,13 +31,13 @@ func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 			}
 
 			return []build.Instruction{
-				{build.Run, []string{"mkdir -p ", tempNpmInstallDir}},
+				{build.Run, []string{"mkdir -p " + tempNpmInstallDir}},
 				{build.Copy, []string{"package.json", tempNpmInstallDir}},
-				{build.Run, []string{"cd ", tempNpmInstallDir, " && ", npmCmd}},
+				{build.Run, []string{"cd " + tempNpmInstallDir + " && " + npmCmd}},
 			}
 		case build.PhasePostInstall:
 			return []build.Instruction{
-				{build.Run, []string{"mv ", path.Join(tempNpmInstallDir, "node_modules"), " ./"}},
+				{build.Run, []string{"mv " + path.Join(tempNpmInstallDir, "node_modules") + " ./"}},
 			}
 		}
 	}
