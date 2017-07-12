@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"sort"
 	"strconv"
 
@@ -70,20 +71,19 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 	case build.PhasePrivileged:
 		if run.In != "" {
 			ins = append(ins, build.Instruction{build.Run, []string{
-				"mkdir -p ", run.In,
+				fmt.Sprintf("mkdir -p %q", run.In),
 			}})
 		}
 
 		if run.As != "" {
 			ins = append(ins, build.Instruction{build.Run, []string{
-				"groupadd -o -g ", strconv.Itoa(run.Gid), " -r ", run.As, " && ",
-				"useradd -o -m -d ", strconv.Quote(run.Home()), " -r -g ", run.As,
-				" -u ", strconv.Itoa(run.Uid), " ", run.As,
+				fmt.Sprintf("groupadd -o -g %d -r %q", run.Gid, run.As) + " && " +
+					fmt.Sprintf("useradd -o -m -d %q -r -g %q -u %d %q", run.Home(), run.As, run.Uid, run.As),
 			}})
 
 			if run.In != "" {
 				ins = append(ins, build.Instruction{build.Run, []string{
-					"chown ", run.As, ":", run.As, " ", run.In,
+					fmt.Sprintf("chown %q:%q %q", run.As, run.As, run.In),
 				}})
 			}
 		}
@@ -92,7 +92,9 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 			"HOME=" + strconv.Quote(run.Home()),
 		}})
 
-		ins = append(ins, build.Instruction{build.Env, run.EnvironmentDefinitions()})
+		if definitions := run.EnvironmentDefinitions(); len(definitions) > 0 {
+			ins = append(ins, build.Instruction{build.Env, definitions})
+		}
 	}
 
 	return ins
