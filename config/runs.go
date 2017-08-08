@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"sort"
 	"strconv"
 
 	"phabricator.wikimedia.org/source/blubber.git/build"
@@ -47,53 +45,43 @@ func (run RunsConfig) Home() string {
 	}
 }
 
-func (run RunsConfig) EnvironmentDefinitions() []string {
-	defs := make([]string, 0, len(run.Environment))
-	names := make([]string, 0, len(run.Environment))
-
-	for name := range run.Environment {
-		names = append(names, name)
-	}
-
-	sort.Strings(names)
-
-	for _, name := range names {
-		defs = append(defs, name+"="+strconv.Quote(run.Environment[name]))
-	}
-
-	return defs
-}
-
 func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := []build.Instruction{}
 
 	switch phase {
 	case build.PhasePrivileged:
+		runAll := build.RunAll{}
+
 		if run.In != "" {
-			ins = append(ins, build.Instruction{build.Run, []string{
-				fmt.Sprintf("mkdir -p %q", run.In),
-			}})
+			runAll.Runs = append(runAll.Runs,
+				build.Run{"mkdir -p", []string{run.In}},
+			)
 		}
 
 		if run.As != "" {
-			ins = append(ins, build.Instruction{build.Run, []string{
-				fmt.Sprintf("groupadd -o -g %d -r %q", run.Gid, run.As) + " && " +
-					fmt.Sprintf("useradd -o -m -d %q -r -g %q -u %d %q", run.Home(), run.As, run.Uid, run.As),
-			}})
+			runAll.Runs = append(runAll.Runs,
+				build.Run{"groupadd -o -g %s -r",
+					[]string{strconv.Itoa(run.Gid), run.As}},
+				build.Run{"useradd -o -m -d %s -r -g %s -u %s",
+					[]string{run.Home(), run.As, strconv.Itoa(run.Uid), run.As}},
+			)
 
 			if run.In != "" {
-				ins = append(ins, build.Instruction{build.Run, []string{
-					fmt.Sprintf("chown %q:%q %q", run.As, run.As, run.In),
-				}})
+				runAll.Runs = append(runAll.Runs,
+					build.Run{"chown %s:%s",
+						[]string{run.As, run.As, run.In}},
+				)
 			}
 		}
-	case build.PhasePrivilegeDropped:
-		ins = append(ins, build.Instruction{build.Env, []string{
-			"HOME=" + strconv.Quote(run.Home()),
-		}})
 
-		if definitions := run.EnvironmentDefinitions(); len(definitions) > 0 {
-			ins = append(ins, build.Instruction{build.Env, definitions})
+		if len(runAll.Runs) > 0 {
+			ins = append(ins, runAll)
+		}
+	case build.PhasePrivilegeDropped:
+		ins = append(ins, build.Env{map[string]string{"HOME": run.Home()}})
+
+		if len(run.Environment) > 0 {
+			ins = append(ins, build.Env{run.Environment})
 		}
 	}
 

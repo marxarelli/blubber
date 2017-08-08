@@ -65,9 +65,12 @@ func TestNpmConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Run, []string{"mkdir -p /tmp/node-deps/"}},
-				{build.Copy, []string{"package.json", "/tmp/node-deps/"}},
-				{build.Run, []string{"cd /tmp/node-deps/ && npm install"}},
+				build.Run{"mkdir -p", []string{"/tmp/node-deps/"}},
+				build.Copy{[]string{"package.json"}, "/tmp/node-deps/"},
+				build.RunAll{[]build.Run{
+					{"cd", []string{"/tmp/node-deps/"}},
+					{"npm install", []string{}},
+				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
@@ -76,7 +79,7 @@ func TestNpmConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Run, []string{"mv /tmp/node-deps/node_modules ./"}},
+				build.Run{"mv", []string{"/tmp/node-deps/node_modules", "./"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
@@ -97,9 +100,13 @@ func TestNpmConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Run, []string{"mkdir -p /tmp/node-deps/"}},
-				{build.Copy, []string{"package.json", "/tmp/node-deps/"}},
-				{build.Run, []string{"cd /tmp/node-deps/ && npm install --production && npm dedupe"}},
+				build.Run{"mkdir -p", []string{"/tmp/node-deps/"}},
+				build.Copy{[]string{"package.json"}, "/tmp/node-deps/"},
+				build.RunAll{[]build.Run{
+					{"cd", []string{"/tmp/node-deps/"}},
+					{"npm install", []string{"--production"}},
+					{"npm dedupe", []string{}},
+				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
@@ -108,7 +115,7 @@ func TestNpmConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Run, []string{"mv /tmp/node-deps/node_modules ./"}},
+				build.Run{"mv", []string{"/tmp/node-deps/node_modules", "./"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)

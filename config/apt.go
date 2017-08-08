@@ -1,8 +1,6 @@
 package config
 
 import (
-	"strings"
-
 	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
@@ -19,10 +17,10 @@ func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 		switch phase {
 		case build.PhasePrivileged:
 			return []build.Instruction{
-				{build.Run, []string{
-					"apt-get update && apt-get install -y ",
-					strings.Join(apt.Packages, " "),
-					" && rm -rf /var/lib/apt/lists/*",
+				build.RunAll{[]build.Run{
+					{"apt-get update", []string{}},
+					{"apt-get install -y", apt.Packages},
+					{"rm -rf /var/lib/apt/lists/*", []string{}},
 				}},
 			}
 		}

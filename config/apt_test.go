@@ -38,10 +38,10 @@ func TestAptConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Run, []string{
-					"apt-get update && apt-get install -y ",
-					"libfoo libbar",
-					" && rm -rf /var/lib/apt/lists/*",
+				build.RunAll{[]build.Run{
+					{"apt-get update", []string{}},
+					{"apt-get install -y", []string{"libfoo", "libbar"}},
+					{"rm -rf /var/lib/apt/lists/*", []string{}},
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePrivileged),

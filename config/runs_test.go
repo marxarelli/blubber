@@ -45,22 +45,6 @@ func TestRunsHomeWithoutUser(t *testing.T) {
 	assert.Equal(t, "/root", runs.Home())
 }
 
-func TestEnvironmentDefinitionsIsSortedAndQuoted(t *testing.T) {
-	runs := config.RunsConfig{
-		Environment: map[string]string{
-			"fooname": "foovalue",
-			"barname": "barvalue",
-			"quxname": "quxvalue",
-		},
-	}
-
-	assert.Equal(t, []string{
-		`barname="barvalue"`,
-		`fooname="foovalue"`,
-		`quxname="quxvalue"`,
-	}, runs.EnvironmentDefinitions())
-}
-
 func TestRunsConfigInstructions(t *testing.T) {
 	cfg := config.RunsConfig{
 		As:  "someuser",
@@ -75,14 +59,12 @@ func TestRunsConfigInstructions(t *testing.T) {
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
-			[]build.Instruction{
-				{build.Run, []string{`mkdir -p "/some/directory"`}},
-				{build.Run, []string{
-					`groupadd -o -g 777 -r "someuser" && ` +
-						`useradd -o -m -d "/home/someuser" -r -g "someuser" -u 666 "someuser"`,
-				}},
-				{build.Run, []string{`chown "someuser":"someuser" "/some/directory"`}},
-			},
+			[]build.Instruction{build.RunAll{[]build.Run{
+				{"mkdir -p", []string{"/some/directory"}},
+				{"groupadd -o -g %s -r", []string{"777", "someuser"}},
+				{"useradd -o -m -d %s -r -g %s -u %s", []string{"/home/someuser", "someuser", "666", "someuser"}},
+				{"chown %s:%s", []string{"someuser", "someuser", "/some/directory"}},
+			}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
 	})
@@ -90,8 +72,8 @@ func TestRunsConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				{build.Env, []string{`HOME="/home/someuser"`}},
-				{build.Env, []string{`barname="barvalue"`, `fooname="foovalue"`}},
+				build.Env{map[string]string{"HOME": "/home/someuser"}},
+				build.Env{map[string]string{"barname": "barvalue", "fooname": "foovalue"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePrivilegeDropped),
 		)
@@ -101,7 +83,7 @@ func TestRunsConfigInstructions(t *testing.T) {
 
 			assert.Equal(t,
 				[]build.Instruction{
-					{build.Env, []string{`HOME="/home/someuser"`}},
+					build.Env{map[string]string{"HOME": "/home/someuser"}},
 				},
 				cfg.InstructionsForPhase(build.PhasePrivilegeDropped),
 			)

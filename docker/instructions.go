@@ -3,25 +3,24 @@ package docker
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
 func NewDockerInstruction(instruction build.Instruction) (DockerInstruction, error) {
-	switch instruction.Type {
-	case build.Run:
+	switch instruction.(type) {
+	case build.Run, build.RunAll:
 		var dockerInstruction DockerRun
-		dockerInstruction.arguments = instruction.Arguments
+		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
 	case build.Copy:
 		var dockerInstruction DockerCopy
-		dockerInstruction.arguments = instruction.Arguments
+		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
 	case build.Env:
 		var dockerInstruction DockerEnv
-		dockerInstruction.arguments = instruction.Arguments
+		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
 	}
 	return nil, errors.New("Unable to create DockerInstruction")
@@ -52,9 +51,8 @@ type DockerCopy struct{ abstractDockerInstruction }
 
 func (dc DockerCopy) Compile() string {
 	return fmt.Sprintf(
-		"COPY [%s, %s]\n",
-		removeNewlines(strconv.Quote(dc.arguments[0])),
-		removeNewlines(strconv.Quote(dc.arguments[1])))
+		"COPY [%s]\n",
+		removeNewlines(strings.Join(dc.arguments, ", ")))
 }
 
 type DockerEnv struct{ abstractDockerInstruction }
