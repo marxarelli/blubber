@@ -6,7 +6,7 @@ type VariantConfig struct {
 	CommonConfig `yaml:",inline"`
 }
 
-func (vc1 *VariantConfig) Merge(vc2 VariantConfig) {
-	vc1.Artifacts = append(vc1.Artifacts, vc2.Artifacts...)
-	vc1.CommonConfig.Merge(vc2.CommonConfig)
+func (vc *VariantConfig) Merge(vc2 VariantConfig) {
+	vc.Artifacts = append(vc.Artifacts, vc2.Artifacts...)
+	vc.CommonConfig.Merge(vc2.CommonConfig)
 }

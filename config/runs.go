@@ -6,6 +6,8 @@ import (
 	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
+const LocalLibPrefix = "/opt/lib"
+
 type RunsConfig struct {
 	In          string            `yaml:"in"`
 	As          string            `yaml:"as"`
@@ -50,7 +52,9 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 
 	switch phase {
 	case build.PhasePrivileged:
-		runAll := build.RunAll{}
+		runAll := build.RunAll{[]build.Run{
+			{"mkdir -p", []string{LocalLibPrefix}},
+		}}
 
 		if run.In != "" {
 			runAll.Runs = append(runAll.Runs,
@@ -64,6 +68,8 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 					[]string{strconv.Itoa(run.Gid), run.As}},
 				build.Run{"useradd -o -m -d %s -r -g %s -u %s",
 					[]string{run.Home(), run.As, strconv.Itoa(run.Uid), run.As}},
+				build.Run{"chown %s:%s",
+					[]string{run.As, run.As, LocalLibPrefix}},
 			)
 
 			if run.In != "" {
