@@ -11,9 +11,6 @@ import (
 func TestCommonConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     base: fooimage
-    apt: {}
-    npm: {}
-    runs: {}
     sharedvolume: true
     entrypoint: ["/bin/foo"]
     variants:

@@ -9,30 +9,30 @@ import (
 	"phabricator.wikimedia.org/source/blubber.git/config"
 )
 
-func TestNpmConfig(t *testing.T) {
+func TestNodeConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    npm:
-      install: true
+    node:
+      dependencies: true
       env: foo
     variants:
       build:
-        npm:
-          install: false
+        node:
+          dependencies: false
           env: bar`))
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, true, cfg.Npm.Install.True)
-	assert.Equal(t, "foo", cfg.Npm.Env)
+	assert.Equal(t, true, cfg.Node.Dependencies.True)
+	assert.Equal(t, "foo", cfg.Node.Env)
 
 	variant, err := config.ExpandVariant(cfg, "build")
 
-	assert.Equal(t, false, variant.Npm.Install.True)
-	assert.Equal(t, "bar", variant.Npm.Env)
+	assert.Equal(t, false, variant.Node.Dependencies.True)
+	assert.Equal(t, "bar", variant.Node.Env)
 }
 
-func TestNpmConfigInstructionsNoInstall(t *testing.T) {
-	cfg := config.NpmConfig{Install: config.Flag{True: false}}
+func TestNodeConfigInstructionsNoDependencies(t *testing.T) {
+	cfg := config.NodeConfig{Dependencies: config.Flag{True: false}}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -51,8 +51,8 @@ func TestNpmConfigInstructionsNoInstall(t *testing.T) {
 	})
 }
 
-func TestNpmConfigInstructionsNonProduction(t *testing.T) {
-	cfg := config.NpmConfig{Install: config.Flag{True: true}, Env: "foo"}
+func TestNodeConfigInstructionsNonProduction(t *testing.T) {
+	cfg := config.NodeConfig{Dependencies: config.Flag{True: true}, Env: "foo"}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -78,15 +78,18 @@ func TestNpmConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{"NODE_PATH": "/opt/lib/node_modules"}},
+				build.Env{map[string]string{
+					"NODE_ENV":  "foo",
+					"NODE_PATH": "/opt/lib/node_modules",
+				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
 	})
 }
 
-func TestNpmConfigInstructionsProduction(t *testing.T) {
-	cfg := config.NpmConfig{Install: config.Flag{True: true}, Env: "production"}
+func TestNodeConfigInstructionsProduction(t *testing.T) {
+	cfg := config.NodeConfig{Dependencies: config.Flag{True: true}, Env: "production"}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -113,7 +116,38 @@ func TestNpmConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{"NODE_PATH": "/opt/lib/node_modules"}},
+				build.Env{map[string]string{
+					"NODE_ENV":  "production",
+					"NODE_PATH": "/opt/lib/node_modules",
+				}},
+			},
+			cfg.InstructionsForPhase(build.PhasePostInstall),
+		)
+	})
+}
+
+func TestNodeConfigInstructionsEnvironmentOnly(t *testing.T) {
+	cfg := config.NodeConfig{Env: "production"}
+
+	t.Run("PhasePrivileged", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
+	})
+
+	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
+	})
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Env{map[string]string{
+					"NODE_ENV":  "production",
+					"NODE_PATH": "/opt/lib/node_modules",
+				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)

@@ -10,12 +10,12 @@ import (
 
 func TestFlagOverwrite(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    npm: { install: true }
+    node: { dependencies: true }
     sharedvolume: false
     variants:
       development:
         sharedvolume: true
-        npm: { install: false }`))
+        node: { dependencies: false }`))
 
 	assert.Nil(t, err)
 
@@ -23,6 +23,6 @@ func TestFlagOverwrite(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	assert.False(t, variant.Npm.Install.True)
+	assert.False(t, variant.Node.Dependencies.True)
 	assert.True(t, variant.SharedVolume.True)
 }

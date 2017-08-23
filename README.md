@@ -14,8 +14,8 @@ running ad-hoc commands.
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
-npm:
-  install: true
+node:
+  dependencies: true
 runs:
   in: /srv/service
   as: runuser
@@ -39,13 +39,13 @@ variants:
 
   production:
     base: debian:jessie-slim
-    npm:
+    node:
       env: production
     artifacts:
       - from: test
         source: /srv/service
         destination: .
-    entrypoint: [npm, start]
+    entrypoint: [node, server.js]
 ```
 
 ## Variants
@@ -68,8 +68,8 @@ becomes:
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]
-npm:
-  install: true
+node:
+  dependencies: true
 runs:
   in: /srv/service
   as: runuser
