@@ -5,8 +5,6 @@ import (
 	"phabricator.wikimedia.org/source/blubber.git/build"
 )
 
-const tempNpmInstallDir = "/tmp/node-deps/"
-
 type NpmConfig struct {
 	Install Flag   `yaml:"install"`
 	Env     string `yaml:"env"`
@@ -25,7 +23,7 @@ func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 		switch phase {
 		case build.PhasePreInstall:
 			npmInstall := build.RunAll{[]build.Run{
-				{"cd", []string{tempNpmInstallDir}},
+				{"cd", []string{LocalLibPrefix}},
 				{"npm install", []string{}},
 			}}
 
@@ -37,13 +35,12 @@ func (npm NpmConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 			}
 
 			return []build.Instruction{
-				build.Run{"mkdir -p", []string{tempNpmInstallDir}},
-				build.Copy{[]string{"package.json"}, tempNpmInstallDir},
+				build.Copy{[]string{"package.json"}, LocalLibPrefix},
 				npmInstall,
 			}
 		case build.PhasePostInstall:
 			return []build.Instruction{
-				build.Run{"mv", []string{path.Join(tempNpmInstallDir, "node_modules"), "./"}},
+				build.Env{map[string]string{"NODE_PATH": path.Join(LocalLibPrefix, "node_modules")}},
 			}
 		}
 	}

@@ -65,10 +65,9 @@ func TestNpmConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{"mkdir -p", []string{"/tmp/node-deps/"}},
-				build.Copy{[]string{"package.json"}, "/tmp/node-deps/"},
+				build.Copy{[]string{"package.json"}, "/opt/lib"},
 				build.RunAll{[]build.Run{
-					{"cd", []string{"/tmp/node-deps/"}},
+					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{}},
 				}},
 			},
@@ -79,7 +78,7 @@ func TestNpmConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{"mv", []string{"/tmp/node-deps/node_modules", "./"}},
+				build.Env{map[string]string{"NODE_PATH": "/opt/lib/node_modules"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
@@ -100,10 +99,9 @@ func TestNpmConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{"mkdir -p", []string{"/tmp/node-deps/"}},
-				build.Copy{[]string{"package.json"}, "/tmp/node-deps/"},
+				build.Copy{[]string{"package.json"}, "/opt/lib"},
 				build.RunAll{[]build.Run{
-					{"cd", []string{"/tmp/node-deps/"}},
+					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{"--production"}},
 					{"npm dedupe", []string{}},
 				}},
@@ -115,7 +113,7 @@ func TestNpmConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{"mv", []string{"/tmp/node-deps/node_modules", "./"}},
+				build.Env{map[string]string{"NODE_PATH": "/opt/lib/node_modules"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
