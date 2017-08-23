@@ -1,6 +1,7 @@
 package docker_test
 
 import (
+	"strings"
 	"testing"
 
 	"gopkg.in/stretchr/testify.v1/assert"
@@ -39,4 +40,32 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
 
 	assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
 	assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")
+
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS build\n"))
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
+}
+
+func TestMultipleArtifactsFromSameStage(t *testing.T) {
+	cfg, err := config.ReadConfig([]byte(`---
+    base: foo/bar
+    variants:
+      build: {}
+      production:
+        artifacts:
+          - from: build
+            source: .
+            destination: .
+          - from: build
+            source: bar
+            destination: bar`))
+
+	assert.Nil(t, err)
+
+	dockerfile := docker.Compile(cfg, "production").String()
+
+	assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
+	assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")
+
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS build\n"))
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
 }

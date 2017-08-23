@@ -17,16 +17,25 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 		// omit the main stage name unless multi-stage is required below
 		mainStage := ""
 
-		// write multi-stage sections for each artifact dependency
+		// get unique set of artifact/variant dependencies
+		existing := map[string]bool{}
+		stages := []string{}
+
 		for _, artifact := range vcfg.Artifacts {
-			if artifact.From != "" {
+			if stage := artifact.From; stage != "" && !existing[stage] {
+				existing[stage] = true
+				stages = append(stages, stage)
+
 				mainStage = variant
+			}
+		}
 
-				dependency, err := config.ExpandVariant(cfg, artifact.From)
+		// write multi-stage sections for each artifact/variant dependency
+		for _, stage := range stages {
+			dependency, err := config.ExpandVariant(cfg, stage)
 
-				if err == nil {
-					CompileStage(buffer, artifact.From, dependency)
-				}
+			if err == nil {
+				CompileStage(buffer, stage, dependency)
 			}
 		}
 
@@ -88,7 +97,7 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 func CompilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
 	for _, instruction := range vcfg.InstructionsForPhase(phase) {
 		dockerInstruction, _ := NewDockerInstruction(instruction)
-		Writeln(buffer, dockerInstruction.Compile())
+		Write(buffer, dockerInstruction.Compile())
 	}
 }
 
