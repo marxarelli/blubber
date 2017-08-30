@@ -14,8 +14,6 @@ running ad-hoc commands.
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
-node:
-  dependencies: true
 runs:
   in: /srv/service
   as: runuser
@@ -26,13 +24,18 @@ runs:
     BAR: baz
 
 variants:
-  development:
+  build:
     apt:
       packages: [libjpeg-dev, libyaml-dev]
+    node:
+      dependencies: true
+
+  development:
+    includes: [build]
     sharedvolume: true
 
   test:
-    includes: [development]
+    includes: [build]
     apt:
       packages: [chromium]
     entrypoint: [npm, test]
@@ -41,10 +44,7 @@ variants:
     base: debian:jessie-slim
     node:
       env: production
-    artifacts:
-      - from: test
-        source: /srv/service
-        destination: .
+    copies: test
     entrypoint: [node, server.js]
 ```
 

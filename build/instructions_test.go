@@ -36,6 +36,12 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, []string{`"source1"`, `"source2"`, `"dest"`}, i.Compile())
 }
 
+func TestCopyFrom(t *testing.T) {
+	i := build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}}
+
+	assert.Equal(t, []string{"foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+}
+
 func TestEnv(t *testing.T) {
 	i := build.Env{map[string]string{
 		"fooname": "foovalue",

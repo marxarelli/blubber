@@ -17,25 +17,13 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 		// omit the main stage name unless multi-stage is required below
 		mainStage := ""
 
-		// get unique set of artifact/variant dependencies
-		existing := map[string]bool{}
-		stages := []string{}
-
-		for _, artifact := range vcfg.Artifacts {
-			if stage := artifact.From; stage != "" && !existing[stage] {
-				existing[stage] = true
-				stages = append(stages, stage)
-
-				mainStage = variant
-			}
-		}
-
-		// write multi-stage sections for each artifact/variant dependency
-		for _, stage := range stages {
+		// write multi-stage sections for each variant dependency
+		for _, stage := range vcfg.VariantDependencies() {
 			dependency, err := config.ExpandVariant(cfg, stage)
 
 			if err == nil {
 				CompileStage(buffer, stage, dependency)
+				mainStage = variant
 			}
 		}
 
@@ -74,17 +62,6 @@ func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 		Writeln(buffer, "VOLUME [\"", vcfg.Runs.In, "\"]")
 	} else {
 		Writeln(buffer, "COPY . .")
-	}
-
-	// Artifact copying
-	for _, artifact := range vcfg.Artifacts {
-		Write(buffer, "COPY ")
-
-		if artifact.From != "" {
-			Write(buffer, "--from=", artifact.From, " ")
-		}
-
-		Writeln(buffer, "[\"", artifact.Source, "\", \"", artifact.Destination, "\"]")
 	}
 
 	CompilePhase(buffer, vcfg, build.PhasePostInstall)

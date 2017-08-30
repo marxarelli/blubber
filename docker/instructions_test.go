@@ -46,6 +46,18 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
 }
 
+func TestCopyFrom(t *testing.T) {
+	i := build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}
+
+	di, err := docker.NewDockerInstruction(i)
+
+	var dockerCopyFrom docker.DockerCopyFrom
+
+	assert.Nil(t, err)
+	assert.IsType(t, dockerCopyFrom, di)
+	assert.Equal(t, "COPY --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+}
+
 func TestEnv(t *testing.T) {
 	i := build.Env{map[string]string{"foo": "bar", "bar": "foo"}}
 

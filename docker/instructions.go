@@ -18,11 +18,16 @@ func NewDockerInstruction(instruction build.Instruction) (DockerInstruction, err
 		var dockerInstruction DockerCopy
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
+	case build.CopyFrom:
+		var dockerInstruction DockerCopyFrom
+		dockerInstruction.arguments = instruction.Compile()
+		return dockerInstruction, nil
 	case build.Env:
 		var dockerInstruction DockerEnv
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
 	}
+
 	return nil, errors.New("Unable to create DockerInstruction")
 }
 
@@ -44,7 +49,7 @@ type DockerRun struct{ abstractDockerInstruction }
 func (dr DockerRun) Compile() string {
 	return fmt.Sprintf(
 		"RUN %s\n",
-		removeNewlines(strings.Join(dr.arguments, "")))
+		join(dr.arguments, ""))
 }
 
 type DockerCopy struct{ abstractDockerInstruction }
@@ -52,7 +57,16 @@ type DockerCopy struct{ abstractDockerInstruction }
 func (dc DockerCopy) Compile() string {
 	return fmt.Sprintf(
 		"COPY [%s]\n",
-		removeNewlines(strings.Join(dc.arguments, ", ")))
+		join(dc.arguments, ", "))
+}
+
+type DockerCopyFrom struct{ abstractDockerInstruction }
+
+func (dcf DockerCopyFrom) Compile() string {
+	return fmt.Sprintf(
+		"COPY --from=%s [%s]\n",
+		dcf.arguments[0],
+		join(dcf.arguments[1:], ", "))
 }
 
 type DockerEnv struct{ abstractDockerInstruction }
@@ -60,7 +74,11 @@ type DockerEnv struct{ abstractDockerInstruction }
 func (de DockerEnv) Compile() string {
 	return fmt.Sprintf(
 		"ENV %s\n",
-		removeNewlines(strings.Join(de.arguments, " ")))
+		join(de.arguments, " "))
+}
+
+func join(arguments []string, delimiter string) string {
+	return removeNewlines(strings.Join(arguments, delimiter))
 }
 
 func removeNewlines(instructions string) string {

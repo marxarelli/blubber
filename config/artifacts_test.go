@@ -5,6 +5,7 @@ import (
 
 	"gopkg.in/stretchr/testify.v1/assert"
 
+	"phabricator.wikimedia.org/source/blubber.git/build"
 	"phabricator.wikimedia.org/source/blubber.git/config"
 )
 
@@ -37,4 +38,34 @@ func TestArtifactsConfig(t *testing.T) {
 		variant.Artifacts,
 		config.ArtifactsConfig{From: "build", Source: "/bar/src", Destination: "/bar/dst"},
 	)
+}
+
+func TestArtifactsConfigInstructions(t *testing.T) {
+	cfg := config.ArtifactsConfig{
+		From:        "foo",
+		Source:      "/source/path",
+		Destination: "/destination/path",
+	}
+
+	t.Run("PhasePrivileged", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
+	})
+
+	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
+	})
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{build.CopyFrom{
+				"foo",
+				build.Copy{[]string{"/source/path"}, "/destination/path"},
+			}},
+			cfg.InstructionsForPhase(build.PhasePostInstall),
+		)
+	})
 }

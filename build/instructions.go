@@ -50,6 +50,15 @@ func (copy Copy) Compile() []string {
 	return append(quoteAll(copy.Sources), quote(copy.Destination))
 }
 
+type CopyFrom struct {
+	From string
+	Copy
+}
+
+func (cf CopyFrom) Compile() []string {
+	return append([]string{cf.From}, cf.Copy.Compile()...)
+}
+
 type Env struct {
 	Definitions map[string]string
 }
