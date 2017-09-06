@@ -81,6 +81,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 				build.Env{map[string]string{
 					"NODE_ENV":  "foo",
 					"NODE_PATH": "/opt/lib/node_modules",
+					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -119,6 +120,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 				build.Env{map[string]string{
 					"NODE_ENV":  "production",
 					"NODE_PATH": "/opt/lib/node_modules",
+					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -147,6 +149,7 @@ func TestNodeConfigInstructionsEnvironmentOnly(t *testing.T) {
 				build.Env{map[string]string{
 					"NODE_ENV":  "production",
 					"NODE_PATH": "/opt/lib/node_modules",
+					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),

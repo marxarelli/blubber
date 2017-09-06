@@ -40,10 +40,11 @@ func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 			}
 		}
 	case build.PhasePostInstall:
-		if nc.Env != "" {
+		if nc.Env != "" || nc.Dependencies.True {
 			return []build.Instruction{build.Env{map[string]string{
 				"NODE_ENV":  nc.Env,
 				"NODE_PATH": path.Join(LocalLibPrefix, "node_modules"),
+				"PATH":      path.Join(LocalLibPrefix, "node_modules", ".bin") + ":${PATH}",
 			}}}
 		}
 	}
