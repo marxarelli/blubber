@@ -70,6 +70,18 @@ func TestEnv(t *testing.T) {
 	assert.Equal(t, "ENV bar=\"foo\" foo=\"bar\"\n", di.Compile())
 }
 
+func TestVolume(t *testing.T) {
+	i := build.Volume{"/foo/dir"}
+
+	di, err := docker.NewDockerInstruction(i)
+
+	var dockerVolume docker.DockerVolume
+
+	assert.Nil(t, err)
+	assert.IsType(t, dockerVolume, di)
+	assert.Equal(t, "VOLUME [\"/foo/dir\"]\n", di.Compile())
+}
+
 func TestEscapeRun(t *testing.T) {
 	i := build.Run{"/bin/true\nRUN echo HACKED!", []string{}}
 	dr, _ := docker.NewDockerInstruction(i)

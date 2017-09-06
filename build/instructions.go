@@ -80,6 +80,14 @@ func (env Env) Compile() []string {
 	return defs
 }
 
+type Volume struct {
+	Path string
+}
+
+func (vol Volume) Compile() []string {
+	return []string{quote(vol.Path)}
+}
+
 func quote(arg string) string {
 	return strconv.Quote(arg)
 }

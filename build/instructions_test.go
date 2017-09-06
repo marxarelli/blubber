@@ -55,3 +55,9 @@ func TestEnv(t *testing.T) {
 		`quxname="quxvalue"`,
 	}, i.Compile())
 }
+
+func TestVolume(t *testing.T) {
+	i := build.Volume{"/foo/dir"}
+
+	assert.Equal(t, []string{`"/foo/dir"`}, i.Compile())
+}

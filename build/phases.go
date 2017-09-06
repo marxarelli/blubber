@@ -6,6 +6,7 @@ const (
 	PhasePrivileged Phase = iota
 	PhasePrivilegeDropped
 	PhasePreInstall
+	PhaseInstall
 	PhasePostInstall
 )
 

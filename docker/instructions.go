@@ -26,6 +26,10 @@ func NewDockerInstruction(instruction build.Instruction) (DockerInstruction, err
 		var dockerInstruction DockerEnv
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
+	case build.Volume:
+		var dockerInstruction DockerVolume
+		dockerInstruction.arguments = instruction.Compile()
+		return dockerInstruction, nil
 	}
 
 	return nil, errors.New("Unable to create DockerInstruction")
@@ -75,6 +79,14 @@ func (de DockerEnv) Compile() string {
 	return fmt.Sprintf(
 		"ENV %s\n",
 		join(de.arguments, " "))
+}
+
+type DockerVolume struct{ abstractDockerInstruction }
+
+func (dv DockerVolume) Compile() string {
+	return fmt.Sprintf(
+		"VOLUME [%s]\n",
+		join(dv.arguments, ", "))
 }
 
 func join(arguments []string, delimiter string) string {

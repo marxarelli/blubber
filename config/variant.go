@@ -25,7 +25,20 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		ainstructions = append(ainstructions, artifact.InstructionsForPhase(phase)...)
 	}
 
-	return append(ainstructions, instructions...)
+	instructions = append(ainstructions, instructions...)
+
+	switch phase {
+	case build.PhaseInstall:
+		if vc.Copies == "" {
+			if vc.SharedVolume.True {
+				instructions = append(instructions, build.Volume{vc.Runs.In})
+			} else {
+				instructions = append(instructions, build.Copy{[]string{"."}, "."})
+			}
+		}
+	}
+
+	return instructions
 }
 
 func (vc *VariantConfig) VariantDependencies() []string {
@@ -52,8 +65,8 @@ func (vc *VariantConfig) defaultArtifacts() []ArtifactsConfig {
 		return []ArtifactsConfig{
 			{
 				From:        vc.Copies,
-				Source:      vc.CommonConfig.Runs.In,
-				Destination: vc.CommonConfig.Runs.In,
+				Source:      vc.Runs.In,
+				Destination: vc.Runs.In,
 			},
 			{
 				From:        vc.Copies,

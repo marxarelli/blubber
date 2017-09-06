@@ -40,11 +40,16 @@ variants:
       packages: [chromium]
     entrypoint: [npm, test]
 
+  prep:
+    includes: [build]
+    node:
+      env: production
+
   production:
     base: debian:jessie-slim
     node:
       env: production
-    copies: test
+    copies: prep
     entrypoint: [node, server.js]
 ```
 
