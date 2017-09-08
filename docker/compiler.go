@@ -2,6 +2,7 @@ package docker
 
 import (
 	"bytes"
+	"log"
 	"strings"
 
 	"phabricator.wikimedia.org/source/blubber.git/build"
@@ -13,22 +14,24 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 
 	vcfg, err := config.ExpandVariant(cfg, variant)
 
-	if err == nil {
-		// omit the main stage name unless multi-stage is required below
-		mainStage := ""
-
-		// write multi-stage sections for each variant dependency
-		for _, stage := range vcfg.VariantDependencies() {
-			dependency, err := config.ExpandVariant(cfg, stage)
-
-			if err == nil {
-				CompileStage(buffer, stage, dependency)
-				mainStage = variant
-			}
-		}
-
-		CompileStage(buffer, mainStage, vcfg)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	// omit the main stage name unless multi-stage is required below
+	mainStage := ""
+
+	// write multi-stage sections for each variant dependency
+	for _, stage := range vcfg.VariantDependencies() {
+		dependency, err := config.ExpandVariant(cfg, stage)
+
+		if err == nil {
+			CompileStage(buffer, stage, dependency)
+			mainStage = variant
+		}
+	}
+
+	CompileStage(buffer, mainStage, vcfg)
 
 	return buffer
 }

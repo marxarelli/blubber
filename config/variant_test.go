@@ -44,6 +44,54 @@ func TestVariantDependencies(t *testing.T) {
 	assert.Equal(t, []string{"foo", "build"}, cfg.VariantDependencies())
 }
 
+func TestVariantLoops(t *testing.T) {
+	cfg := config.Config{
+		Variants: map[string]config.VariantConfig{
+			"foo": config.VariantConfig{Includes: []string{"bar"}},
+			"bar": config.VariantConfig{Includes: []string{"foo"}}}}
+
+	cfgTwo := config.Config{
+		Variants: map[string]config.VariantConfig{
+			"foo": config.VariantConfig{},
+			"bar": config.VariantConfig{Includes: []string{"foo"}}}}
+
+	// Configuration that contains a loop in "Includes" should error
+	_, err := config.ExpandVariant(&cfg, "bar")
+	assert.NotNil(t, err)
+
+	_, errTwo := config.ExpandVariant(&cfgTwo, "bar")
+	assert.Nil(t, errTwo)
+}
+
+func TestMultiLevelIncludes(t *testing.T) {
+	cfg, err := config.ReadConfig([]byte(`---
+    base: nodejs-slim
+    variants:
+      build:
+        base: nodejs-devel
+        node: {env: build}
+      development:
+        includes: [build]
+        node: {env: development}
+        entrypoint: [npm, start]
+      test:
+        includes: [development]
+        node: {dependencies: true}
+        entrypoint: [npm, test]`))
+
+	assert.Nil(t, err)
+
+	variant, _ := config.ExpandVariant(cfg, "test")
+
+	assert.Equal(t, "nodejs-devel", variant.Base)
+	assert.Equal(t, "development", variant.Node.Env)
+
+	devVariant, _ := config.ExpandVariant(cfg, "development")
+
+	assert.True(t, variant.Node.Dependencies.True)
+	assert.False(t, devVariant.Node.Dependencies.True)
+}
+
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
 		t.Run("copies", func(t *testing.T) {
