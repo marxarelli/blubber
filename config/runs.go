@@ -3,7 +3,7 @@ package config
 import (
 	"strconv"
 
-	"phabricator.wikimedia.org/source/blubber.git/build"
+	"phabricator.wikimedia.org/source/blubber/build"
 )
 
 const LocalLibPrefix = "/opt/lib"

@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"phabricator.wikimedia.org/source/blubber.git/build"
-	"phabricator.wikimedia.org/source/blubber.git/config"
+	"phabricator.wikimedia.org/source/blubber/build"
+	"phabricator.wikimedia.org/source/blubber/config"
 )
 
 func Compile(cfg *config.Config, variant string) *bytes.Buffer {

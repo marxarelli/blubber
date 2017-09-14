@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/stretchr/testify.v1/assert"
 
-	"phabricator.wikimedia.org/source/blubber.git/config"
-	"phabricator.wikimedia.org/source/blubber.git/docker"
+	"phabricator.wikimedia.org/source/blubber/config"
+	"phabricator.wikimedia.org/source/blubber/docker"
 )
 
 func TestSingleStageHasNoName(t *testing.T) {

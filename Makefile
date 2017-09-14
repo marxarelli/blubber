@@ -1,5 +1,5 @@
 export GOPATH=$(CURDIR)/.build
-PACKAGE := phabricator.wikimedia.org/source/blubber.git
+PACKAGE := phabricator.wikimedia.org/source/blubber
 export BUILD_DIR=$(GOPATH)/src/$(PACKAGE)
 BINARY :=$(CURDIR)/bin/blubber
 
@@ -14,7 +14,7 @@ bin/blubber:
 	ln -s $(CURDIR) $(BUILD_DIR)
 	cd $(BUILD_DIR) && go get ./...
 	cd $(BUILD_DIR) && go build -v -i
-	mkdir -p $(CURDIR)/bin && mv $(BUILD_DIR)/blubber.git $(BINARY)
+	mkdir -p $(CURDIR)/bin && mv $(BUILD_DIR)/blubber $(BINARY)
 
 
 .PHONY: all clean

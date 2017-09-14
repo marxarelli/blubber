@@ -2,7 +2,7 @@ package config
 
 import (
 	"path"
-	"phabricator.wikimedia.org/source/blubber.git/build"
+	"phabricator.wikimedia.org/source/blubber/build"
 )
 
 type NodeConfig struct {

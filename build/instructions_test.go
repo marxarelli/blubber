@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/stretchr/testify.v1/assert"
 
-	"phabricator.wikimedia.org/source/blubber.git/build"
+	"phabricator.wikimedia.org/source/blubber/build"
 )
 
 func TestRun(t *testing.T) {

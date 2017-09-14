@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"phabricator.wikimedia.org/source/blubber.git/build"
+	"phabricator.wikimedia.org/source/blubber/build"
 )
 
 func NewDockerInstruction(instruction build.Instruction) (DockerInstruction, error) {

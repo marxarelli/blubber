@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/stretchr/testify.v1/assert"
 
-	"phabricator.wikimedia.org/source/blubber.git/config"
+	"phabricator.wikimedia.org/source/blubber/config"
 )
 
 func TestFlagOverwrite(t *testing.T) {
