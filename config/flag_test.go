@@ -3,7 +3,7 @@ package config_test
 import (
 	"testing"
 
-	"gopkg.in/stretchr/testify.v1/assert"
+	"github.com/stretchr/testify/assert"
 
 	"phabricator.wikimedia.org/source/blubber/config"
 )
