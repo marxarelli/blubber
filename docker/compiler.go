@@ -2,20 +2,20 @@ package docker
 
 import (
 	"bytes"
-	"log"
 	"strings"
 
 	"phabricator.wikimedia.org/source/blubber/build"
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func Compile(cfg *config.Config, variant string) *bytes.Buffer {
+// Compile blubber yaml file into Dockerfile
+func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 
 	vcfg, err := config.ExpandVariant(cfg, variant)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// omit the main stage name unless multi-stage is required below
@@ -25,15 +25,16 @@ func Compile(cfg *config.Config, variant string) *bytes.Buffer {
 	for _, stage := range vcfg.VariantDependencies() {
 		dependency, err := config.ExpandVariant(cfg, stage)
 
-		if err == nil {
-			CompileStage(buffer, stage, dependency)
-			mainStage = variant
+		if err != nil {
+			return nil, err
 		}
+		CompileStage(buffer, stage, dependency)
+		mainStage = variant
 	}
 
 	CompileStage(buffer, mainStage, vcfg)
 
-	return buffer
+	return buffer, nil
 }
 
 func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig) {

@@ -18,7 +18,8 @@ func TestSingleStageHasNoName(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	dockerfile := docker.Compile(cfg, "development").String()
+	dockerOut, _ := docker.Compile(cfg, "development")
+	dockerfile := dockerOut.String()
 
 	assert.Contains(t, dockerfile, "FROM foo/bar\n")
 }
@@ -36,7 +37,8 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	dockerfile := docker.Compile(cfg, "production").String()
+	dockerOut, _ := docker.Compile(cfg, "production")
+	dockerfile := dockerOut.String()
 
 	assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
 	assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")
@@ -61,7 +63,8 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	dockerfile := docker.Compile(cfg, "production").String()
+	dockerOut, _ := docker.Compile(cfg, "production")
+	dockerfile := dockerOut.String()
 
 	assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
 	assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")

@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
+
 	"phabricator.wikimedia.org/source/blubber/config"
 	"phabricator.wikimedia.org/source/blubber/docker"
 )
@@ -16,9 +18,16 @@ func main() {
 	cfg, err := config.ReadConfigFile(os.Args[1])
 
 	if err != nil {
-		fmt.Println("Error reading config:\n", err)
+		log.Printf("Error reading config: %v\n", err)
 		os.Exit(2)
 	}
 
-	docker.Compile(cfg, os.Args[2]).WriteTo(os.Stdout)
+	dockerFile, err := docker.Compile(cfg, os.Args[2])
+
+	if err != nil {
+		log.Printf("Error compiling config: %v\n", err)
+		os.Exit(3)
+	}
+
+	dockerFile.WriteTo(os.Stdout)
 }
