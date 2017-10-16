@@ -71,6 +71,18 @@ func TestEnv(t *testing.T) {
 	assert.Equal(t, "ENV bar=\"foo\" foo=\"bar\"\n", di.Compile())
 }
 
+func TestLabel(t *testing.T) {
+	i := build.Label{map[string]string{"foo": "bar", "bar": "foo"}}
+
+	di, err := docker.NewDockerInstruction(i)
+
+	var dockerLabel docker.DockerLabel
+
+	assert.Nil(t, err)
+	assert.IsType(t, dockerLabel, di)
+	assert.Equal(t, "LABEL bar=\"foo\" foo=\"bar\"\n", di.Compile())
+}
+
 func TestVolume(t *testing.T) {
 	i := build.Volume{"/foo/dir"}
 

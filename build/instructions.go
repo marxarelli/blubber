@@ -64,20 +64,18 @@ type Env struct {
 }
 
 func (env Env) Compile() []string {
-	defs := make([]string, 0, len(env.Definitions))
-	names := make([]string, 0, len(env.Definitions))
+	return compileSortedKeyValues(env.Definitions)
+}
 
-	for name := range env.Definitions {
-		names = append(names, name)
-	}
+// Label represents a number of meta-data key/value pairs
+type Label struct {
+	Definitions map[string]string
+}
 
-	sort.Strings(names)
-
-	for _, name := range names {
-		defs = append(defs, name+"="+quote(env.Definitions[name]))
-	}
-
-	return defs
+// Compile returns the label key/value pairs as a number of `key="value"`
+// strings where the values are properly quoted
+func (label Label) Compile() []string {
+	return compileSortedKeyValues(label.Definitions)
 }
 
 type Volume struct {
@@ -86,6 +84,23 @@ type Volume struct {
 
 func (vol Volume) Compile() []string {
 	return []string{quote(vol.Path)}
+}
+
+func compileSortedKeyValues(keyValues map[string]string) []string {
+	defs := make([]string, 0, len(keyValues))
+	names := make([]string, 0, len(keyValues))
+
+	for name := range keyValues {
+		names = append(names, name)
+	}
+
+	sort.Strings(names)
+
+	for _, name := range names {
+		defs = append(defs, name+"="+quote(keyValues[name]))
+	}
+
+	return defs
 }
 
 func quote(arg string) string {

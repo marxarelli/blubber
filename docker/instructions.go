@@ -26,6 +26,10 @@ func NewDockerInstruction(instruction build.Instruction) (DockerInstruction, err
 		var dockerInstruction DockerEnv
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
+	case build.Label:
+		var dockerInstruction DockerLabel
+		dockerInstruction.arguments = instruction.Compile()
+		return dockerInstruction, nil
 	case build.Volume:
 		var dockerInstruction DockerVolume
 		dockerInstruction.arguments = instruction.Compile()
@@ -79,6 +83,16 @@ func (de DockerEnv) Compile() string {
 	return fmt.Sprintf(
 		"ENV %s\n",
 		join(de.arguments, " "))
+}
+
+// DockerLabel represents a concrete LABEL instruction
+type DockerLabel struct{ abstractDockerInstruction }
+
+// Compile returns multiple key="value" arguments as a single LABEL string
+func (dl DockerLabel) Compile() string {
+	return fmt.Sprintf(
+		"LABEL %s\n",
+		join(dl.arguments, " "))
 }
 
 type DockerVolume struct{ abstractDockerInstruction }

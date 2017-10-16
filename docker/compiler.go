@@ -6,6 +6,7 @@ import (
 
 	"phabricator.wikimedia.org/source/blubber/build"
 	"phabricator.wikimedia.org/source/blubber/config"
+	"phabricator.wikimedia.org/source/blubber/meta"
 )
 
 // Compile blubber yaml file into Dockerfile
@@ -28,63 +29,73 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 		if err != nil {
 			return nil, err
 		}
-		CompileStage(buffer, stage, dependency)
+		compileStage(buffer, stage, dependency)
 		mainStage = variant
 	}
 
-	CompileStage(buffer, mainStage, vcfg)
+	compileStage(buffer, mainStage, vcfg)
+
+	// add meta-data labels to the final stage
+	compileInstructions(buffer, build.Label{map[string]string{
+		"blubber.variant": variant,
+		"blubber.version": meta.FullVersion(),
+	}})
 
 	return buffer, nil
 }
 
-func CompileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig) {
+func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig) {
 	baseAndStage := vcfg.Base
 
 	if stage != "" {
 		baseAndStage += " AS " + stage
 	}
 
-	Writeln(buffer, "FROM ", baseAndStage)
+	writeln(buffer, "FROM ", baseAndStage)
 
-	Writeln(buffer, "USER root")
+	writeln(buffer, "USER root")
 
-	CompilePhase(buffer, vcfg, build.PhasePrivileged)
+	compilePhase(buffer, vcfg, build.PhasePrivileged)
 
 	if vcfg.Runs.As != "" {
-		Writeln(buffer, "USER ", vcfg.Runs.As)
+		writeln(buffer, "USER ", vcfg.Runs.As)
 	}
 
-	CompilePhase(buffer, vcfg, build.PhasePrivilegeDropped)
+	compilePhase(buffer, vcfg, build.PhasePrivilegeDropped)
 
 	if vcfg.Runs.In != "" {
-		Writeln(buffer, "WORKDIR ", vcfg.Runs.In)
+		writeln(buffer, "WORKDIR ", vcfg.Runs.In)
 	}
 
-	CompilePhase(buffer, vcfg, build.PhasePreInstall)
+	compilePhase(buffer, vcfg, build.PhasePreInstall)
 
-	CompilePhase(buffer, vcfg, build.PhaseInstall)
+	compilePhase(buffer, vcfg, build.PhaseInstall)
 
-	CompilePhase(buffer, vcfg, build.PhasePostInstall)
+	compilePhase(buffer, vcfg, build.PhasePostInstall)
 
 	if len(vcfg.EntryPoint) > 0 {
-		Writeln(buffer, "ENTRYPOINT [\"", strings.Join(vcfg.EntryPoint, "\", \""), "\"]")
+		writeln(buffer, "ENTRYPOINT [\"", strings.Join(vcfg.EntryPoint, "\", \""), "\"]")
 	}
 }
 
-func CompilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
-	for _, instruction := range vcfg.InstructionsForPhase(phase) {
+func compileInstructions(buffer *bytes.Buffer, instructions ...build.Instruction) {
+	for _, instruction := range instructions {
 		dockerInstruction, _ := NewDockerInstruction(instruction)
-		Write(buffer, dockerInstruction.Compile())
+		write(buffer, dockerInstruction.Compile())
 	}
 }
 
-func Write(buffer *bytes.Buffer, strings ...string) {
+func compilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
+	compileInstructions(buffer, vcfg.InstructionsForPhase(phase)...)
+}
+
+func write(buffer *bytes.Buffer, strings ...string) {
 	for _, str := range strings {
 		buffer.WriteString(str)
 	}
 }
 
-func Writeln(buffer *bytes.Buffer, strings ...string) {
-	Write(buffer, strings...)
+func writeln(buffer *bytes.Buffer, strings ...string) {
+	write(buffer, strings...)
 	buffer.WriteString("\n")
 }

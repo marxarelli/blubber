@@ -56,6 +56,20 @@ func TestEnv(t *testing.T) {
 	}, i.Compile())
 }
 
+func TestLabel(t *testing.T) {
+	i := build.Label{map[string]string{
+		"fooname": "foovalue",
+		"barname": "barvalue",
+		"quxname": "quxvalue",
+	}}
+
+	assert.Equal(t, []string{
+		`barname="barvalue"`,
+		`fooname="foovalue"`,
+		`quxname="quxvalue"`,
+	}, i.Compile())
+}
+
 func TestVolume(t *testing.T) {
 	i := build.Volume{"/foo/dir"}
 

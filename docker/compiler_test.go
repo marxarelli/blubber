@@ -8,6 +8,7 @@ import (
 
 	"phabricator.wikimedia.org/source/blubber/config"
 	"phabricator.wikimedia.org/source/blubber/docker"
+	"phabricator.wikimedia.org/source/blubber/meta"
 )
 
 func TestSingleStageHasNoName(t *testing.T) {
@@ -71,4 +72,22 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS build\n"))
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
+}
+
+func TestMetaDataLabels(t *testing.T) {
+	cfg, err := config.ReadConfig([]byte(`---
+    base: foo/bar
+    variants:
+      development: {}`))
+
+	assert.Nil(t, err)
+
+	dockerOut, _ := docker.Compile(cfg, "development")
+	dockerfile := dockerOut.String()
+
+	version := meta.FullVersion()
+
+	assert.Contains(t, dockerfile,
+		"LABEL blubber.variant=\"development\" blubber.version=\""+version+"\"\n",
+	)
 }
