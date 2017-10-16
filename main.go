@@ -7,9 +7,15 @@ import (
 
 	"phabricator.wikimedia.org/source/blubber/config"
 	"phabricator.wikimedia.org/source/blubber/docker"
+	"phabricator.wikimedia.org/source/blubber/meta"
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--version" {
+		fmt.Println(meta.FullVersion())
+		os.Exit(0)
+	}
+
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: blubber config.yaml variant")
 		os.Exit(1)
