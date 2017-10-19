@@ -1,3 +1,14 @@
+blubber (0.1.0) unstable; urgency=medium
+
+  [ Tyler Cipriani ]
+  * Move error handling to main
+
+  [ Dan Duvall ]
+  * Capture and expose build-time meta data
+  * Include meta data as labels in Dockerfile output
+
+ -- Dan Duvall <dduvall@wikimedia.org>  Thu, 19 Oct 2017 15:47:58 -0700
+
 blubber (0.0~git20170911.0.4e5c728-1) unstable; urgency=medium
 
   * Initial release
