@@ -87,7 +87,7 @@ func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 func compileInstructions(buffer *bytes.Buffer, instructions ...build.Instruction) {
 	for _, instruction := range instructions {
-		dockerInstruction, _ := NewDockerInstruction(instruction)
+		dockerInstruction, _ := NewInstruction(instruction)
 		write(buffer, dockerInstruction.Compile())
 	}
 }

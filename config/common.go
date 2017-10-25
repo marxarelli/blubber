@@ -18,18 +18,18 @@ type CommonConfig struct {
 
 // Merge takes another CommonConfig and merges its fields this one's.
 //
-func (cc1 *CommonConfig) Merge(cc2 CommonConfig) {
+func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 	if cc2.Base != "" {
-		cc1.Base = cc2.Base
+		cc.Base = cc2.Base
 	}
 
-	cc1.Apt.Merge(cc2.Apt)
-	cc1.Node.Merge(cc2.Node)
-	cc1.Runs.Merge(cc2.Runs)
-	cc1.SharedVolume.Merge(cc2.SharedVolume)
+	cc.Apt.Merge(cc2.Apt)
+	cc.Node.Merge(cc2.Node)
+	cc.Runs.Merge(cc2.Runs)
+	cc.SharedVolume.Merge(cc2.SharedVolume)
 
-	if len(cc1.EntryPoint) < 1 {
-		cc1.EntryPoint = cc2.EntryPoint
+	if len(cc.EntryPoint) < 1 {
+		cc.EntryPoint = cc2.EntryPoint
 	}
 }
 

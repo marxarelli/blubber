@@ -17,8 +17,8 @@ const LocalLibPrefix = "/opt/lib"
 type RunsConfig struct {
 	In          string            `yaml:"in"`          // working directory
 	As          string            `yaml:"as"`          // unprivileged user
-	Uid         int               `yaml:"uid"`         // unprivileged UID
-	Gid         int               `yaml:"gid"`         // unprivileged GID
+	UID         int               `yaml:"uid"`         // unprivileged user ID
+	GID         int               `yaml:"gid"`         // unprivileged group ID
 	Environment map[string]string `yaml:"environment"` // environment variables
 }
 
@@ -33,11 +33,11 @@ func (run *RunsConfig) Merge(run2 RunsConfig) {
 	if run2.As != "" {
 		run.As = run2.As
 	}
-	if run2.Uid != 0 {
-		run.Uid = run2.Uid
+	if run2.UID != 0 {
+		run.UID = run2.UID
 	}
-	if run2.Gid != 0 {
-		run.Gid = run2.Gid
+	if run2.GID != 0 {
+		run.GID = run2.GID
 	}
 
 	if run.Environment == nil {
@@ -55,9 +55,9 @@ func (run *RunsConfig) Merge(run2 RunsConfig) {
 func (run RunsConfig) Home() string {
 	if run.As == "" {
 		return "/root"
-	} else {
-		return "/home/" + run.As
 	}
+
+	return "/home/" + run.As
 }
 
 // InstructionsForPhase injects build instructions related to the runtime
@@ -92,9 +92,9 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 		if run.As != "" {
 			runAll.Runs = append(runAll.Runs,
 				build.Run{"groupadd -o -g %s -r",
-					[]string{strconv.Itoa(run.Gid), run.As}},
+					[]string{strconv.Itoa(run.GID), run.As}},
 				build.Run{"useradd -o -m -d %s -r -g %s -u %s",
-					[]string{run.Home(), run.As, strconv.Itoa(run.Uid), run.As}},
+					[]string{run.Home(), run.As, strconv.Itoa(run.UID), run.As}},
 				build.Run{"chown %s:%s",
 					[]string{run.As, run.As, LocalLibPrefix}},
 			)

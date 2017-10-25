@@ -28,8 +28,8 @@ func TestRunsConfig(t *testing.T) {
 
 	assert.Equal(t, "someuser", variant.Runs.As)
 	assert.Equal(t, "/some/directory", variant.Runs.In)
-	assert.Equal(t, 666, variant.Runs.Uid)
-	assert.Equal(t, 777, variant.Runs.Gid)
+	assert.Equal(t, 666, variant.Runs.UID)
+	assert.Equal(t, 777, variant.Runs.GID)
 	assert.Equal(t, map[string]string{"FOO": "bar"}, variant.Runs.Environment)
 }
 
@@ -49,8 +49,8 @@ func TestRunsConfigInstructions(t *testing.T) {
 	cfg := config.RunsConfig{
 		As:  "someuser",
 		In:  "/some/directory",
-		Uid: 666,
-		Gid: 777,
+		UID: 666,
+		GID: 777,
 		Environment: map[string]string{
 			"fooname": "foovalue",
 			"barname": "barvalue",

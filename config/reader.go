@@ -72,7 +72,7 @@ func ReadConfigFile(path string) (*Config, error) {
 
 	if err != nil {
 		return nil, err
-	} else {
-		return ReadConfig(data)
 	}
+
+	return ReadConfig(data)
 }
