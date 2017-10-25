@@ -1,3 +1,7 @@
+// Package build defines types and interfaces that could potentially be
+// compiled to various external build-tool scripts but share a general
+// internal abstraction and rules for escaping.
+//
 package build
 
 import (
@@ -7,15 +11,28 @@ import (
 	"strings"
 )
 
+// Instruction defines a common interface that all concrete build types must
+// implement.
+//
 type Instruction interface {
 	Compile() []string
 }
 
+// Run is a concrete build instruction for passing any number of arguments to
+// a shell command.
+//
+// The command string may contain inner argument placeholders using the "%s"
+// format verb and will be appended with the quoted values of any arguments
+// that remain after interpolation of the command string.
+//
 type Run struct {
-	Command   string
-	Arguments []string
+	Command   string   // command string (e.g. "useradd -d %s -u %s")
+	Arguments []string // command arguments both inner and final (e.g. ["/home/user", "123", "user"])
 }
 
+// Compile quotes all arguments, interpolates the command string with inner
+// arguments, and appends the final arguments.
+//
 func (run Run) Compile() []string {
 	numInnerArgs := strings.Count(run.Command, `%`) - strings.Count(run.Command, `%%`)
 	command := sprintf(run.Command, run.Arguments[0:numInnerArgs])
@@ -27,10 +44,16 @@ func (run Run) Compile() []string {
 	return []string{command}
 }
 
+// RunAll is a concrete build instruction for declaring multiple Run
+// instructions that will be executed together in a `cmd1 && cmd2` chain.
+//
 type RunAll struct {
-	Runs []Run
+	Runs []Run // multiple Run instructions to be executed together
 }
 
+// Compile concatenates all individually compiled Run instructions into a
+// single command.
+//
 func (runAll RunAll) Compile() []string {
 	commands := make([]string, len(runAll.Runs))
 
@@ -41,47 +64,72 @@ func (runAll RunAll) Compile() []string {
 	return []string{strings.Join(commands, " && ")}
 }
 
+// Copy is a concrete build instruction for copying source files/directories
+// from the build host into the image.
+//
 type Copy struct {
-	Sources     []string
-	Destination string
+	Sources     []string // source file/directory paths
+	Destination string   // destination path
 }
 
+// Compile quotes the defined source files/directories and destination.
+//
 func (copy Copy) Compile() []string {
 	return append(quoteAll(copy.Sources), quote(copy.Destination))
 }
 
+// CopyFrom is a concrete build instruction for copying source
+// files/directories from one variant image to another.
+//
 type CopyFrom struct {
-	From string
+	From string // source variant name
 	Copy
 }
 
+// Compile returns the variant name unquoted and all quoted Copy instruction
+// fields.
+//
 func (cf CopyFrom) Compile() []string {
 	return append([]string{cf.From}, cf.Copy.Compile()...)
 }
 
+// Env is a concrete build instruction for declaring a container's runtime
+// environment variables.
+//
 type Env struct {
-	Definitions map[string]string
+	Definitions map[string]string // number of key/value pairs
 }
 
+// Compile returns the key/value pairs as a number of `key="value"` strings
+// where the values are properly quoted and the slice is ordered by the keys.
+//
 func (env Env) Compile() []string {
 	return compileSortedKeyValues(env.Definitions)
 }
 
-// Label represents a number of meta-data key/value pairs
+// Label is a concrete build instruction for declaring a number of meta-data
+// key/value pairs to be included in the image.
+//
 type Label struct {
-	Definitions map[string]string
+	Definitions map[string]string // number of meta-data key/value pairs
 }
 
-// Compile returns the label key/value pairs as a number of `key="value"`
-// strings where the values are properly quoted
+// Compile returns the key/value pairs as a number of `key="value"` strings
+// where the values are properly quoted and the slice is ordered by the keys.
+//
 func (label Label) Compile() []string {
 	return compileSortedKeyValues(label.Definitions)
 }
 
+// Volume is a concrete build instruction for defining a volume mount point
+// within the container.
+//
 type Volume struct {
-	Path string
+	Path string // volume/mount path
 }
 
+// Compile returns the quoted volume path.
+//
 func (vol Volume) Compile() []string {
 	return []string{quote(vol.Path)}
 }

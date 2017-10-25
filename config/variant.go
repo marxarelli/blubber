@@ -4,19 +4,34 @@ import (
 	"phabricator.wikimedia.org/source/blubber/build"
 )
 
+// VariantConfig holds configuration fields for each defined build variant.
+//
 type VariantConfig struct {
-	Includes     []string          `yaml:"includes"`
-	Copies       string            `yaml:"copies"`
-	Artifacts    []ArtifactsConfig `yaml:"artifacts"`
+	Includes     []string          `yaml:"includes"`  // references to one or more
+	Copies       string            `yaml:"copies"`    // copy standard artifacts from another variant
+	Artifacts    []ArtifactsConfig `yaml:"artifacts"` // non-standard artifact configuration
 	CommonConfig `yaml:",inline"`
 }
 
+// Merge takes another VariantConfig and overwrites this struct's fields.
+// Artifacts are merged additively.
+//
 func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 	vc.Copies = vc2.Copies
 	vc.Artifacts = append(vc.Artifacts, vc2.Artifacts...)
 	vc.CommonConfig.Merge(vc2.CommonConfig)
 }
 
+// InstructionsForPhase injects build instructions related to artifact
+// copying, volume definition or copying of application files, and all common
+// configuration.
+//
+// PhaseInstall
+//
+// If VariantConfig.Copies is not set, either copy in application files or
+// define a shared volume. Otherwise, delegate to
+// ArtifactsConfig.InstructionsForPhase.
+//
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
 	ainstructions := []build.Instruction{}
@@ -41,6 +56,9 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	return instructions
 }
 
+// VariantDependencies returns all unique names of other variants that are
+// referenced in the VariantConfig.Artifacts configuration.
+//
 func (vc *VariantConfig) VariantDependencies() []string {
 	// get unique set of variant dependencies based on artifacts
 	existing := map[string]bool{}

@@ -6,16 +6,26 @@ import (
 	"phabricator.wikimedia.org/source/blubber/build"
 )
 
+// LocalLibPrefix declares the shared directory into which application level
+// dependencies will be installed.
+//
 const LocalLibPrefix = "/opt/lib"
 
+// RunsConfig holds configuration fields related to the application's
+// runtime environment.
+//
 type RunsConfig struct {
-	In          string            `yaml:"in"`
-	As          string            `yaml:"as"`
-	Uid         int               `yaml:"uid"`
-	Gid         int               `yaml:"gid"`
-	Environment map[string]string `yaml:"environment"`
+	In          string            `yaml:"in"`          // working directory
+	As          string            `yaml:"as"`          // unprivileged user
+	Uid         int               `yaml:"uid"`         // unprivileged UID
+	Gid         int               `yaml:"gid"`         // unprivileged GID
+	Environment map[string]string `yaml:"environment"` // environment variables
 }
 
+// Merge takes another RunsConfig and overwrites this struct's fields. All
+// fields except Environment are overwritten if set. The latter is an additive
+// merge.
+//
 func (run *RunsConfig) Merge(run2 RunsConfig) {
 	if run2.In != "" {
 		run.In = run2.In
@@ -39,6 +49,9 @@ func (run *RunsConfig) Merge(run2 RunsConfig) {
 	}
 }
 
+// Home returns the home directory for the configured user, or /root if no
+// user is set.
+//
 func (run RunsConfig) Home() string {
 	if run.As == "" {
 		return "/root"
@@ -47,6 +60,20 @@ func (run RunsConfig) Home() string {
 	}
 }
 
+// InstructionsForPhase injects build instructions related to the runtime
+// configuration.
+//
+// PhasePrivileged
+//
+// Creates LocalLibPrefix directory and unprivileged user home directory,
+// creates the unprivileged user and its group, and sets up directory
+// permissions.
+//
+// PhasePrivilegeDropped
+//
+// Injects build.Env instructions for the user home directory and all
+// names/values defined by RunsConfig.Environment.
+//
 func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := []build.Instruction{}
 
