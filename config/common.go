@@ -8,12 +8,12 @@ import (
 // and each configured variant.
 //
 type CommonConfig struct {
-	Base         string     `yaml:"base"`         // name/path to base image
-	Apt          AptConfig  `yaml:"apt"`          // APT related configuration
-	Node         NodeConfig `yaml:"node"`         // Node related configuration
-	Runs         RunsConfig `yaml:"runs"`         // runtime environment configuration
-	SharedVolume Flag       `yaml:"sharedvolume"` // define a volume instead of copying in source files
-	EntryPoint   []string   `yaml:"entrypoint"`   // entry-point executable
+	Base         string     `yaml:"base" validate:"omitempty,baseimage"` // name/path to base image
+	Apt          AptConfig  `yaml:"apt"`                                 // APT related configuration
+	Node         NodeConfig `yaml:"node"`                                // Node related configuration
+	Runs         RunsConfig `yaml:"runs"`                                // runtime environment configuration
+	SharedVolume Flag       `yaml:"sharedvolume"`                        // define a volume for application
+	EntryPoint   []string   `yaml:"entrypoint"`                          // entry-point executable
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.

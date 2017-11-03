@@ -7,9 +7,9 @@ import (
 // VariantConfig holds configuration fields for each defined build variant.
 //
 type VariantConfig struct {
-	Includes     []string          `yaml:"includes"`  // references to one or more
-	Copies       string            `yaml:"copies"`    // copy standard artifacts from another variant
-	Artifacts    []ArtifactsConfig `yaml:"artifacts"` // non-standard artifact configuration
+	Includes     []string          `yaml:"includes" validate:"dive,variantref"`    // other variants
+	Copies       string            `yaml:"copies" validate:"omitempty,variantref"` // copy artifacts from variant
+	Artifacts    []ArtifactsConfig `yaml:"artifacts" validate:"dive"`              // artifact configuration
 	CommonConfig `yaml:",inline"`
 }
 

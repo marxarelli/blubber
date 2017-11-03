@@ -11,6 +11,7 @@ import (
 
 func TestNodeConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    base: foo
     node:
       dependencies: true
       env: foo
@@ -154,5 +155,36 @@ func TestNodeConfigInstructionsEnvironmentOnly(t *testing.T) {
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
+	})
+}
+
+func TestNodeConfigValidation(t *testing.T) {
+	t.Run("env", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        node:
+          env: production`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        node: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        node:
+          env: foo bar`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `env: "foo bar" is not a valid Node environment name`, msg)
+			}
+		})
 	})
 }

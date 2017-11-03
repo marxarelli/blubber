@@ -61,6 +61,12 @@ func ReadConfig(data []byte) (*Config, error) {
 
 	err := yaml.Unmarshal(data, &config)
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = Validate(config)
+
 	return &config, err
 }
 

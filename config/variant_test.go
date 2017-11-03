@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,6 +12,7 @@ import (
 
 func TestVariantConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    base: foo
     variants:
       build: {}
       production:
@@ -159,6 +161,78 @@ func TestVariantConfigInstructions(t *testing.T) {
 				},
 				cfg.InstructionsForPhase(build.PhasePostInstall),
 			)
+		})
+	})
+}
+
+func TestVariantConfigValidation(t *testing.T) {
+	t.Run("includes", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: { includes: [build] }`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: { includes: [build, foobuild, foo_build] }`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, strings.Join([]string{
+					`includes[1]: references an unknown variant "foobuild"`,
+					`includes[2]: references an unknown variant "foo_build"`,
+				}, "\n"), msg)
+			}
+		})
+	})
+
+	t.Run("copies", func(t *testing.T) {
+
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: { copies: build }`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo: { copies: foobuild }`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `copies: references an unknown variant "foobuild"`, msg)
+			}
 		})
 	})
 }

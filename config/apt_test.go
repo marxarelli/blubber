@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,5 +59,47 @@ func TestAptConfigInstructions(t *testing.T) {
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
+	})
+}
+
+func TestAptConfigValidation(t *testing.T) {
+	t.Run("packages", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        apt:
+          packages:
+           - f1
+           - foo-fighter
+           - bar+b.az
+           - bar+b.az=0:0.1~foo1-1
+           - bar+b.az/stable
+           - bar+b.az/jessie-wikimedia
+        variants: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        apt:
+          packages:
+           - foo
+           - foo fighter
+           - bar_baz
+           - 'bar=0.1*bad version'
+           - bar/0bad_release
+        variants: {}`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, strings.Join([]string{
+					`packages[1]: "foo fighter" is not a valid Debian package name`,
+					`packages[2]: "bar_baz" is not a valid Debian package name`,
+					`packages[3]: "bar=0.1*bad version" is not a valid Debian package name`,
+					`packages[4]: "bar/0bad_release" is not a valid Debian package name`,
+				}, "\n"), msg)
+			}
+		})
 	})
 }

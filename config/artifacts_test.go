@@ -11,6 +11,7 @@ import (
 
 func TestArtifactsConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    base: foo
     variants:
       build: {}
       production:
@@ -67,5 +68,56 @@ func TestArtifactsConfigInstructions(t *testing.T) {
 			}},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
+	})
+}
+
+func TestArtifactsConfigValidation(t *testing.T) {
+	t.Run("from", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo:
+            artifacts:
+              - from: build
+                source: /foo
+                destination: /bar`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("missing", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo:
+            artifacts:
+              - from: ~
+                source: /foo
+                destination: /bar`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `from: is required`, msg)
+			}
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        variants:
+          build: {}
+          foo:
+            artifacts:
+              - from: foo bar
+                source: /foo
+                destination: /bar`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `from: references an unknown variant "foo bar"`, msg)
+			}
+		})
 	})
 }

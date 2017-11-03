@@ -15,9 +15,9 @@ import (
 // VariantConfig.Copies.
 //
 type ArtifactsConfig struct {
-	From        string `yaml:"from"`        // source variant from which to copy
-	Source      string `yaml:"source"`      // source path within variant from which to copy
-	Destination string `yaml:"destination"` // destination path within current variant
+	From        string `yaml:"from" validate:"required,variantref"` // source variant from which to copy
+	Source      string `yaml:"source" validate:"required"`          // source variant path from which to copy
+	Destination string `yaml:"destination" validate:"required"`     // destination path within current variant
 }
 
 // InstructionsForPhase injects instructions into the given build phase that

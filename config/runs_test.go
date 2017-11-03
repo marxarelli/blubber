@@ -11,6 +11,7 @@ import (
 
 func TestRunsConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    base: foo
     runs:
       as: someuser
       in: /some/directory
@@ -28,8 +29,8 @@ func TestRunsConfig(t *testing.T) {
 
 	assert.Equal(t, "someuser", variant.Runs.As)
 	assert.Equal(t, "/some/directory", variant.Runs.In)
-	assert.Equal(t, 666, variant.Runs.UID)
-	assert.Equal(t, 777, variant.Runs.GID)
+	assert.Equal(t, uint(666), variant.Runs.UID)
+	assert.Equal(t, uint(777), variant.Runs.GID)
 	assert.Equal(t, map[string]string{"FOO": "bar"}, variant.Runs.Environment)
 }
 
@@ -98,5 +99,190 @@ func TestRunsConfigInstructions(t *testing.T) {
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
+	})
+}
+
+func TestRunsConfigValidation(t *testing.T) {
+	t.Run("in", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          in: /foo`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("non-root", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          in: /`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `in: "/" is not a valid absolute non-root path`, msg)
+			}
+		})
+
+		t.Run("non-root tricky", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          in: /foo/..`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `in: "/foo/.." is not a valid absolute non-root path`, msg)
+			}
+		})
+
+		t.Run("absolute", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          in: foo/bar`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `in: "foo/bar" is not a valid absolute non-root path`, msg)
+			}
+		})
+	})
+
+	t.Run("as", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          as: foo-bar.baz`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("no spaces", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          as: foo bar`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `as: "foo bar" is not a valid user name`, msg)
+			}
+		})
+
+		t.Run("long enough", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          as: fo`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `as: "fo" is not a valid user name`, msg)
+			}
+		})
+
+		t.Run("not root", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          as: root`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `as: "root" is not a valid user name`, msg)
+			}
+		})
+	})
+
+	t.Run("environment", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs:
+          environment:
+            foo: bar
+            f1oo: bar
+            FOO: bar
+            foo_fighter: bar
+            FOO_FIGHTER: bar
+            _FOO_FIGHTER: bar`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        runs: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			t.Run("spaces", func(t *testing.T) {
+				_, err := config.ReadConfig([]byte(`---
+          runs:
+            environment:
+              foo fighter: bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `environment: contains invalid environment variable names`, msg)
+				}
+			})
+
+			t.Run("dashes", func(t *testing.T) {
+				_, err := config.ReadConfig([]byte(`---
+          runs:
+            environment:
+              foo-fighter: bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `environment: contains invalid environment variable names`, msg)
+				}
+			})
+
+			t.Run("dots", func(t *testing.T) {
+				_, err := config.ReadConfig([]byte(`---
+          runs:
+            environment:
+              foo.fighter: bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `environment: contains invalid environment variable names`, msg)
+				}
+			})
+
+			t.Run("starts with number", func(t *testing.T) {
+				_, err := config.ReadConfig([]byte(`---
+          runs:
+            environment:
+              1foo: bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `environment: contains invalid environment variable names`, msg)
+				}
+			})
+		})
 	})
 }

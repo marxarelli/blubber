@@ -1,7 +1,7 @@
 package config
 
 import (
-	"strconv"
+	"fmt"
 
 	"phabricator.wikimedia.org/source/blubber/build"
 )
@@ -15,11 +15,11 @@ const LocalLibPrefix = "/opt/lib"
 // runtime environment.
 //
 type RunsConfig struct {
-	In          string            `yaml:"in"`          // working directory
-	As          string            `yaml:"as"`          // unprivileged user
-	UID         int               `yaml:"uid"`         // unprivileged user ID
-	GID         int               `yaml:"gid"`         // unprivileged group ID
-	Environment map[string]string `yaml:"environment"` // environment variables
+	In          string            `yaml:"in" validate:"omitempty,abspath"`  // working directory
+	As          string            `yaml:"as" validate:"omitempty,username"` // unprivileged user
+	UID         uint              `yaml:"uid"`                              // unprivileged user ID
+	GID         uint              `yaml:"gid"`                              // unprivileged group ID
+	Environment map[string]string `yaml:"environment" validate:"envvars"`   // environment variables
 }
 
 // Merge takes another RunsConfig and overwrites this struct's fields. All
@@ -92,9 +92,9 @@ func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instructio
 		if run.As != "" {
 			runAll.Runs = append(runAll.Runs,
 				build.Run{"groupadd -o -g %s -r",
-					[]string{strconv.Itoa(run.GID), run.As}},
+					[]string{fmt.Sprint(run.GID), run.As}},
 				build.Run{"useradd -o -m -d %s -r -g %s -u %s",
-					[]string{run.Home(), run.As, strconv.Itoa(run.UID), run.As}},
+					[]string{run.Home(), run.As, fmt.Sprint(run.UID), run.As}},
 				build.Run{"chown %s:%s",
 					[]string{run.As, run.As, LocalLibPrefix}},
 			)

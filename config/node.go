@@ -9,8 +9,8 @@ import (
 // whether/how to install NPM packages.
 //
 type NodeConfig struct {
-	Dependencies Flag   `yaml:"dependencies"` // install dependencies declared in package.json
-	Env          string `yaml:"env"`          // environment name ("production" install)
+	Dependencies Flag   `yaml:"dependencies"`                     // install dependencies declared in package.json
+	Env          string `yaml:"env" validate:"omitempty,nodeenv"` // environment name ("production" install)
 }
 
 // Merge takes another NodeConfig and merges its fields into this one's,

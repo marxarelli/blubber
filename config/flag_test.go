@@ -10,6 +10,7 @@ import (
 
 func TestFlagOverwrite(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    base: foo
     node: { dependencies: true }
     sharedvolume: false
     variants:
