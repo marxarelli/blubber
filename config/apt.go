@@ -4,14 +4,27 @@ import (
 	"phabricator.wikimedia.org/source/blubber/build"
 )
 
+// AptConfig represents configuration pertaining to package installation from
+// existing APT sources.
+//
 type AptConfig struct {
-	Packages []string `yaml:"packages"`
+	Packages []string `yaml:"packages" validate:"dive,debianpackage"`
 }
 
+// Merge takes another AptConfig and combines the packages declared within
+// with the packages of this AptConfig.
+//
 func (apt *AptConfig) Merge(apt2 AptConfig) {
 	apt.Packages = append(apt.Packages, apt2.Packages...)
 }
 
+// InstructionsForPhase injects build instructions that will install the
+// declared packages during the privileged phase.
+//
+// PhasePrivileged
+//
+// Updates the APT cache, installs configured packages, and cleans up.
+//
 func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	if len(apt.Packages) > 0 {
 		switch phase {

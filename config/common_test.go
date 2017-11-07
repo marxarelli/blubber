@@ -28,3 +28,35 @@ func TestCommonConfig(t *testing.T) {
 	assert.Equal(t, true, variant.SharedVolume.True)
 	assert.Equal(t, []string{"/bin/foo"}, variant.EntryPoint)
 }
+
+func TestCommonConfigValidation(t *testing.T) {
+	t.Run("base", func(t *testing.T) {
+		t.Run("ok", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        base: foo
+        variants: {}`))
+
+			assert.Nil(t, err)
+		})
+
+		t.Run("optional", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        base:
+        variants: {}`))
+
+			assert.False(t, config.IsValidationError(err))
+		})
+
+		t.Run("bad", func(t *testing.T) {
+			_, err := config.ReadConfig([]byte(`---
+        base: foo fighter
+        variants: {}`))
+
+			if assert.True(t, config.IsValidationError(err)) {
+				msg := config.HumanizeValidationError(err)
+
+				assert.Equal(t, `base: "foo fighter" is not a valid base image reference`, msg)
+			}
+		})
+	})
+}

@@ -1,3 +1,5 @@
+// Package main provides the command line interface.
+//
 package main
 
 import (
@@ -24,8 +26,13 @@ func main() {
 	cfg, err := config.ReadConfigFile(os.Args[1])
 
 	if err != nil {
-		log.Printf("Error reading config: %v\n", err)
-		os.Exit(2)
+		if config.IsValidationError(err) {
+			log.Printf("Your config is invalid:\n%v", config.HumanizeValidationError(err))
+			os.Exit(4)
+		} else {
+			log.Printf("Error reading config: %v\n", err)
+			os.Exit(2)
+		}
 	}
 
 	dockerFile, err := docker.Compile(cfg, os.Args[2])

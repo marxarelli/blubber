@@ -35,6 +35,7 @@ func expandIncludes(config *Config, name string, included map[string]bool) ([]st
 
 // ExpandVariant merges a named variant with a config. It also attempts to
 // recursively expand any included variants in the expanded variant.
+//
 func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	expanded := new(VariantConfig)
 	expanded.CommonConfig.Merge(config.CommonConfig)
@@ -53,20 +54,31 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	return expanded, nil
 }
 
+// ReadConfig unmarshals the given YAML bytes into a Config struct.
+//
 func ReadConfig(data []byte) (*Config, error) {
 	var config Config
 
 	err := yaml.Unmarshal(data, &config)
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = Validate(config)
+
 	return &config, err
 }
 
+// ReadConfigFile unmarshals the given YAML file contents into a Config
+// struct.
+//
 func ReadConfigFile(path string) (*Config, error) {
 	data, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		return nil, err
-	} else {
-		return ReadConfig(data)
 	}
+
+	return ReadConfig(data)
 }

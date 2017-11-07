@@ -11,9 +11,9 @@ import (
 
 func TestRun(t *testing.T) {
 	i := build.Run{"echo", []string{"hello"}}
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerRun docker.DockerRun
+	var dockerRun docker.Run
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerRun, di)
@@ -26,9 +26,9 @@ func TestRunAll(t *testing.T) {
 		{"echo", []string{"yo"}},
 	}}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerRun docker.DockerRun
+	var dockerRun docker.Run
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerRun, di)
@@ -38,9 +38,9 @@ func TestRunAll(t *testing.T) {
 func TestCopy(t *testing.T) {
 	i := build.Copy{[]string{"foo1", "foo2"}, "bar"}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerCopy docker.DockerCopy
+	var dockerCopy docker.Copy
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerCopy, di)
@@ -50,9 +50,9 @@ func TestCopy(t *testing.T) {
 func TestCopyFrom(t *testing.T) {
 	i := build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerCopyFrom docker.DockerCopyFrom
+	var dockerCopyFrom docker.CopyFrom
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerCopyFrom, di)
@@ -62,9 +62,9 @@ func TestCopyFrom(t *testing.T) {
 func TestEnv(t *testing.T) {
 	i := build.Env{map[string]string{"foo": "bar", "bar": "foo"}}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerEnv docker.DockerEnv
+	var dockerEnv docker.Env
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerEnv, di)
@@ -74,9 +74,9 @@ func TestEnv(t *testing.T) {
 func TestLabel(t *testing.T) {
 	i := build.Label{map[string]string{"foo": "bar", "bar": "foo"}}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerLabel docker.DockerLabel
+	var dockerLabel docker.Label
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerLabel, di)
@@ -86,9 +86,9 @@ func TestLabel(t *testing.T) {
 func TestVolume(t *testing.T) {
 	i := build.Volume{"/foo/dir"}
 
-	di, err := docker.NewDockerInstruction(i)
+	di, err := docker.NewInstruction(i)
 
-	var dockerVolume docker.DockerVolume
+	var dockerVolume docker.Volume
 
 	assert.Nil(t, err)
 	assert.IsType(t, dockerVolume, di)
@@ -97,21 +97,21 @@ func TestVolume(t *testing.T) {
 
 func TestEscapeRun(t *testing.T) {
 	i := build.Run{"/bin/true\nRUN echo HACKED!", []string{}}
-	dr, _ := docker.NewDockerInstruction(i)
+	dr, _ := docker.NewInstruction(i)
 
 	assert.Equal(t, "RUN /bin/true\\nRUN echo HACKED!\n", dr.Compile())
 }
 
 func TestEscapeCopy(t *testing.T) {
 	i := build.Copy{[]string{"file.a", "file.b"}, "dest"}
-	dr, _ := docker.NewDockerInstruction(i)
+	dr, _ := docker.NewInstruction(i)
 
 	assert.Equal(t, "COPY [\"file.a\", \"file.b\", \"dest\"]\n", dr.Compile())
 }
 
 func TestEscapeEnv(t *testing.T) {
 	i := build.Env{map[string]string{"a": "b\nRUN echo HACKED!"}}
-	dr, _ := docker.NewDockerInstruction(i)
+	dr, _ := docker.NewInstruction(i)
 
 	assert.Equal(t, "ENV a=\"b\\nRUN echo HACKED!\"\n", dr.Compile())
 }
