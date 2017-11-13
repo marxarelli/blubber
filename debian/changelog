@@ -1,4 +1,4 @@
-blubber (0.2.0) unstable; urgency=medium
+blubber (0.2.0-1) unstable; urgency=medium
 
   [ Dan Duvall ]
   * Documented all exported types, functions, and interfaces
@@ -7,7 +7,7 @@ blubber (0.2.0) unstable; urgency=medium
 
  -- Dan Duvall <dduvall@wikimedia.org>  Tue, 07 Nov 2017 13:12:35 -0800
 
-blubber (0.1.0) unstable; urgency=medium
+blubber (0.1.0-1) unstable; urgency=medium
 
   [ Tyler Cipriani ]
   * Move error handling to main
