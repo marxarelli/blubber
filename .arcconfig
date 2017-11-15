@@ -3,6 +3,6 @@
   "repository.callsign" : "GBLBR",
   "unit.engine": "GoTestEngine",
   "load" : [
-    "vendor/arcanist-go"
+    ".arcvendor/arcanist-go"
   ]
 }
