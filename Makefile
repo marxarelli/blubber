@@ -16,9 +16,9 @@ clean:
 bin/blubber:
 	mkdir -p $(dir $(BUILD_DIR))
 	ln -s $(CURDIR) $(BUILD_DIR)
-	cd $(BUILD_DIR) && go get ./...
 	cd $(BUILD_DIR) && go build -v -i -ldflags "$(GO_LDFLAGS)"
 	mkdir -p $(CURDIR)/bin && mv $(BUILD_DIR)/blubber $(BINARY)
+	rm -rf $(CURDIR)/.build
 
 
 .PHONY: all clean
