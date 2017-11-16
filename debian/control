@@ -6,9 +6,7 @@ Uploaders: Dan Duvall <dduvall@wikimedia.org>,
            Tyler Cipriani <tcipriani@wikimedia.org>
 Build-Depends: debhelper (>= 10),
                dh-golang,
-               golang-any,
-               golang-github-stretchr-testify-dev,
-               golang-gopkg-yaml.v2-dev
+               golang-any
 Standards-Version: 3.9.8
 Homepage: https://phabricator.wikimedia.org/source/blubber
 XS-Go-Import-Path: phabricator.wikimedia.org/source/blubber
