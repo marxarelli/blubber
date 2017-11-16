@@ -1,0 +1,18 @@
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+
+[[constraint]]
+  name = "github.com/docker/distribution"
+  version = "2.6.2"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.1.4"
+
+[[constraint]]
+  name = "gopkg.in/go-playground/validator.v9"
+  version = "9.9.0"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
