@@ -1,0 +1,2 @@
+extend-diff-ignore = "(^|/)(\.arcvendor|\.dockerignore|Dockerfile)($|/)"
+tar-ignore = ".arcvendor"
