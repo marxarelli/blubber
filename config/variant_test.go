@@ -65,35 +65,6 @@ func TestVariantLoops(t *testing.T) {
 	assert.Nil(t, errTwo)
 }
 
-func TestMultiLevelIncludes(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
-    base: nodejs-slim
-    variants:
-      build:
-        base: nodejs-devel
-        node: {env: build}
-      development:
-        includes: [build]
-        node: {env: development}
-        entrypoint: [npm, start]
-      test:
-        includes: [development]
-        node: {dependencies: true}
-        entrypoint: [npm, test]`))
-
-	assert.Nil(t, err)
-
-	variant, _ := config.ExpandVariant(cfg, "test")
-
-	assert.Equal(t, "nodejs-devel", variant.Base)
-	assert.Equal(t, "development", variant.Node.Env)
-
-	devVariant, _ := config.ExpandVariant(cfg, "development")
-
-	assert.True(t, variant.Node.Dependencies.True)
-	assert.False(t, devVariant.Node.Dependencies.True)
-}
-
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
 		t.Run("copies", func(t *testing.T) {
