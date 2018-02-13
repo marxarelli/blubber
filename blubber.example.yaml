@@ -2,6 +2,8 @@
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
+python:
+  version: python2.7
 runs:
   environment:
     FOO: bar
@@ -13,6 +15,8 @@ variants:
       packages: [libjpeg-dev, libyaml-dev]
     node:
       dependencies: true
+    python:
+      requirements: [requirements.txt]
 
   development:
     includes: [build]
@@ -22,6 +26,8 @@ variants:
     includes: [build]
     apt:
       packages: [chromium]
+    python:
+      requirements: [requirements.txt, test-requirements.txt, docs/requirements.txt]
     entrypoint: [npm, test]
 
   prep:
