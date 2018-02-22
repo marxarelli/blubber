@@ -47,6 +47,18 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
 }
 
+func TestCopyAs(t *testing.T) {
+	i := build.CopyAs{123, 124, build.Copy{[]string{"foo1", "foo2"}, "bar"}}
+
+	di, err := docker.NewInstruction(i)
+
+	var dockerCopyAs docker.CopyAs
+
+	assert.Nil(t, err)
+	assert.IsType(t, dockerCopyAs, di)
+	assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+}
+
 func TestCopyFrom(t *testing.T) {
 	i := build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}
 
@@ -81,6 +93,18 @@ func TestLabel(t *testing.T) {
 	assert.Nil(t, err)
 	assert.IsType(t, dockerLabel, di)
 	assert.Equal(t, "LABEL bar=\"foo\" foo=\"bar\"\n", di.Compile())
+}
+
+func TestUser(t *testing.T) {
+	i := build.User{"foo"}
+
+	di, err := docker.NewInstruction(i)
+
+	var dockerUser docker.User
+
+	assert.Nil(t, err)
+	assert.IsType(t, dockerUser, di)
+	assert.Equal(t, "USER \"foo\"\n", di.Compile())
 }
 
 func TestVolume(t *testing.T) {

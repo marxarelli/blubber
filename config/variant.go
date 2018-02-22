@@ -41,16 +41,43 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	}
 
 	instructions = append(ainstructions, instructions...)
+	var switchUser string
 
 	switch phase {
+	case build.PhasePrivileged:
+		switchUser = "root"
+
+	case build.PhasePrivilegeDropped:
+		switchUser = vc.Lives.As
+		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
+
+	case build.PhasePreInstall:
+		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
+
 	case build.PhaseInstall:
 		if vc.Copies == "" {
 			if vc.SharedVolume.True {
-				instructions = append(instructions, build.Volume{vc.Runs.In})
+				instructions = append(instructions, build.Volume{vc.Lives.In})
 			} else {
 				instructions = append(instructions, build.Copy{[]string{"."}, "."})
 			}
 		}
+
+		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
+
+	case build.PhasePostInstall:
+		switchUser = vc.Runs.As
+		instructions = build.ApplyUser(vc.Runs.UID, vc.Runs.GID, instructions)
+	}
+
+	if switchUser != "" {
+		instructions = append(
+			[]build.Instruction{
+				build.User{switchUser},
+				build.Home(switchUser),
+			},
+			instructions...,
+		)
 	}
 
 	return instructions
@@ -83,8 +110,8 @@ func (vc *VariantConfig) defaultArtifacts() []ArtifactsConfig {
 		return []ArtifactsConfig{
 			{
 				From:        vc.Copies,
-				Source:      vc.Runs.In,
-				Destination: vc.Runs.In,
+				Source:      vc.Lives.In,
+				Destination: vc.Lives.In,
 			},
 			{
 				From:        vc.Copies,

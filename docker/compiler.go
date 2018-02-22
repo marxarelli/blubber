@@ -36,6 +36,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		compileStage(buffer, stage, dependency)
 		mainStage = variant
 	}
@@ -60,18 +61,12 @@ func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 	writeln(buffer, "FROM ", baseAndStage)
 
-	writeln(buffer, "USER root")
-
 	compilePhase(buffer, vcfg, build.PhasePrivileged)
-
-	if vcfg.Runs.As != "" {
-		writeln(buffer, "USER ", vcfg.Runs.As)
-	}
 
 	compilePhase(buffer, vcfg, build.PhasePrivilegeDropped)
 
-	if vcfg.Runs.In != "" {
-		writeln(buffer, "WORKDIR ", vcfg.Runs.In)
+	if vcfg.Lives.In != "" {
+		writeln(buffer, "WORKDIR ", vcfg.Lives.In)
 	}
 
 	compilePhase(buffer, vcfg, build.PhasePreInstall)

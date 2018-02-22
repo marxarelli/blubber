@@ -3,10 +3,6 @@ base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
 runs:
-  in: /srv/service
-  as: runuser
-  uid: 666
-  gid: 666
   environment:
     FOO: bar
     BAR: baz

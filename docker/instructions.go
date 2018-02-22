@@ -23,6 +23,10 @@ func NewInstruction(instruction build.Instruction) (Instruction, error) {
 		var dockerInstruction Copy
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
+	case build.CopyAs:
+		var dockerInstruction CopyAs
+		dockerInstruction.arguments = instruction.Compile()
+		return dockerInstruction, nil
 	case build.CopyFrom:
 		var dockerInstruction CopyFrom
 		dockerInstruction.arguments = instruction.Compile()
@@ -33,6 +37,10 @@ func NewInstruction(instruction build.Instruction) (Instruction, error) {
 		return dockerInstruction, nil
 	case build.Label:
 		var dockerInstruction Label
+		dockerInstruction.arguments = instruction.Compile()
+		return dockerInstruction, nil
+	case build.User:
+		var dockerInstruction User
 		dockerInstruction.arguments = instruction.Compile()
 		return dockerInstruction, nil
 	case build.Volume:
@@ -83,6 +91,19 @@ func (dc Copy) Compile() string {
 		join(dc.arguments, ", "))
 }
 
+// CopyAs compiles into a COPY --chown instruction.
+//
+type CopyAs struct{ abstractInstruction }
+
+// Compile compiles COPY --chown instructions.
+//
+func (dca CopyAs) Compile() string {
+	return fmt.Sprintf(
+		"COPY --chown=%s [%s]\n",
+		dca.arguments[0],
+		join(dca.arguments[1:], ", "))
+}
+
 // CopyFrom compiles into a COPY --from instruction.
 //
 type CopyFrom struct{ abstractInstruction }
@@ -119,6 +140,18 @@ func (dl Label) Compile() string {
 	return fmt.Sprintf(
 		"LABEL %s\n",
 		join(dl.arguments, " "))
+}
+
+// User compiles into a USER instruction.
+//
+type User struct{ abstractInstruction }
+
+// Compile compiles USER instructions.
+//
+func (du User) Compile() string {
+	return fmt.Sprintf(
+		"USER %s\n",
+		join(du.arguments, ", "))
 }
 
 // Volume compiles into a VOLUME instruction.

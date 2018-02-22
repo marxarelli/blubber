@@ -36,6 +36,12 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, []string{`"source1"`, `"source2"`, `"dest"`}, i.Compile())
 }
 
+func TestCopyAs(t *testing.T) {
+	i := build.CopyAs{123, 124, build.Copy{[]string{"source1", "source2"}, "dest"}}
+
+	assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+}
+
 func TestCopyFrom(t *testing.T) {
 	i := build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}}
 
@@ -68,6 +74,12 @@ func TestLabel(t *testing.T) {
 		`fooname="foovalue"`,
 		`quxname="quxvalue"`,
 	}, i.Compile())
+}
+
+func TestUser(t *testing.T) {
+	i := build.User{"foo"}
+
+	assert.Equal(t, []string{`"foo"`}, i.Compile())
 }
 
 func TestVolume(t *testing.T) {

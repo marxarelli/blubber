@@ -78,6 +78,22 @@ func (copy Copy) Compile() []string {
 	return append(quoteAll(copy.Sources), quote(copy.Destination))
 }
 
+// CopyAs is a concrete build instruction for copying source
+// files/directories and setting their ownership to the given UID/GID.
+//
+type CopyAs struct {
+	UID uint // owner UID
+	GID uint // owner GID
+	Copy
+}
+
+// Compile returns the variant name unquoted and all quoted CopyAs instruction
+// fields.
+//
+func (ca CopyAs) Compile() []string {
+	return append([]string{fmt.Sprintf("%d:%d", ca.UID, ca.GID)}, ca.Copy.Compile()...)
+}
+
 // CopyFrom is a concrete build instruction for copying source
 // files/directories from one variant image to another.
 //
@@ -119,6 +135,19 @@ type Label struct {
 //
 func (label Label) Compile() []string {
 	return compileSortedKeyValues(label.Definitions)
+}
+
+// User is a build instruction for setting which user will run future
+// commands.
+//
+type User struct {
+	Name string // user name
+}
+
+// Compile returns the quoted user name.
+//
+func (user User) Compile() []string {
+	return []string{quote(user.Name)}
 }
 
 // Volume is a concrete build instruction for defining a volume mount point

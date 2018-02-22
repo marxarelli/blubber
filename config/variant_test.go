@@ -75,7 +75,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 
 		t.Run("shared volume", func(t *testing.T) {
 			cfg := config.VariantConfig{}
-			cfg.Runs.In = "/srv/service"
+			cfg.Lives.In = "/srv/service"
 			cfg.SharedVolume.True = true
 
 			assert.Equal(t,
@@ -88,10 +88,12 @@ func TestVariantConfigInstructions(t *testing.T) {
 
 		t.Run("standard source copy", func(t *testing.T) {
 			cfg := config.VariantConfig{}
+			cfg.Lives.UID = 123
+			cfg.Lives.GID = 223
 
 			assert.Equal(t,
 				[]build.Instruction{
-					build.Copy{[]string{"."}, "."},
+					build.CopyAs{123, 223, build.Copy{[]string{"."}, "."}},
 				},
 				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
@@ -105,7 +107,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 				Artifacts: []config.ArtifactsConfig{
 					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
-				CommonConfig: config.CommonConfig{Runs: config.RunsConfig{In: "/srv/service"}},
+				CommonConfig: config.CommonConfig{Lives: config.LivesConfig{In: "/srv/service"}},
 			}
 
 			assert.Equal(t,
@@ -123,7 +125,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 				Artifacts: []config.ArtifactsConfig{
 					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
-				CommonConfig: config.CommonConfig{Runs: config.RunsConfig{In: "/srv/service"}},
+				CommonConfig: config.CommonConfig{Lives: config.LivesConfig{In: "/srv/service"}},
 			}
 
 			assert.Equal(t,

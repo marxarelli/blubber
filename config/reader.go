@@ -8,6 +8,20 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// DefaultConfig contains YAML that is applied before the user's
+// configuration.
+//
+const DefaultConfig = `---
+lives:
+  in: /srv/app
+  as: somebody
+  uid: 65533
+  gid: 65533
+runs:
+  as: runuser
+  uid: 900
+  gid: 900`
+
 // ResolveIncludes iterates over and recurses through a given variant's
 // includes to build a flat slice of variant names in the correct order by
 // which they should be expanded/merged. It checks for both the existence of
@@ -74,10 +88,12 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	return expanded, nil
 }
 
-// ReadConfig unmarshals the given YAML bytes into a Config struct.
+// ReadConfig unmarshals the given YAML bytes into a new Config struct.
 //
 func ReadConfig(data []byte) (*Config, error) {
 	var config Config
+
+	yaml.Unmarshal([]byte(DefaultConfig), &config)
 
 	err := yaml.Unmarshal(data, &config)
 
