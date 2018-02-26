@@ -111,3 +111,8 @@ running (assuming you have go):
     ./bin/blubber blubber blubber.example.yaml development
     ./bin/blubber blubber blubber.example.yaml test
     ./bin/blubber blubber blubber.example.yaml production
+
+## Contribution
+
+If you'd like to make code contributions to Blubber, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
