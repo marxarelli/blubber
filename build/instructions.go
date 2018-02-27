@@ -109,6 +109,18 @@ func (cf CopyFrom) Compile() []string {
 	return append([]string{cf.From}, cf.Copy.Compile()...)
 }
 
+// EntryPoint is a build instruction for declaring a container's default
+// runtime process.
+type EntryPoint struct {
+	Command []string // command and arguments
+}
+
+// Compile returns the quoted entrypoint command and arguments.
+//
+func (ep EntryPoint) Compile() []string {
+	return quoteAll(ep.Command)
+}
+
 // Env is a concrete build instruction for declaring a container's runtime
 // environment variables.
 //
@@ -161,6 +173,19 @@ type Volume struct {
 //
 func (vol Volume) Compile() []string {
 	return []string{quote(vol.Path)}
+}
+
+// WorkingDirectory is a build instruction for defining the working directory
+// for future command and entrypoint instructions.
+//
+type WorkingDirectory struct {
+	Path string // working directory path
+}
+
+// Compile returns the quoted working directory path.
+//
+func (wd WorkingDirectory) Compile() []string {
+	return []string{quote(wd.Path)}
 }
 
 func compileSortedKeyValues(keyValues map[string]string) []string {

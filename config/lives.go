@@ -48,6 +48,10 @@ func (lives LivesConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 				build.Chown(lives.UID, lives.GID, LocalLibPrefix),
 			),
 		}}
+	case build.PhasePrivilegeDropped:
+		return []build.Instruction{
+			build.WorkingDirectory{lives.In},
+		}
 	}
 
 	return []build.Instruction{}

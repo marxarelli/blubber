@@ -31,6 +31,10 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 			i.flags = []string{"from"}
 		}
 
+	case build.EntryPoint:
+		i.name = "ENTRYPOINT"
+		i.array = true
+
 	case build.Env:
 		i.name = "ENV"
 		i.separator = " "
@@ -45,6 +49,9 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 	case build.Volume:
 		i.name = "VOLUME"
 		i.array = true
+
+	case build.WorkingDirectory:
+		i.name = "WORKDIR"
 	}
 
 	if i.name == "" {

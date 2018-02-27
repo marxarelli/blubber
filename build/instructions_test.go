@@ -48,6 +48,12 @@ func TestCopyFrom(t *testing.T) {
 	assert.Equal(t, []string{"foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
 }
 
+func TestEntryPoint(t *testing.T) {
+	i := build.EntryPoint{[]string{"/bin/foo", "bar", "baz"}}
+
+	assert.Equal(t, []string{`"/bin/foo"`, `"bar"`, `"baz"`}, i.Compile())
+}
+
 func TestEnv(t *testing.T) {
 	i := build.Env{map[string]string{
 		"fooname": "foovalue",
@@ -86,4 +92,10 @@ func TestVolume(t *testing.T) {
 	i := build.Volume{"/foo/dir"}
 
 	assert.Equal(t, []string{`"/foo/dir"`}, i.Compile())
+}
+
+func TestWorkingDirectory(t *testing.T) {
+	i := build.WorkingDirectory{"/foo/path"}
+
+	assert.Equal(t, []string{`"/foo/path"`}, i.Compile())
 }

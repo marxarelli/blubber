@@ -61,6 +61,16 @@ func TestCopyFrom(t *testing.T) {
 	}
 }
 
+func TestEntryPoint(t *testing.T) {
+	i := build.EntryPoint{[]string{"foo", "bar"}}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ENTRYPOINT [\"foo\", \"bar\"]\n", di.Compile())
+	}
+}
+
 func TestEnv(t *testing.T) {
 	i := build.Env{map[string]string{"foo": "bar", "bar": "foo"}}
 
@@ -98,6 +108,16 @@ func TestVolume(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, "VOLUME [\"/foo/dir\"]\n", di.Compile())
+	}
+}
+
+func TestWorkingDirectory(t *testing.T) {
+	i := build.WorkingDirectory{"/foo/dir"}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "WORKDIR \"/foo/dir\"\n", di.Compile())
 	}
 }
 

@@ -135,6 +135,21 @@ func TestVariantConfigInstructions(t *testing.T) {
 				cfg.InstructionsForPhase(build.PhasePostInstall),
 			)
 		})
+
+		t.Run("with entrypoint", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.EntryPoint{[]string{"/foo", "bar"}},
+				},
+				cfg.InstructionsForPhase(build.PhasePostInstall),
+			)
+		})
 	})
 }
 

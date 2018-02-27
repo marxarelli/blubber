@@ -73,7 +73,12 @@ func TestLivesConfigInstructions(t *testing.T) {
 	})
 
 	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
-		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
+		assert.Equal(t,
+			[]build.Instruction{
+				build.WorkingDirectory{"/some/directory"},
+			},
+			cfg.InstructionsForPhase(build.PhasePrivilegeDropped),
+		)
 	})
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
