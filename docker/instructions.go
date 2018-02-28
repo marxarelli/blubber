@@ -13,157 +13,90 @@ import (
 // instruction is partially compiled at this point by calling Compile() which
 // applies its own logic for escaping arguments, etc.
 //
-func NewInstruction(instruction build.Instruction) (Instruction, error) {
-	switch instruction.(type) {
+func NewInstruction(bi build.Instruction) (Instruction, error) {
+	i := instruction{arguments: bi.Compile()}
+
+	switch bi.(type) {
 	case build.Run, build.RunAll:
-		var dockerInstruction Run
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
-	case build.Copy:
-		var dockerInstruction Copy
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
-	case build.CopyAs:
-		var dockerInstruction CopyAs
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
-	case build.CopyFrom:
-		var dockerInstruction CopyFrom
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
+		i.name = "RUN"
+
+	case build.Copy, build.CopyAs, build.CopyFrom:
+		i.name = "COPY"
+		i.array = true
+
+		switch bi.(type) {
+		case build.CopyAs:
+			i.flags = []string{"chown"}
+		case build.CopyFrom:
+			i.flags = []string{"from"}
+		}
+
 	case build.Env:
-		var dockerInstruction Env
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
+		i.name = "ENV"
+		i.separator = " "
+
 	case build.Label:
-		var dockerInstruction Label
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
+		i.name = "LABEL"
+		i.separator = " "
+
 	case build.User:
-		var dockerInstruction User
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
+		i.name = "USER"
+
 	case build.Volume:
-		var dockerInstruction Volume
-		dockerInstruction.arguments = instruction.Compile()
-		return dockerInstruction, nil
+		i.name = "VOLUME"
+		i.array = true
 	}
 
-	return nil, errors.New("Unable to create Instruction")
+	if i.name == "" {
+		return nil, errors.New("Unable to create Instruction")
+	}
+
+	return i, nil
 }
 
 // Instruction defines an interface for instruction compilation.
 //
 type Instruction interface {
 	Compile() string
-	Arguments() []string
 }
 
-type abstractInstruction struct {
-	arguments []string
+type instruction struct {
+	name      string   // name (e.g. "RUN")
+	flags     []string // flags (e.g. "chown")
+	arguments []string // quoted arguments
+	separator string   // argument separator
+	array     bool     // format arguments as array (enforces ", " separator)
 }
 
-func (di abstractInstruction) Arguments() []string {
-	return di.arguments
-}
-
-// Run compiles into a RUN instruction.
+// Compile returns a valid Dockerfile line for the instruction.
 //
-type Run struct{ abstractInstruction }
-
-// Compile compiles RUN instructions.
+// Output is in the format "<name> <flags> <arguments>", e.g.
+// "COPY --chown=123:223 ["foo", "bar"]" and flag values are taken from the
+// beginning of the arguments slice.
 //
-func (dr Run) Compile() string {
-	return fmt.Sprintf(
-		"RUN %s\n",
-		join(dr.arguments, ""))
-}
+func (ins instruction) Compile() string {
+	format := ins.name + " "
+	numFlags := len(ins.flags)
+	args := make([]interface{}, numFlags+1)
 
-// Copy compiles into a COPY instruction.
-//
-type Copy struct{ abstractInstruction }
+	for i, option := range ins.flags {
+		format += "--" + option + "=%s "
+		args[i] = ins.arguments[i]
+	}
 
-// Compile compiles COPY instructions.
-//
-func (dc Copy) Compile() string {
-	return fmt.Sprintf(
-		"COPY [%s]\n",
-		join(dc.arguments, ", "))
-}
+	separator := ins.separator
 
-// CopyAs compiles into a COPY --chown instruction.
-//
-type CopyAs struct{ abstractInstruction }
+	if ins.array {
+		separator = ", "
+		format += "[%s]"
+	} else {
+		format += "%s"
+	}
 
-// Compile compiles COPY --chown instructions.
-//
-func (dca CopyAs) Compile() string {
-	return fmt.Sprintf(
-		"COPY --chown=%s [%s]\n",
-		dca.arguments[0],
-		join(dca.arguments[1:], ", "))
-}
+	format += "\n"
+	args[numFlags] = join(ins.arguments[numFlags:], separator)
 
-// CopyFrom compiles into a COPY --from instruction.
-//
-type CopyFrom struct{ abstractInstruction }
-
-// Compile compiles COPY --from instructions.
-//
-func (dcf CopyFrom) Compile() string {
-	return fmt.Sprintf(
-		"COPY --from=%s [%s]\n",
-		dcf.arguments[0],
-		join(dcf.arguments[1:], ", "))
-}
-
-// Env compiles into a ENV instruction.
-//
-type Env struct{ abstractInstruction }
-
-// Compile compiles ENV instructions.
-//
-func (de Env) Compile() string {
-	return fmt.Sprintf(
-		"ENV %s\n",
-		join(de.arguments, " "))
-}
-
-// Label compiles into a LABEL instruction.
-//
-type Label struct{ abstractInstruction }
-
-// Compile returns multiple key="value" arguments as a single LABEL
-// instruction.
-//
-func (dl Label) Compile() string {
-	return fmt.Sprintf(
-		"LABEL %s\n",
-		join(dl.arguments, " "))
-}
-
-// User compiles into a USER instruction.
-//
-type User struct{ abstractInstruction }
-
-// Compile compiles USER instructions.
-//
-func (du User) Compile() string {
-	return fmt.Sprintf(
-		"USER %s\n",
-		join(du.arguments, ", "))
-}
-
-// Volume compiles into a VOLUME instruction.
-//
-type Volume struct{ abstractInstruction }
-
-// Compile compiles VOLUME instructions.
-//
-func (dv Volume) Compile() string {
-	return fmt.Sprintf(
-		"VOLUME [%s]\n",
-		join(dv.arguments, ", "))
+	return fmt.Sprintf(format, args...)
 }
 
 func join(arguments []string, delimiter string) string {
