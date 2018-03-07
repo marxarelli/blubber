@@ -9,12 +9,12 @@ import (
 //
 type CommonConfig struct {
 	Base         string       `yaml:"base" validate:"omitempty,baseimage"` // name/path to base image
-	Apt          AptConfig    `yaml:"apt"`                                 // APT related configuration
-	Node         NodeConfig   `yaml:"node"`                                // Node related configuration
-	Python       PythonConfig `yaml:"python"`                              // Python related configuration
-	Lives        LivesConfig  `yaml:"lives"`                               // application owner/dir configuration
-	Runs         RunsConfig   `yaml:"runs"`                                // runtime environment configuration
-	SharedVolume Flag         `yaml:"sharedvolume"`                        // define a volume for application
+	Apt          AptConfig    `yaml:"apt"`                                 // APT related
+	Node         NodeConfig   `yaml:"node"`                                // Node related
+	Python       PythonConfig `yaml:"python"`                              // Python related
+	Lives        LivesConfig  `yaml:"lives"`                               // application owner/dir
+	Runs         RunsConfig   `yaml:"runs"`                                // runtime environment
+	SharedVolume Flag         `yaml:"sharedvolume"`                        // use volume for app
 	EntryPoint   []string     `yaml:"entrypoint"`                          // entry-point executable
 }
 

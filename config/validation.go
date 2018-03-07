@@ -52,6 +52,8 @@ var (
 		"baseimage":     isBaseImage,
 		"debianpackage": isDebianPackage,
 		"envvars":       isEnvironmentVariables,
+		"isfalse":       isFalse,
+		"istrue":        isTrue,
 		"variantref":    isVariantReference,
 		"variants":      hasVariantNames,
 	}
@@ -61,11 +63,10 @@ type ctxKey uint8
 
 const rootCfgCtx ctxKey = iota
 
-// Validate runs all validations defined for config fields against the given
-// Config value. If the returned error is not nil, it will contain a
-// user-friendly message describing all invalid field values.
+// NewValidator returns a validator instance for which our custom aliases and
+// functions are registered.
 //
-func Validate(config Config) error {
+func NewValidator() *validator.Validate {
 	validate := validator.New()
 
 	validate.RegisterTagNameFunc(resolveYAMLTagName)
@@ -77,6 +78,16 @@ func Validate(config Config) error {
 	for name, f := range validatorFuncs {
 		validate.RegisterValidationCtx(name, f)
 	}
+
+	return validate
+}
+
+// Validate runs all validations defined for config fields against the given
+// Config value. If the returned error is not nil, it will contain a
+// user-friendly message describing all invalid field values.
+//
+func Validate(config Config) error {
+	validate := NewValidator()
 
 	ctx := context.WithValue(context.Background(), rootCfgCtx, config)
 
@@ -167,6 +178,18 @@ func isEnvironmentVariables(_ context.Context, fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func isFalse(_ context.Context, fl validator.FieldLevel) bool {
+	val, ok := fl.Field().Interface().(bool)
+
+	return ok && val == false
+}
+
+func isTrue(_ context.Context, fl validator.FieldLevel) bool {
+	val, ok := fl.Field().Interface().(bool)
+
+	return ok && val == true
 }
 
 func isVariantReference(ctx context.Context, fl validator.FieldLevel) bool {

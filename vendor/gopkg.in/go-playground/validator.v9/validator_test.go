@@ -1564,10 +1564,6 @@ func TestCrossNamespaceFieldValidation(t *testing.T) {
 		Name string
 	}
 
-	type MapStruct struct {
-		Name string
-	}
-
 	type Inner struct {
 		CreatedAt        *time.Time
 		Slice            []string
@@ -1653,10 +1649,10 @@ func TestCrossNamespaceFieldValidation(t *testing.T) {
 	Equal(t, kind, reflect.String)
 	Equal(t, current.String(), "val2")
 
-	current, kind, ok = v.getStructFieldOKInternal(val, "Inner.CrazyNonExistantField")
+	current, _, ok = v.getStructFieldOKInternal(val, "Inner.CrazyNonExistantField")
 	Equal(t, ok, false)
 
-	current, kind, ok = v.getStructFieldOKInternal(val, "Inner.Slice[101]")
+	current, _, ok = v.getStructFieldOKInternal(val, "Inner.Slice[101]")
 	Equal(t, ok, false)
 
 	current, kind, ok = v.getStructFieldOKInternal(val, "Inner.Map[key3]")
@@ -1854,8 +1850,6 @@ func TestSQLValue2Validation(t *testing.T) {
 
 	PanicMatches(t, func() { validate.Var(val, "required") }, "SQL Driver Valuer error: some kind of error")
 
-	type myValuer valuer
-
 	myVal := valuer{
 		Name: "",
 	}
@@ -1906,8 +1900,6 @@ func TestSQLValueValidation(t *testing.T) {
 	val.Name = "errorme"
 
 	PanicMatches(t, func() { errs = validate.Var(val, "required") }, "SQL Driver Valuer error: some kind of error")
-
-	type myValuer valuer
 
 	myVal := valuer{
 		Name: "",
@@ -2696,11 +2688,8 @@ func TestBadKeyValidation(t *testing.T) {
 
 func TestInterfaceErrValidation(t *testing.T) {
 
-	var v1 interface{}
-	var v2 interface{}
-
-	v2 = 1
-	v1 = v2
+	var v2 interface{} = 1
+	var v1 interface{} = v2
 
 	validate := New()
 	errs := validate.Var(v1, "len=1")
@@ -4325,6 +4314,66 @@ func TestIsEqValidation(t *testing.T) {
 	PanicMatches(t, func() { validate.Var(now, "eq=now") }, "Bad field type time.Time")
 }
 
+func TestOneOfValidation(t *testing.T) {
+	validate := New()
+
+	passSpecs := []struct {
+		f interface{}
+		t string
+	}{
+		{f: "red", t: "oneof=red green"},
+		{f: "green", t: "oneof=red green"},
+		{f: 5, t: "oneof=5 6"},
+		{f: 6, t: "oneof=5 6"},
+		{f: int8(6), t: "oneof=5 6"},
+		{f: int16(6), t: "oneof=5 6"},
+		{f: int32(6), t: "oneof=5 6"},
+		{f: int64(6), t: "oneof=5 6"},
+		{f: uint(6), t: "oneof=5 6"},
+		{f: uint8(6), t: "oneof=5 6"},
+		{f: uint16(6), t: "oneof=5 6"},
+		{f: uint32(6), t: "oneof=5 6"},
+		{f: uint64(6), t: "oneof=5 6"},
+	}
+
+	for _, spec := range passSpecs {
+		t.Logf("%#v", spec)
+		errs := validate.Var(spec.f, spec.t)
+		Equal(t, errs, nil)
+	}
+
+	failSpecs := []struct {
+		f interface{}
+		t string
+	}{
+		{f: "", t: "oneof=red green"},
+		{f: "yellow", t: "oneof=red green"},
+		{f: 5, t: "oneof=red green"},
+		{f: 6, t: "oneof=red green"},
+		{f: 6, t: "oneof=7"},
+		{f: uint(6), t: "oneof=7"},
+		{f: int8(5), t: "oneof=red green"},
+		{f: int16(5), t: "oneof=red green"},
+		{f: int32(5), t: "oneof=red green"},
+		{f: int64(5), t: "oneof=red green"},
+		{f: uint(5), t: "oneof=red green"},
+		{f: uint8(5), t: "oneof=red green"},
+		{f: uint16(5), t: "oneof=red green"},
+		{f: uint32(5), t: "oneof=red green"},
+		{f: uint64(5), t: "oneof=red green"},
+	}
+
+	for _, spec := range failSpecs {
+		t.Logf("%#v", spec)
+		errs := validate.Var(spec.f, spec.t)
+		AssertError(t, errs, "", "", "", "", "oneof")
+	}
+
+	PanicMatches(t, func() {
+		validate.Var(3.14, "oneof=red green")
+	}, "Bad field type float64")
+}
+
 func TestBase64Validation(t *testing.T) {
 
 	validate := New()
@@ -5584,6 +5633,13 @@ func TestOrTag(t *testing.T) {
 	s = ""
 	errs = validate.Var(s, "omitempty,rgb|rgba")
 	Equal(t, errs, nil)
+
+	s = "green"
+	errs = validate.Var(s, "eq=|eq=blue,rgb|rgba") //should fail on first validation block
+	NotEqual(t, errs, nil)
+	ve := errs.(ValidationErrors)
+	Equal(t, len(ve), 1)
+	Equal(t, ve[0].Tag(), "eq=|eq=blue")
 
 	s = "this is right, but a blank or isn't"
 
@@ -7139,7 +7195,7 @@ func TestValidateStructRegisterCtx(t *testing.T) {
 	Equal(t, ctxSlVal, "slVal")
 }
 
-func TestHostnameValidation(t *testing.T) {
+func TestHostnameRFC952Validation(t *testing.T) {
 	tests := []struct {
 		param    string
 		expected bool
@@ -7150,6 +7206,7 @@ func TestHostnameValidation(t *testing.T) {
 		{"test.example24.com", true},
 		{"test24.example24.com", true},
 		{"example", true},
+		{"1.foo.com", false},
 		{"test.example.com.", false},
 		{"example.com.", false},
 		{"example24.com.", false},
@@ -7171,15 +7228,112 @@ func TestHostnameValidation(t *testing.T) {
 
 		if test.expected {
 			if !IsEqual(errs, nil) {
-				t.Fatalf("Index: %d hostname failed Error: %s", i, errs)
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
 			}
 		} else {
 			if IsEqual(errs, nil) {
-				t.Fatalf("Index: %d hostname failed Error: %s", i, errs)
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
 			} else {
 				val := getError(errs, "", "")
 				if val.Tag() != "hostname" {
-					t.Fatalf("Index: %d hostname failed Error: %s", i, errs)
+					t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+				}
+			}
+		}
+	}
+}
+
+func TestHostnameRFC1123Validation(t *testing.T) {
+	tests := []struct {
+		param    string
+		expected bool
+	}{
+		{"test.example.com", true},
+		{"example.com", true},
+		{"example24.com", true},
+		{"test.example24.com", true},
+		{"test24.example24.com", true},
+		{"example", true},
+		{"1.foo.com", true},
+		{"test.example.com.", false},
+		{"example.com.", false},
+		{"example24.com.", false},
+		{"test.example24.com.", false},
+		{"test24.example24.com.", false},
+		{"example.", false},
+		{"192.168.0.1", true},
+		{"email@example.com", false},
+		{"2001:cdba:0000:0000:0000:0000:3257:9652", false},
+		{"2001:cdba:0:0:0:0:3257:9652", false},
+		{"2001:cdba::3257:9652", false},
+	}
+
+	validate := New()
+
+	for i, test := range tests {
+
+		errs := validate.Var(test.param, "hostname_rfc1123")
+
+		if test.expected {
+			if !IsEqual(errs, nil) {
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+			}
+		} else {
+			if IsEqual(errs, nil) {
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+			} else {
+				val := getError(errs, "", "")
+				if val.Tag() != "hostname_rfc1123" {
+					t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+				}
+			}
+		}
+	}
+}
+
+func TestHostnameRFC1123AliasValidation(t *testing.T) {
+	tests := []struct {
+		param    string
+		expected bool
+	}{
+		{"test.example.com", true},
+		{"example.com", true},
+		{"example24.com", true},
+		{"test.example24.com", true},
+		{"test24.example24.com", true},
+		{"example", true},
+		{"1.foo.com", true},
+		{"test.example.com.", false},
+		{"example.com.", false},
+		{"example24.com.", false},
+		{"test.example24.com.", false},
+		{"test24.example24.com.", false},
+		{"example.", false},
+		{"192.168.0.1", true},
+		{"email@example.com", false},
+		{"2001:cdba:0000:0000:0000:0000:3257:9652", false},
+		{"2001:cdba:0:0:0:0:3257:9652", false},
+		{"2001:cdba::3257:9652", false},
+	}
+
+	validate := New()
+	validate.RegisterAlias("hostname", "hostname_rfc1123")
+
+	for i, test := range tests {
+
+		errs := validate.Var(test.param, "hostname")
+
+		if test.expected {
+			if !IsEqual(errs, nil) {
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+			}
+		} else {
+			if IsEqual(errs, nil) {
+				t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
+			} else {
+				val := getError(errs, "", "")
+				if val.Tag() != "hostname" {
+					t.Fatalf("Index: %d hostname failed Error: %v", i, errs)
 				}
 			}
 		}
@@ -7219,15 +7373,15 @@ func TestFQDNValidation(t *testing.T) {
 
 		if test.expected {
 			if !IsEqual(errs, nil) {
-				t.Fatalf("Index: %d fqdn failed Error: %s", i, errs)
+				t.Fatalf("Index: %d fqdn failed Error: %v", i, errs)
 			}
 		} else {
 			if IsEqual(errs, nil) {
-				t.Fatalf("Index: %d fqdn failed Error: %s", i, errs)
+				t.Fatalf("Index: %d fqdn failed Error: %v", i, errs)
 			} else {
 				val := getError(errs, "", "")
 				if val.Tag() != "fqdn" {
-					t.Fatalf("Index: %d fqdn failed Error: %s", i, errs)
+					t.Fatalf("Index: %d fqdn failed Error: %v", i, errs)
 				}
 			}
 		}
