@@ -67,12 +67,6 @@ func TestVariantLoops(t *testing.T) {
 
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
-		t.Run("copies", func(t *testing.T) {
-			cfg := config.VariantConfig{Copies: "foo"}
-
-			assert.Empty(t, cfg.InstructionsForPhase(build.PhaseInstall))
-		})
-
 		t.Run("shared volume", func(t *testing.T) {
 			cfg := config.VariantConfig{}
 			cfg.Lives.In = "/srv/service"
@@ -98,9 +92,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
-	})
 
-	t.Run("PhasePostInstall", func(t *testing.T) {
 		t.Run("for copies and artifacts", func(t *testing.T) {
 			cfg := config.VariantConfig{
 				Copies: "foo",
@@ -116,7 +108,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 					build.CopyFrom{"foo", build.Copy{[]string{config.LocalLibPrefix}, config.LocalLibPrefix}},
 					build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}},
 				},
-				cfg.InstructionsForPhase(build.PhasePostInstall),
+				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
 
@@ -125,17 +117,29 @@ func TestVariantConfigInstructions(t *testing.T) {
 				Artifacts: []config.ArtifactsConfig{
 					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
-				CommonConfig: config.CommonConfig{Lives: config.LivesConfig{In: "/srv/service"}},
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						In: "/srv/service",
+						UserConfig: config.UserConfig{
+							UID: 123,
+							GID: 223,
+						},
+					},
+				},
 			}
 
 			assert.Equal(t,
 				[]build.Instruction{
-					build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}},
+					build.CopyAs{123, 223, build.Copy{[]string{"."}, "."}},
+					build.CopyAs{123, 223, build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}}},
 				},
-				cfg.InstructionsForPhase(build.PhasePostInstall),
+				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
 
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
 		t.Run("with entrypoint", func(t *testing.T) {
 			cfg := config.VariantConfig{
 				CommonConfig: config.CommonConfig{

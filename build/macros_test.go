@@ -12,12 +12,14 @@ func TestApplyUser(t *testing.T) {
 	instructions := []build.Instruction{
 		build.Copy{[]string{"foo"}, "bar"},
 		build.Copy{[]string{"baz"}, "qux"},
+		build.CopyFrom{"foo", build.Copy{[]string{"a"}, "b"}},
 	}
 
 	assert.Equal(t,
 		[]build.Instruction{
 			build.CopyAs{123, 223, build.Copy{[]string{"foo"}, "bar"}},
 			build.CopyAs{123, 223, build.Copy{[]string{"baz"}, "qux"}},
+			build.CopyAs{123, 223, build.CopyFrom{"foo", build.Copy{[]string{"a"}, "b"}}},
 		},
 		build.ApplyUser(123, 223, instructions),
 	)

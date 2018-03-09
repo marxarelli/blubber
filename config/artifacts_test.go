@@ -60,14 +60,18 @@ func TestArtifactsConfigInstructions(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
 	})
 
-	t.Run("PhasePostInstall", func(t *testing.T) {
+	t.Run("PhaseInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{build.CopyFrom{
 				"foo",
 				build.Copy{[]string{"/source/path"}, "/destination/path"},
 			}},
-			cfg.InstructionsForPhase(build.PhasePostInstall),
+			cfg.InstructionsForPhase(build.PhaseInstall),
 		)
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
 	})
 }
 

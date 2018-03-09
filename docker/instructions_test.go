@@ -42,13 +42,25 @@ func TestCopy(t *testing.T) {
 }
 
 func TestCopyAs(t *testing.T) {
-	i := build.CopyAs{123, 124, build.Copy{[]string{"foo1", "foo2"}, "bar"}}
+	t.Run("with Copy", func(t *testing.T) {
+		i := build.CopyAs{123, 124, build.Copy{[]string{"foo1", "foo2"}, "bar"}}
 
-	di, err := docker.NewInstruction(i)
+		di, err := docker.NewInstruction(i)
 
-	if assert.NoError(t, err) {
-		assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
-	}
+		if assert.NoError(t, err) {
+			assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		}
+	})
+
+	t.Run("with CopyFrom", func(t *testing.T) {
+		i := build.CopyAs{123, 124, build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}}
+
+		di, err := docker.NewInstruction(i)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, "COPY --chown=123:124 --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		}
+	})
 }
 
 func TestCopyFrom(t *testing.T) {

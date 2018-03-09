@@ -11,9 +11,10 @@ func ApplyUser(uid uint, gid uint, instructions []Instruction) []Instruction {
 	applied := make([]Instruction, len(instructions))
 
 	for i, instruction := range instructions {
-		if copy, iscopy := instruction.(Copy); iscopy {
-			applied[i] = CopyAs{uid, gid, copy}
-		} else {
+		switch instruction.(type) {
+		case Copy, CopyFrom:
+			applied[i] = CopyAs{uid, gid, instruction}
+		default:
 			applied[i] = instruction
 		}
 	}

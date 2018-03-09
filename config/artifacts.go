@@ -23,14 +23,14 @@ type ArtifactsConfig struct {
 // InstructionsForPhase injects instructions into the given build phase that
 // copy configured artifacts.
 //
-// PhasePostInstall
+// PhaseInstall
 //
 // Injects build.CopyFrom instructions for the configured source and
 // destination paths.
 //
 func (ac ArtifactsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	switch phase {
-	case build.PhasePostInstall:
+	case build.PhaseInstall:
 		return []build.Instruction{
 			build.CopyFrom{ac.From, build.Copy{[]string{ac.Source}, ac.Destination}},
 		}

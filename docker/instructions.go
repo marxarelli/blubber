@@ -26,7 +26,12 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 
 		switch bi.(type) {
 		case build.CopyAs:
-			i.flags = []string{"chown"}
+			switch bi.(build.CopyAs).Instruction.(type) {
+			case build.Copy:
+				i.flags = []string{"chown"}
+			case build.CopyFrom:
+				i.flags = []string{"chown", "from"}
+			}
 		case build.CopyFrom:
 			i.flags = []string{"from"}
 		}

@@ -34,14 +34,9 @@ func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 //
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
-	ainstructions := []build.Instruction{}
 
-	for _, artifact := range vc.allArtifacts() {
-		ainstructions = append(ainstructions, artifact.InstructionsForPhase(phase)...)
-	}
-
-	instructions = append(ainstructions, instructions...)
 	var switchUser string
+	var uid, gid uint
 
 	switch phase {
 	case build.PhasePrivileged:
@@ -49,12 +44,14 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 
 	case build.PhasePrivilegeDropped:
 		switchUser = vc.Lives.As
-		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
+		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 	case build.PhasePreInstall:
-		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
+		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 	case build.PhaseInstall:
+		uid, gid = vc.Lives.UID, vc.Lives.GID
+
 		if vc.Copies == "" {
 			if vc.SharedVolume.True {
 				instructions = append(instructions, build.Volume{vc.Lives.In})
@@ -63,15 +60,17 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 			}
 		}
 
-		instructions = build.ApplyUser(vc.Lives.UID, vc.Lives.GID, instructions)
-
 	case build.PhasePostInstall:
 		switchUser = vc.Runs.As
-		instructions = build.ApplyUser(vc.Runs.UID, vc.Runs.GID, instructions)
+		uid, gid = vc.Runs.UID, vc.Runs.GID
 
 		if len(vc.EntryPoint) > 0 {
 			instructions = append(instructions, build.EntryPoint{vc.EntryPoint})
 		}
+	}
+
+	for _, artifact := range vc.allArtifacts() {
+		instructions = append(instructions, artifact.InstructionsForPhase(phase)...)
 	}
 
 	if switchUser != "" {
@@ -82,6 +81,10 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 			},
 			instructions...,
 		)
+	}
+
+	if uid != 0 {
+		instructions = build.ApplyUser(uid, gid, instructions)
 	}
 
 	return instructions

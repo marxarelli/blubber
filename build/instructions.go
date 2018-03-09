@@ -81,17 +81,20 @@ func (copy Copy) Compile() []string {
 // CopyAs is a concrete build instruction for copying source
 // files/directories and setting their ownership to the given UID/GID.
 //
+// While it can technically wrap any build.Instruction, it is meant to be used
+// with build.Copy and build.CopyFrom to enforce file/directory ownership.
+//
 type CopyAs struct {
 	UID uint // owner UID
 	GID uint // owner GID
-	Copy
+	Instruction
 }
 
 // Compile returns the variant name unquoted and all quoted CopyAs instruction
 // fields.
 //
 func (ca CopyAs) Compile() []string {
-	return append([]string{fmt.Sprintf("%d:%d", ca.UID, ca.GID)}, ca.Copy.Compile()...)
+	return append([]string{fmt.Sprintf("%d:%d", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
 }
 
 // CopyFrom is a concrete build instruction for copying source

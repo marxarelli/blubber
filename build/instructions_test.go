@@ -37,9 +37,25 @@ func TestCopy(t *testing.T) {
 }
 
 func TestCopyAs(t *testing.T) {
-	i := build.CopyAs{123, 124, build.Copy{[]string{"source1", "source2"}, "dest"}}
+	t.Run("wrapping Copy", func(t *testing.T) {
+		i := build.CopyAs{
+			123,
+			124,
+			build.Copy{[]string{"source1", "source2"}, "dest"},
+		}
 
-	assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+		assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	})
+
+	t.Run("wrapping CopyFrom", func(t *testing.T) {
+		i := build.CopyAs{
+			123,
+			124,
+			build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}},
+		}
+
+		assert.Equal(t, []string{"123:124", "foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	})
 }
 
 func TestCopyFrom(t *testing.T) {
