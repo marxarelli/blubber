@@ -154,6 +154,60 @@ func TestVariantConfigInstructions(t *testing.T) {
 				cfg.InstructionsForPhase(build.PhasePostInstall),
 			)
 		})
+
+		t.Run("without Runs.Insecurely", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						UserConfig: config.UserConfig{
+							As: "foouser",
+						},
+					},
+					Runs: config.RunsConfig{
+						Insecurely: config.Flag{True: false},
+						UserConfig: config.UserConfig{
+							As: "baruser",
+						},
+					},
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.User{"baruser"},
+					build.Env{map[string]string{"HOME": "/home/baruser"}},
+					build.EntryPoint{[]string{"/foo", "bar"}},
+				},
+				cfg.InstructionsForPhase(build.PhasePostInstall),
+			)
+		})
+
+		t.Run("with Runs.Insecurely", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						UserConfig: config.UserConfig{
+							As: "foouser",
+						},
+					},
+					Runs: config.RunsConfig{
+						Insecurely: config.Flag{True: true},
+						UserConfig: config.UserConfig{
+							As: "baruser",
+						},
+					},
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.EntryPoint{[]string{"/foo", "bar"}},
+				},
+				cfg.InstructionsForPhase(build.PhasePostInstall),
+			)
+		})
 	})
 }
 

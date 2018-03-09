@@ -14,6 +14,7 @@ func TestRunsConfig(t *testing.T) {
     base: foo
     runs:
       as: someuser
+      insecurely: true
       uid: 666
       gid: 777
       environment: { FOO: bar }
@@ -27,6 +28,7 @@ func TestRunsConfig(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, "someuser", variant.Runs.As)
+	assert.Equal(t, true, variant.Runs.Insecurely.True)
 	assert.Equal(t, uint(666), variant.Runs.UID)
 	assert.Equal(t, uint(777), variant.Runs.GID)
 	assert.Equal(t, map[string]string{"FOO": "bar"}, variant.Runs.Environment)

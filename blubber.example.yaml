@@ -28,6 +28,8 @@ variants:
       packages: [chromium]
     python:
       requirements: [requirements.txt, test-requirements.txt, docs/requirements.txt]
+    runs:
+      insecurely: true
     entrypoint: [npm, test]
 
   prep:

@@ -61,8 +61,12 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		}
 
 	case build.PhasePostInstall:
-		switchUser = vc.Runs.As
-		uid, gid = vc.Runs.UID, vc.Runs.GID
+		if vc.Runs.Insecurely.True {
+			uid, gid = vc.Lives.UID, vc.Lives.GID
+		} else {
+			switchUser = vc.Runs.As
+			uid, gid = vc.Runs.UID, vc.Runs.GID
+		}
 
 		if len(vc.EntryPoint) > 0 {
 			instructions = append(instructions, build.EntryPoint{vc.EntryPoint})

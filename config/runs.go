@@ -9,6 +9,7 @@ import (
 //
 type RunsConfig struct {
 	UserConfig  `yaml:",inline"`
+	Insecurely  Flag              `yaml:"insecurely"`                     // runs user owns application files
 	Environment map[string]string `yaml:"environment" validate:"envvars"` // environment variables
 }
 
@@ -18,6 +19,7 @@ type RunsConfig struct {
 //
 func (run *RunsConfig) Merge(run2 RunsConfig) {
 	run.UserConfig.Merge(run2.UserConfig)
+	run.Insecurely.Merge(run2.Insecurely)
 
 	if run.Environment == nil {
 		run.Environment = make(map[string]string)
