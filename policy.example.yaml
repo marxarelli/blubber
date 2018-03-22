@@ -1,5 +1,5 @@
 enforcements:
   - path: variants.production.base
     rule: oneof=debian:jessie debian:jessie-slim
-  - path: variants.production.node.dependencies
-    rule: istrue
+  - path: variants.production.runs.insecurely
+    rule: isfalse
