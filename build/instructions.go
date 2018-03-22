@@ -78,6 +78,25 @@ func (copy Copy) Compile() []string {
 	return append(quoteAll(copy.Sources), quote(copy.Destination))
 }
 
+// CopyAs is a concrete build instruction for copying source
+// files/directories and setting their ownership to the given UID/GID.
+//
+// While it can technically wrap any build.Instruction, it is meant to be used
+// with build.Copy and build.CopyFrom to enforce file/directory ownership.
+//
+type CopyAs struct {
+	UID uint // owner UID
+	GID uint // owner GID
+	Instruction
+}
+
+// Compile returns the variant name unquoted and all quoted CopyAs instruction
+// fields.
+//
+func (ca CopyAs) Compile() []string {
+	return append([]string{fmt.Sprintf("%d:%d", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
+}
+
 // CopyFrom is a concrete build instruction for copying source
 // files/directories from one variant image to another.
 //
@@ -91,6 +110,18 @@ type CopyFrom struct {
 //
 func (cf CopyFrom) Compile() []string {
 	return append([]string{cf.From}, cf.Copy.Compile()...)
+}
+
+// EntryPoint is a build instruction for declaring a container's default
+// runtime process.
+type EntryPoint struct {
+	Command []string // command and arguments
+}
+
+// Compile returns the quoted entrypoint command and arguments.
+//
+func (ep EntryPoint) Compile() []string {
+	return quoteAll(ep.Command)
 }
 
 // Env is a concrete build instruction for declaring a container's runtime
@@ -121,6 +152,19 @@ func (label Label) Compile() []string {
 	return compileSortedKeyValues(label.Definitions)
 }
 
+// User is a build instruction for setting which user will run future
+// commands.
+//
+type User struct {
+	Name string // user name
+}
+
+// Compile returns the quoted user name.
+//
+func (user User) Compile() []string {
+	return []string{quote(user.Name)}
+}
+
 // Volume is a concrete build instruction for defining a volume mount point
 // within the container.
 //
@@ -132,6 +176,19 @@ type Volume struct {
 //
 func (vol Volume) Compile() []string {
 	return []string{quote(vol.Path)}
+}
+
+// WorkingDirectory is a build instruction for defining the working directory
+// for future command and entrypoint instructions.
+//
+type WorkingDirectory struct {
+	Path string // working directory path
+}
+
+// Compile returns the quoted working directory path.
+//
+func (wd WorkingDirectory) Compile() []string {
+	return []string{quote(wd.Path)}
 }
 
 func compileSortedKeyValues(keyValues map[string]string) []string {

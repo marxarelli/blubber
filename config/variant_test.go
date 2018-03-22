@@ -65,46 +65,11 @@ func TestVariantLoops(t *testing.T) {
 	assert.Nil(t, errTwo)
 }
 
-func TestMultiLevelIncludes(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
-    base: nodejs-slim
-    variants:
-      build:
-        base: nodejs-devel
-        node: {env: build}
-      development:
-        includes: [build]
-        node: {env: development}
-        entrypoint: [npm, start]
-      test:
-        includes: [development]
-        node: {dependencies: true}
-        entrypoint: [npm, test]`))
-
-	assert.Nil(t, err)
-
-	variant, _ := config.ExpandVariant(cfg, "test")
-
-	assert.Equal(t, "nodejs-devel", variant.Base)
-	assert.Equal(t, "development", variant.Node.Env)
-
-	devVariant, _ := config.ExpandVariant(cfg, "development")
-
-	assert.True(t, variant.Node.Dependencies.True)
-	assert.False(t, devVariant.Node.Dependencies.True)
-}
-
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
-		t.Run("copies", func(t *testing.T) {
-			cfg := config.VariantConfig{Copies: "foo"}
-
-			assert.Empty(t, cfg.InstructionsForPhase(build.PhaseInstall))
-		})
-
 		t.Run("shared volume", func(t *testing.T) {
 			cfg := config.VariantConfig{}
-			cfg.Runs.In = "/srv/service"
+			cfg.Lives.In = "/srv/service"
 			cfg.SharedVolume.True = true
 
 			assert.Equal(t,
@@ -117,24 +82,24 @@ func TestVariantConfigInstructions(t *testing.T) {
 
 		t.Run("standard source copy", func(t *testing.T) {
 			cfg := config.VariantConfig{}
+			cfg.Lives.UID = 123
+			cfg.Lives.GID = 223
 
 			assert.Equal(t,
 				[]build.Instruction{
-					build.Copy{[]string{"."}, "."},
+					build.CopyAs{123, 223, build.Copy{[]string{"."}, "."}},
 				},
 				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
-	})
 
-	t.Run("PhasePostInstall", func(t *testing.T) {
 		t.Run("for copies and artifacts", func(t *testing.T) {
 			cfg := config.VariantConfig{
 				Copies: "foo",
 				Artifacts: []config.ArtifactsConfig{
 					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
-				CommonConfig: config.CommonConfig{Runs: config.RunsConfig{In: "/srv/service"}},
+				CommonConfig: config.CommonConfig{Lives: config.LivesConfig{In: "/srv/service"}},
 			}
 
 			assert.Equal(t,
@@ -143,7 +108,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 					build.CopyFrom{"foo", build.Copy{[]string{config.LocalLibPrefix}, config.LocalLibPrefix}},
 					build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}},
 				},
-				cfg.InstructionsForPhase(build.PhasePostInstall),
+				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
 
@@ -152,12 +117,93 @@ func TestVariantConfigInstructions(t *testing.T) {
 				Artifacts: []config.ArtifactsConfig{
 					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
-				CommonConfig: config.CommonConfig{Runs: config.RunsConfig{In: "/srv/service"}},
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						In: "/srv/service",
+						UserConfig: config.UserConfig{
+							UID: 123,
+							GID: 223,
+						},
+					},
+				},
 			}
 
 			assert.Equal(t,
 				[]build.Instruction{
-					build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}},
+					build.CopyAs{123, 223, build.Copy{[]string{"."}, "."}},
+					build.CopyAs{123, 223, build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}}},
+				},
+				cfg.InstructionsForPhase(build.PhaseInstall),
+			)
+		})
+
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		t.Run("with entrypoint", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.EntryPoint{[]string{"/foo", "bar"}},
+				},
+				cfg.InstructionsForPhase(build.PhasePostInstall),
+			)
+		})
+
+		t.Run("without Runs.Insecurely", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						UserConfig: config.UserConfig{
+							As: "foouser",
+						},
+					},
+					Runs: config.RunsConfig{
+						Insecurely: config.Flag{True: false},
+						UserConfig: config.UserConfig{
+							As: "baruser",
+						},
+					},
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.User{"baruser"},
+					build.Env{map[string]string{"HOME": "/home/baruser"}},
+					build.EntryPoint{[]string{"/foo", "bar"}},
+				},
+				cfg.InstructionsForPhase(build.PhasePostInstall),
+			)
+		})
+
+		t.Run("with Runs.Insecurely", func(t *testing.T) {
+			cfg := config.VariantConfig{
+				CommonConfig: config.CommonConfig{
+					Lives: config.LivesConfig{
+						UserConfig: config.UserConfig{
+							As: "foouser",
+						},
+					},
+					Runs: config.RunsConfig{
+						Insecurely: config.Flag{True: true},
+						UserConfig: config.UserConfig{
+							As: "baruser",
+						},
+					},
+					EntryPoint: []string{"/foo", "bar"},
+				},
+			}
+
+			assert.Equal(t,
+				[]build.Instruction{
+					build.EntryPoint{[]string{"/foo", "bar"}},
 				},
 				cfg.InstructionsForPhase(build.PhasePostInstall),
 			)

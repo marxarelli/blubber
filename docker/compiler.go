@@ -5,7 +5,6 @@ package docker
 
 import (
 	"bytes"
-	"strings"
 
 	"phabricator.wikimedia.org/source/blubber/build"
 	"phabricator.wikimedia.org/source/blubber/config"
@@ -36,6 +35,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		compileStage(buffer, stage, dependency)
 		mainStage = variant
 	}
@@ -60,28 +60,8 @@ func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 
 	writeln(buffer, "FROM ", baseAndStage)
 
-	writeln(buffer, "USER root")
-
-	compilePhase(buffer, vcfg, build.PhasePrivileged)
-
-	if vcfg.Runs.As != "" {
-		writeln(buffer, "USER ", vcfg.Runs.As)
-	}
-
-	compilePhase(buffer, vcfg, build.PhasePrivilegeDropped)
-
-	if vcfg.Runs.In != "" {
-		writeln(buffer, "WORKDIR ", vcfg.Runs.In)
-	}
-
-	compilePhase(buffer, vcfg, build.PhasePreInstall)
-
-	compilePhase(buffer, vcfg, build.PhaseInstall)
-
-	compilePhase(buffer, vcfg, build.PhasePostInstall)
-
-	if len(vcfg.EntryPoint) > 0 {
-		writeln(buffer, "ENTRYPOINT [\"", strings.Join(vcfg.EntryPoint, "\", \""), "\"]")
+	for _, phase := range build.Phases() {
+		compilePhase(buffer, vcfg, phase)
 	}
 }
 

@@ -7,35 +7,73 @@ import (
 	"log"
 	"os"
 
+	"github.com/pborman/getopt/v2"
+
 	"phabricator.wikimedia.org/source/blubber/config"
 	"phabricator.wikimedia.org/source/blubber/docker"
 	"phabricator.wikimedia.org/source/blubber/meta"
 )
 
+const parameters = "config.yaml variant"
+
+var (
+	showHelp    *bool   = getopt.BoolLong("help", 'h', "show help/usage")
+	showVersion *bool   = getopt.BoolLong("version", 'v', "show version information")
+	policyURI   *string = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
+)
+
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "--version" {
+	getopt.SetParameters(parameters)
+	getopt.Parse()
+
+	if *showHelp {
+		getopt.Usage()
+		os.Exit(1)
+	}
+
+	if *showVersion {
 		fmt.Println(meta.FullVersion())
 		os.Exit(0)
 	}
 
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: blubber config.yaml variant")
+	args := getopt.Args()
+
+	if len(args) < 2 {
+		getopt.Usage()
 		os.Exit(1)
 	}
 
-	cfg, err := config.ReadConfigFile(os.Args[1])
+	cfgPath, variant := args[0], args[1]
+
+	cfg, err := config.ReadConfigFile(cfgPath)
 
 	if err != nil {
 		if config.IsValidationError(err) {
-			log.Printf("Your config is invalid:\n%v", config.HumanizeValidationError(err))
+			log.Printf("%s is invalid:\n%v", cfgPath, config.HumanizeValidationError(err))
 			os.Exit(4)
 		} else {
-			log.Printf("Error reading config: %v\n", err)
+			log.Printf("Error reading %s: %v\n", cfgPath, err)
 			os.Exit(2)
 		}
 	}
 
-	dockerFile, err := docker.Compile(cfg, os.Args[2])
+	if *policyURI != "" {
+		policy, err := config.ReadPolicyFromURI(*policyURI)
+
+		if err != nil {
+			log.Printf("Error loading policy from %s: %v\n", *policyURI, err)
+			os.Exit(5)
+		}
+
+		err = policy.Validate(*cfg)
+
+		if err != nil {
+			log.Printf("Configuration fails policy check against:\npolicy: %s\nviolation: %v\n", *policyURI, err)
+			os.Exit(6)
+		}
+	}
+
+	dockerFile, err := docker.Compile(cfg, variant)
 
 	if err != nil {
 		log.Printf("Error compiling config: %v\n", err)

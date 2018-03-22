@@ -8,29 +8,64 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func expandIncludes(config *Config, name string, included map[string]bool) ([]string, error) {
-	variant, found := config.Variants[name]
+// DefaultConfig contains YAML that is applied before the user's
+// configuration.
+//
+const DefaultConfig = `---
+lives:
+  in: /srv/app
+  as: somebody
+  uid: 65533
+  gid: 65533
+runs:
+  as: runuser
+  uid: 900
+  gid: 900`
 
-	if !found {
-		return nil, fmt.Errorf("variant '%s' does not exist", name)
-	}
+// ResolveIncludes iterates over and recurses through a given variant's
+// includes to build a flat slice of variant names in the correct order by
+// which they should be expanded/merged. It checks for both the existence of
+// included variants and maintains a recursion stack to protect against
+// infinite loops.
+//
+// Variant names found at a greater depth of recursion are first and siblings
+// last, the order in which config should be merged.
+//
+func ResolveIncludes(config *Config, name string) ([]string, error) {
+	stack := map[string]bool{}
+	includes := []string{}
 
-	if included[name] == true {
-		return nil, errors.New("variant expansion detected loop")
-	}
+	var resolve func(string) error
 
-	for _, include := range variant.Includes {
-		included[name] = true
-		inc, err := expandIncludes(config, include, included)
-
-		if err != nil {
-			return nil, err
+	resolve = func(name string) error {
+		if instack, found := stack[name]; found && instack {
+			return errors.New("variant expansion detected loop")
 		}
 
-		return append(inc, include), nil
+		stack[name] = true
+		defer func() { stack[name] = false }()
+
+		variant, found := config.Variants[name]
+
+		if !found {
+			return fmt.Errorf("variant '%s' does not exist", name)
+		}
+
+		for _, include := range variant.Includes {
+			if err := resolve(include); err != nil {
+				return err
+			}
+		}
+
+		// Appending _after_ recursion ensures the correct ordering
+		includes = append(includes, name)
+
+		return nil
 	}
 
-	return []string{}, nil
+	err := resolve(name)
+
+	return includes, err
 }
 
 // ExpandVariant merges a named variant with a config. It also attempts to
@@ -40,8 +75,7 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	expanded := new(VariantConfig)
 	expanded.CommonConfig.Merge(config.CommonConfig)
 
-	includes, err := expandIncludes(config, name, map[string]bool{})
-	includes = append(includes, name)
+	includes, err := ResolveIncludes(config, name)
 
 	if err != nil {
 		return nil, err
@@ -54,10 +88,12 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	return expanded, nil
 }
 
-// ReadConfig unmarshals the given YAML bytes into a Config struct.
+// ReadConfig unmarshals the given YAML bytes into a new Config struct.
 //
 func ReadConfig(data []byte) (*Config, error) {
 	var config Config
+
+	yaml.Unmarshal([]byte(DefaultConfig), &config)
 
 	err := yaml.Unmarshal(data, &config)
 

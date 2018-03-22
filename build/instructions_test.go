@@ -36,10 +36,38 @@ func TestCopy(t *testing.T) {
 	assert.Equal(t, []string{`"source1"`, `"source2"`, `"dest"`}, i.Compile())
 }
 
+func TestCopyAs(t *testing.T) {
+	t.Run("wrapping Copy", func(t *testing.T) {
+		i := build.CopyAs{
+			123,
+			124,
+			build.Copy{[]string{"source1", "source2"}, "dest"},
+		}
+
+		assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	})
+
+	t.Run("wrapping CopyFrom", func(t *testing.T) {
+		i := build.CopyAs{
+			123,
+			124,
+			build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}},
+		}
+
+		assert.Equal(t, []string{"123:124", "foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	})
+}
+
 func TestCopyFrom(t *testing.T) {
 	i := build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}}
 
 	assert.Equal(t, []string{"foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+}
+
+func TestEntryPoint(t *testing.T) {
+	i := build.EntryPoint{[]string{"/bin/foo", "bar", "baz"}}
+
+	assert.Equal(t, []string{`"/bin/foo"`, `"bar"`, `"baz"`}, i.Compile())
 }
 
 func TestEnv(t *testing.T) {
@@ -70,8 +98,20 @@ func TestLabel(t *testing.T) {
 	}, i.Compile())
 }
 
+func TestUser(t *testing.T) {
+	i := build.User{"foo"}
+
+	assert.Equal(t, []string{`"foo"`}, i.Compile())
+}
+
 func TestVolume(t *testing.T) {
 	i := build.Volume{"/foo/dir"}
 
 	assert.Equal(t, []string{`"/foo/dir"`}, i.Compile())
+}
+
+func TestWorkingDirectory(t *testing.T) {
+	i := build.WorkingDirectory{"/foo/path"}
+
+	assert.Equal(t, []string{`"/foo/path"`}, i.Compile())
 }

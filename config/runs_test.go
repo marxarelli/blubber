@@ -14,7 +14,7 @@ func TestRunsConfig(t *testing.T) {
     base: foo
     runs:
       as: someuser
-      in: /some/directory
+      insecurely: true
       uid: 666
       gid: 777
       environment: { FOO: bar }
@@ -28,30 +28,19 @@ func TestRunsConfig(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, "someuser", variant.Runs.As)
-	assert.Equal(t, "/some/directory", variant.Runs.In)
+	assert.Equal(t, true, variant.Runs.Insecurely.True)
 	assert.Equal(t, uint(666), variant.Runs.UID)
 	assert.Equal(t, uint(777), variant.Runs.GID)
 	assert.Equal(t, map[string]string{"FOO": "bar"}, variant.Runs.Environment)
 }
 
-func TestRunsHomeWithUser(t *testing.T) {
-	runs := config.RunsConfig{As: "someuser"}
-
-	assert.Equal(t, "/home/someuser", runs.Home())
-}
-
-func TestRunsHomeWithoutUser(t *testing.T) {
-	runs := config.RunsConfig{}
-
-	assert.Equal(t, "/root", runs.Home())
-}
-
 func TestRunsConfigInstructions(t *testing.T) {
 	cfg := config.RunsConfig{
-		As:  "someuser",
-		In:  "/some/directory",
-		UID: 666,
-		GID: 777,
+		UserConfig: config.UserConfig{
+			As:  "someuser",
+			UID: 666,
+			GID: 777,
+		},
 		Environment: map[string]string{
 			"fooname": "foovalue",
 			"barname": "barvalue",
@@ -61,12 +50,8 @@ func TestRunsConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{build.RunAll{[]build.Run{
-				{"mkdir -p", []string{"/opt/lib"}},
-				{"mkdir -p", []string{"/some/directory"}},
 				{"groupadd -o -g %s -r", []string{"777", "someuser"}},
 				{"useradd -o -m -d %s -r -g %s -u %s", []string{"/home/someuser", "someuser", "666", "someuser"}},
-				{"chown %s:%s", []string{"someuser", "someuser", "/opt/lib"}},
-				{"chown %s:%s", []string{"someuser", "someuser", "/some/directory"}},
 			}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
@@ -75,7 +60,6 @@ func TestRunsConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{"HOME": "/home/someuser"}},
 				build.Env{map[string]string{"barname": "barvalue", "fooname": "foovalue"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePrivilegeDropped),
@@ -84,12 +68,7 @@ func TestRunsConfigInstructions(t *testing.T) {
 		t.Run("with empty Environment", func(t *testing.T) {
 			cfg.Environment = map[string]string{}
 
-			assert.Equal(t,
-				[]build.Instruction{
-					build.Env{map[string]string{"HOME": "/home/someuser"}},
-				},
-				cfg.InstructionsForPhase(build.PhasePrivilegeDropped),
-			)
+			assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
 		})
 	})
 
@@ -103,59 +82,6 @@ func TestRunsConfigInstructions(t *testing.T) {
 }
 
 func TestRunsConfigValidation(t *testing.T) {
-	t.Run("in", func(t *testing.T) {
-		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          in: /foo`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs: {}`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("non-root", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          in: /`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `in: "/" is not a valid absolute non-root path`, msg)
-			}
-		})
-
-		t.Run("non-root tricky", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          in: /foo/..`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `in: "/foo/.." is not a valid absolute non-root path`, msg)
-			}
-		})
-
-		t.Run("absolute", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          in: foo/bar`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `in: "foo/bar" is not a valid absolute non-root path`, msg)
-			}
-		})
-	})
-
 	t.Run("as", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---

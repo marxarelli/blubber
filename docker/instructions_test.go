@@ -13,11 +13,9 @@ func TestRun(t *testing.T) {
 	i := build.Run{"echo", []string{"hello"}}
 	di, err := docker.NewInstruction(i)
 
-	var dockerRun docker.Run
-
-	assert.Nil(t, err)
-	assert.IsType(t, dockerRun, di)
-	assert.Equal(t, "RUN echo \"hello\"\n", di.Compile())
+	if assert.NoError(t, err) {
+		assert.Equal(t, "RUN echo \"hello\"\n", di.Compile())
+	}
 }
 
 func TestRunAll(t *testing.T) {
@@ -28,11 +26,9 @@ func TestRunAll(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerRun docker.Run
-
-	assert.Nil(t, err)
-	assert.IsType(t, dockerRun, di)
-	assert.Equal(t, "RUN echo \"hello\" && echo \"yo\"\n", di.Compile())
+	if assert.NoError(t, err) {
+		assert.Equal(t, "RUN echo \"hello\" && echo \"yo\"\n", di.Compile())
+	}
 }
 
 func TestCopy(t *testing.T) {
@@ -40,11 +36,31 @@ func TestCopy(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerCopy docker.Copy
+	if assert.NoError(t, err) {
+		assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+	}
+}
 
-	assert.Nil(t, err)
-	assert.IsType(t, dockerCopy, di)
-	assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+func TestCopyAs(t *testing.T) {
+	t.Run("with Copy", func(t *testing.T) {
+		i := build.CopyAs{123, 124, build.Copy{[]string{"foo1", "foo2"}, "bar"}}
+
+		di, err := docker.NewInstruction(i)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		}
+	})
+
+	t.Run("with CopyFrom", func(t *testing.T) {
+		i := build.CopyAs{123, 124, build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}}
+
+		di, err := docker.NewInstruction(i)
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, "COPY --chown=123:124 --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		}
+	})
 }
 
 func TestCopyFrom(t *testing.T) {
@@ -52,11 +68,19 @@ func TestCopyFrom(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerCopyFrom docker.CopyFrom
+	if assert.NoError(t, err) {
+		assert.Equal(t, "COPY --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+	}
+}
 
-	assert.Nil(t, err)
-	assert.IsType(t, dockerCopyFrom, di)
-	assert.Equal(t, "COPY --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+func TestEntryPoint(t *testing.T) {
+	i := build.EntryPoint{[]string{"foo", "bar"}}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ENTRYPOINT [\"foo\", \"bar\"]\n", di.Compile())
+	}
 }
 
 func TestEnv(t *testing.T) {
@@ -64,11 +88,9 @@ func TestEnv(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerEnv docker.Env
-
-	assert.Nil(t, err)
-	assert.IsType(t, dockerEnv, di)
-	assert.Equal(t, "ENV bar=\"foo\" foo=\"bar\"\n", di.Compile())
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ENV bar=\"foo\" foo=\"bar\"\n", di.Compile())
+	}
 }
 
 func TestLabel(t *testing.T) {
@@ -76,11 +98,19 @@ func TestLabel(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerLabel docker.Label
+	if assert.NoError(t, err) {
+		assert.Equal(t, "LABEL bar=\"foo\" foo=\"bar\"\n", di.Compile())
+	}
+}
 
-	assert.Nil(t, err)
-	assert.IsType(t, dockerLabel, di)
-	assert.Equal(t, "LABEL bar=\"foo\" foo=\"bar\"\n", di.Compile())
+func TestUser(t *testing.T) {
+	i := build.User{"foo"}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "USER \"foo\"\n", di.Compile())
+	}
 }
 
 func TestVolume(t *testing.T) {
@@ -88,30 +118,47 @@ func TestVolume(t *testing.T) {
 
 	di, err := docker.NewInstruction(i)
 
-	var dockerVolume docker.Volume
+	if assert.NoError(t, err) {
+		assert.Equal(t, "VOLUME [\"/foo/dir\"]\n", di.Compile())
+	}
+}
 
-	assert.Nil(t, err)
-	assert.IsType(t, dockerVolume, di)
-	assert.Equal(t, "VOLUME [\"/foo/dir\"]\n", di.Compile())
+func TestWorkingDirectory(t *testing.T) {
+	i := build.WorkingDirectory{"/foo/dir"}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "WORKDIR \"/foo/dir\"\n", di.Compile())
+	}
 }
 
 func TestEscapeRun(t *testing.T) {
 	i := build.Run{"/bin/true\nRUN echo HACKED!", []string{}}
-	dr, _ := docker.NewInstruction(i)
 
-	assert.Equal(t, "RUN /bin/true\\nRUN echo HACKED!\n", dr.Compile())
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "RUN /bin/true\\nRUN echo HACKED!\n", di.Compile())
+	}
 }
 
 func TestEscapeCopy(t *testing.T) {
 	i := build.Copy{[]string{"file.a", "file.b"}, "dest"}
-	dr, _ := docker.NewInstruction(i)
 
-	assert.Equal(t, "COPY [\"file.a\", \"file.b\", \"dest\"]\n", dr.Compile())
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "COPY [\"file.a\", \"file.b\", \"dest\"]\n", di.Compile())
+	}
 }
 
 func TestEscapeEnv(t *testing.T) {
 	i := build.Env{map[string]string{"a": "b\nRUN echo HACKED!"}}
-	dr, _ := docker.NewInstruction(i)
 
-	assert.Equal(t, "ENV a=\"b\\nRUN echo HACKED!\"\n", dr.Compile())
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ENV a=\"b\\nRUN echo HACKED!\"\n", di.Compile())
+	}
 }

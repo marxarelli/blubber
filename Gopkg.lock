@@ -26,6 +26,12 @@
   version = "v0.16.0"
 
 [[projects]]
+  branch = "v2"
+  name = "github.com/pborman/getopt"
+  packages = ["v2"]
+  revision = "0fd4e972e7f7285fbae5863470524ece4ae99d78"
+
+[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -38,10 +44,16 @@
   version = "v1.1.4"
 
 [[projects]]
+  name = "github.com/utahta/go-openuri"
+  packages = ["."]
+  revision = "e3e1c475535dd7256d67286b1c8c223721aafa05"
+  version = "v0.1.0"
+
+[[projects]]
   name = "gopkg.in/go-playground/validator.v9"
   packages = ["."]
-  revision = "61caf9d3038e1af346dbf5c2e16f6678e1548364"
-  version = "v9.9.0"
+  revision = "1b8c8e19cd250435025214492d9a08411d760fdd"
+  version = "v9.12.0"
 
 [[projects]]
   branch = "v2"
@@ -52,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a207dfcd5255a9f7ed6e08d3982f8f3075d29d45b7d0bb7ad31709e04755a649"
+  inputs-digest = "8cdb40365412638a73ba10e3c82296098a85b4df74a25186aec4bd7b3a8c50e4"
   solver-name = "gps-cdcl"
   solver-version = 1

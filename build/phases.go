@@ -22,3 +22,15 @@ const (
 type PhaseCompileable interface {
 	InstructionsForPhase(phase Phase) []Instruction
 }
+
+// Phases returns all build phases in the order to be compiled.
+//
+func Phases() []Phase {
+	return []Phase{
+		PhasePrivileged,
+		PhasePrivilegeDropped,
+		PhasePreInstall,
+		PhaseInstall,
+		PhasePostInstall,
+	}
+}

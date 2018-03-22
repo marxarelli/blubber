@@ -2,11 +2,9 @@
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
+python:
+  version: python2.7
 runs:
-  in: /srv/service
-  as: runuser
-  uid: 666
-  gid: 666
   environment:
     FOO: bar
     BAR: baz
@@ -17,6 +15,8 @@ variants:
       packages: [libjpeg-dev, libyaml-dev]
     node:
       dependencies: true
+    python:
+      requirements: [requirements.txt]
 
   development:
     includes: [build]
@@ -26,6 +26,10 @@ variants:
     includes: [build]
     apt:
       packages: [chromium]
+    python:
+      requirements: [requirements.txt, test-requirements.txt, docs/requirements.txt]
+    runs:
+      insecurely: true
     entrypoint: [npm, test]
 
   prep:
