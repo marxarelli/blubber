@@ -63,10 +63,10 @@ type ctxKey uint8
 
 const rootCfgCtx ctxKey = iota
 
-// NewValidator returns a validator instance for which our custom aliases and
+// newValidator returns a validator instance for which our custom aliases and
 // functions are registered.
 //
-func NewValidator() *validator.Validate {
+func newValidator() *validator.Validate {
 	validate := validator.New()
 
 	validate.RegisterTagNameFunc(resolveYAMLTagName)
@@ -87,7 +87,7 @@ func NewValidator() *validator.Validate {
 // user-friendly message describing all invalid field values.
 //
 func Validate(config Config) error {
-	validate := NewValidator()
+	validate := newValidator()
 
 	ctx := context.WithValue(context.Background(), rootCfgCtx, config)
 

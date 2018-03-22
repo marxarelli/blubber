@@ -20,7 +20,7 @@ type Policy struct {
 // Validate checks the given config against all policy enforcements.
 //
 func (pol Policy) Validate(config Config) error {
-	validate := NewValidator()
+	validate := newValidator()
 
 	for _, enforcement := range pol.Enforcements {
 		cfg, err := ResolveYAMLPath(enforcement.Path, config)
