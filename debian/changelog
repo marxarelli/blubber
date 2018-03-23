@@ -1,3 +1,33 @@
+blubber (0.3.0-1) unstable; urgency=medium
+
+  [ Tyler Cipriani ]
+  * dh-golang: exclude vendor directories
+
+  [ Dan Duvall ]
+  * Docker env for Debian packaging on non-Debian systems
+  * Resolve variant includes with the correct ordering
+  * Fix application files/runtime permissions scheme
+  * Simplify Docker instruction compilation
+  * Generalize instructions for entrypoint and working directory
+
+  [ Tyler Cipriani ]
+  * Makefile: install to global GOPATH with correct -ldflags
+
+  [ Dan Duvall ]
+  * Support Python projects
+  * Allow for configuration policies
+  * Fix ownership on artifact copies
+  * Provide a `runs.insecurely` to be used with test variants
+
+  [ Tyler Cipriani ]
+  * No need to export NewValidator
+  * Policy example should work on blubber.example.yaml
+
+  [ Dan Duvall ]
+  * Release v0.3.0
+
+ -- Dan Duvall <dduvall@wikimedia.org>  Fri, 23 Mar 2018 17:17:16 +0000
+
 blubber (0.2.0-1) unstable; urgency=medium
 
   [ Dan Duvall ]
