@@ -6,6 +6,7 @@ Uploaders: Dan Duvall <dduvall@wikimedia.org>,
            Tyler Cipriani <tcipriani@wikimedia.org>
 Build-Depends: debhelper (>= 10),
                dh-golang,
+               git,
                golang-any
 Standards-Version: 3.9.8
 Homepage: https://phabricator.wikimedia.org/source/blubber
