@@ -12,6 +12,7 @@ import (
 
 func TestVariantConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     variants:
       build: {}
@@ -215,6 +216,7 @@ func TestVariantConfigValidation(t *testing.T) {
 	t.Run("includes", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: { includes: [build] }`))
@@ -224,6 +226,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: {}`))
@@ -233,6 +236,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: { includes: [build, foobuild, foo_build] }`))
@@ -252,6 +256,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: { copies: build }`))
@@ -261,6 +266,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: {}`))
@@ -270,6 +276,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo: { copies: foobuild }`))

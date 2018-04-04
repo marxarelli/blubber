@@ -12,6 +12,7 @@ import (
 
 func TestAptConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     apt:
       packages:
         - libfoo
@@ -66,6 +67,7 @@ func TestAptConfigValidation(t *testing.T) {
 	t.Run("packages", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         apt:
           packages:
            - f1
@@ -81,6 +83,7 @@ func TestAptConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         apt:
           packages:
            - foo

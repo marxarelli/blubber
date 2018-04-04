@@ -11,6 +11,7 @@ import (
 
 func TestPythonConfigUnmarshalMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     python:
       version: python2.7
@@ -36,6 +37,7 @@ func TestPythonConfigUnmarshalMerge(t *testing.T) {
 
 func TestPythonConfigMergeEmpty(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     python:
       requirements: [requirements.txt]
@@ -57,6 +59,7 @@ func TestPythonConfigMergeEmpty(t *testing.T) {
 
 func TestPythonConfigDoNotMergeNil(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     python:
       requirements: [requirements.txt]

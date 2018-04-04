@@ -11,6 +11,7 @@ import (
 
 func TestLivesConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     lives:
       in: /some/directory
@@ -39,6 +40,7 @@ func TestLivesConfig(t *testing.T) {
 
 func TestLivesConfigDefaults(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo`))
 
 	if assert.NoError(t, err) {
@@ -94,6 +96,7 @@ func TestLivesConfigValidation(t *testing.T) {
 	t.Run("in", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           in: /foo`))
 
@@ -102,6 +105,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives: {}`))
 
 			assert.False(t, config.IsValidationError(err))
@@ -109,6 +113,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("non-root", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           in: /`))
 
@@ -121,6 +126,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("non-root tricky", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           in: /foo/..`))
 
@@ -133,6 +139,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("absolute", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           in: foo/bar`))
 
@@ -147,6 +154,7 @@ func TestLivesConfigValidation(t *testing.T) {
 	t.Run("as", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           as: foo-bar.baz`))
 
@@ -155,6 +163,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives: {}`))
 
 			assert.False(t, config.IsValidationError(err))
@@ -162,6 +171,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("no spaces", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           as: foo bar`))
 
@@ -174,6 +184,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("long enough", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           as: fo`))
 
@@ -186,6 +197,7 @@ func TestLivesConfigValidation(t *testing.T) {
 
 		t.Run("not root", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         lives:
           as: root`))
 

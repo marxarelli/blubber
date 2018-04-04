@@ -91,11 +91,27 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 // ReadConfig unmarshals the given YAML bytes into a new Config struct.
 //
 func ReadConfig(data []byte) (*Config, error) {
-	var config Config
+	var (
+		version VersionConfig
+		config  Config
+	)
 
+	// Unmarshal (un-strictly) config version first for pre-validation
+	err := yaml.Unmarshal(data, &version)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err = Validate(version); err != nil {
+		return nil, err
+	}
+
+	// Unmarshal the default config
 	yaml.Unmarshal([]byte(DefaultConfig), &config)
 
-	err := yaml.Unmarshal(data, &config)
+	// And finally strictly unmarshal the entire user-provided config
+	err = yaml.UnmarshalStrict(data, &config)
 
 	if err != nil {
 		return nil, err

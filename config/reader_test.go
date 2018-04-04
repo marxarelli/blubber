@@ -11,6 +11,7 @@ import (
 
 func ExampleResolveIncludes() {
 	cfg, _ := config.ReadConfig([]byte(`---
+    version: v1
     variants:
       varA: { includes: [varB, varC] }
       varB: { includes: [varD, varE] }
@@ -26,8 +27,37 @@ func ExampleResolveIncludes() {
 	// Output: [varF varD varE varB varC varA]
 }
 
+func TestReadConfig_ErrorsOnUnknownYAML(t *testing.T) {
+	_, err := config.ReadConfig([]byte(`---
+    version: v1
+    newphone: whodis
+    variants:
+      foo: {}`))
+
+	assert.EqualError(t,
+		err,
+		"yaml: unmarshal errors:\n"+
+			"  line 2: field newphone not found in struct config.Config",
+	)
+}
+
+func TestReadConfig_ValidateVersionBeforeStrictUnmarshal(t *testing.T) {
+	_, err := config.ReadConfig([]byte(`---
+    version: foo
+    newphone: whodis
+    variants:
+      foo: {}`))
+
+	if assert.True(t, config.IsValidationError(err)) {
+		msg := config.HumanizeValidationError(err)
+
+		assert.Equal(t, `version: config version "foo" is unsupported`, msg)
+	}
+}
+
 func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     variants:
       varA: { includes: [varB] }
       varB: { includes: [varA] }`))
@@ -41,6 +71,7 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 
 func TestMultiLevelIncludes(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: nodejs-slim
     variants:
       build:
@@ -70,6 +101,7 @@ func TestMultiLevelIncludes(t *testing.T) {
 
 func TestMultiIncludes(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     variants:
       mammal:
         base: neutral

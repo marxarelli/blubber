@@ -11,6 +11,7 @@ import (
 
 func TestRunsConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     runs:
       as: someuser
@@ -85,6 +86,7 @@ func TestRunsConfigValidation(t *testing.T) {
 	t.Run("as", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs:
           as: foo-bar.baz`))
 
@@ -93,6 +95,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs: {}`))
 
 			assert.False(t, config.IsValidationError(err))
@@ -100,6 +103,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 		t.Run("no spaces", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs:
           as: foo bar`))
 
@@ -112,6 +116,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 		t.Run("long enough", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs:
           as: fo`))
 
@@ -124,6 +129,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 		t.Run("not root", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs:
           as: root`))
 
@@ -138,6 +144,7 @@ func TestRunsConfigValidation(t *testing.T) {
 	t.Run("environment", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs:
           environment:
             foo: bar
@@ -152,6 +159,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         runs: {}`))
 
 			assert.False(t, config.IsValidationError(err))
@@ -160,6 +168,7 @@ func TestRunsConfigValidation(t *testing.T) {
 		t.Run("bad", func(t *testing.T) {
 			t.Run("spaces", func(t *testing.T) {
 				_, err := config.ReadConfig([]byte(`---
+          version: v1
           runs:
             environment:
               foo fighter: bar`))
@@ -173,6 +182,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 			t.Run("dashes", func(t *testing.T) {
 				_, err := config.ReadConfig([]byte(`---
+          version: v1
           runs:
             environment:
               foo-fighter: bar`))
@@ -186,6 +196,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 			t.Run("dots", func(t *testing.T) {
 				_, err := config.ReadConfig([]byte(`---
+          version: v1
           runs:
             environment:
               foo.fighter: bar`))
@@ -199,6 +210,7 @@ func TestRunsConfigValidation(t *testing.T) {
 
 			t.Run("starts with number", func(t *testing.T) {
 				_, err := config.ReadConfig([]byte(`---
+          version: v1
           runs:
             environment:
               1foo: bar`))

@@ -10,6 +10,7 @@ import (
 
 func TestCommonConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: fooimage
     sharedvolume: true
     entrypoint: ["/bin/foo"]
@@ -33,6 +34,7 @@ func TestCommonConfigValidation(t *testing.T) {
 	t.Run("base", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         base: foo
         variants: {}`))
 
@@ -41,6 +43,7 @@ func TestCommonConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         base:
         variants: {}`))
 
@@ -49,6 +52,7 @@ func TestCommonConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         base: foo fighter
         variants: {}`))
 

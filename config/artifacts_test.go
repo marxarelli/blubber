@@ -11,6 +11,7 @@ import (
 
 func TestArtifactsConfig(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v1
     base: foo
     variants:
       build: {}
@@ -79,6 +80,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 	t.Run("from", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo:
@@ -92,6 +94,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("missing", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo:
@@ -109,6 +112,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
+        version: v1
         variants:
           build: {}
           foo:
