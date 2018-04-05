@@ -8,7 +8,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestFlagOverwrite(t *testing.T) {
+func TestFlagMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo

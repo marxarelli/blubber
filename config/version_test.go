@@ -8,7 +8,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestVersionConfig_YAML(t *testing.T) {
+func TestVersionConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     variants:
@@ -21,7 +21,7 @@ func TestVersionConfig_YAML(t *testing.T) {
 	}
 }
 
-func TestVersionConfig_Validation(t *testing.T) {
+func TestVersionConfigValidation(t *testing.T) {
 	t.Run("supported version", func(t *testing.T) {
 		err := config.Validate(config.VersionConfig{
 			Version: "v1",

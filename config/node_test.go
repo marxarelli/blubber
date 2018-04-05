@@ -9,7 +9,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestNodeConfig(t *testing.T) {
+func TestNodeConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo
@@ -162,27 +162,23 @@ func TestNodeConfigInstructionsEnvironmentOnly(t *testing.T) {
 func TestNodeConfigValidation(t *testing.T) {
 	t.Run("env", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        node:
-          env: production`))
+			err := config.Validate(config.NodeConfig{
+				Env: "production",
+			})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        node: {}`))
+			err := config.Validate(config.NodeConfig{})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        node:
-          env: foo bar`))
+			err := config.Validate(config.NodeConfig{
+				Env: "foo bar",
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)

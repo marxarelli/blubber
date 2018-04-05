@@ -10,7 +10,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestVariantConfig(t *testing.T) {
+func TestVariantConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo

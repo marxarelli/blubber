@@ -27,7 +27,7 @@ func ExampleResolveIncludes() {
 	// Output: [varF varD varE varB varC varA]
 }
 
-func TestReadConfig_ErrorsOnUnknownYAML(t *testing.T) {
+func TestReadConfigErrorsOnUnknownYAML(t *testing.T) {
 	_, err := config.ReadConfig([]byte(`---
     version: v1
     newphone: whodis
@@ -41,7 +41,7 @@ func TestReadConfig_ErrorsOnUnknownYAML(t *testing.T) {
 	)
 }
 
-func TestReadConfig_ValidateVersionBeforeStrictUnmarshal(t *testing.T) {
+func TestReadConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
 	_, err := config.ReadConfig([]byte(`---
     version: foo
     newphone: whodis

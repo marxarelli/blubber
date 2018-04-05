@@ -10,7 +10,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestAptConfig(t *testing.T) {
+func TestAptConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     apt:
@@ -66,32 +66,30 @@ func TestAptConfigInstructions(t *testing.T) {
 func TestAptConfigValidation(t *testing.T) {
 	t.Run("packages", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        apt:
-          packages:
-           - f1
-           - foo-fighter
-           - bar+b.az
-           - bar+b.az=0:0.1~foo1-1
-           - bar+b.az/stable
-           - bar+b.az/jessie-wikimedia
-        variants: {}`))
+			err := config.Validate(config.AptConfig{
+				Packages: []string{
+					"f1",
+					"foo-fighter",
+					"bar+b.az",
+					"bar+b.az=0:0.1~foo1-1",
+					"bar+b.az/stable",
+					"bar+b.az/jessie-wikimedia",
+				},
+			})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        apt:
-          packages:
-           - foo
-           - foo fighter
-           - bar_baz
-           - 'bar=0.1*bad version'
-           - bar/0bad_release
-        variants: {}`))
+			err := config.Validate(config.AptConfig{
+				Packages: []string{
+					"f1",
+					"foo fighter",
+					"bar_baz",
+					"bar=0.1*bad version",
+					"bar/0bad_release",
+				},
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)

@@ -8,7 +8,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestCommonConfig(t *testing.T) {
+func TestCommonConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: fooimage
@@ -33,28 +33,25 @@ func TestCommonConfig(t *testing.T) {
 func TestCommonConfigValidation(t *testing.T) {
 	t.Run("base", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        base: foo
-        variants: {}`))
+			err := config.Validate(config.CommonConfig{
+				Base: "foo",
+			})
 
 			assert.Nil(t, err)
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        base:
-        variants: {}`))
+			err := config.Validate(config.CommonConfig{
+				Base: "",
+			})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        version: v1
-        base: foo fighter
-        variants: {}`))
+			err := config.Validate(config.CommonConfig{
+				Base: "foo fighter",
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)

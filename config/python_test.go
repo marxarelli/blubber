@@ -9,7 +9,7 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestPythonConfigUnmarshalMerge(t *testing.T) {
+func TestPythonConfigYAMLMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo
@@ -35,7 +35,7 @@ func TestPythonConfigUnmarshalMerge(t *testing.T) {
 	}
 }
 
-func TestPythonConfigMergeEmpty(t *testing.T) {
+func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo
@@ -57,7 +57,7 @@ func TestPythonConfigMergeEmpty(t *testing.T) {
 	}
 }
 
-func TestPythonConfigDoNotMergeNil(t *testing.T) {
+func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo
