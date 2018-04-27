@@ -40,6 +40,9 @@ func TestAptConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
+				build.Env{map[string]string{
+					"DEBIAN_FRONTEND": "noninteractive",
+				}},
 				build.RunAll{[]build.Run{
 					{"apt-get update", []string{}},
 					{"apt-get install -y", []string{"libfoo", "libbar"}},
