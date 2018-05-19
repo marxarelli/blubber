@@ -15,7 +15,7 @@ variants:
     apt:
       packages: [libjpeg-dev, libyaml-dev]
     node:
-      dependencies: true
+      requirements: [package.json, package-lock.json]
     python:
       requirements: [requirements.txt]
     builder: [make, -f, Makefile]

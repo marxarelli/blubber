@@ -28,7 +28,7 @@ variants:
     apt:
       packages: [libjpeg-dev, libyaml-dev]
     node:
-      dependencies: true
+      requirements: [package.json, package-lock.json]
 
   development:
     includes: [build]

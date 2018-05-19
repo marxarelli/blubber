@@ -72,31 +72,33 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 func TestMultiLevelIncludes(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
-    base: nodejs-slim
+    base: foo-slim
     variants:
       build:
-        base: nodejs-devel
-        node: {env: build}
+        base: foo-devel
+        runs: { as: foo }
       development:
         includes: [build]
-        node: {env: development}
-        entrypoint: [npm, start]
+        runs: { uid: 123 }
       test:
         includes: [development]
-        node: {dependencies: true}
-        entrypoint: [npm, test]`))
+        runs: { insecurely: true }`))
 
-	assert.NoError(t, err)
+	if assert.NoError(t, err) {
+		dev, _ := config.ExpandVariant(cfg, "development")
 
-	variant, _ := config.ExpandVariant(cfg, "test")
+		assert.Equal(t, "foo-devel", dev.Base)
+		assert.Equal(t, "foo", dev.Runs.As)
+		assert.Equal(t, uint(123), dev.Runs.UID)
 
-	assert.Equal(t, "nodejs-devel", variant.Base)
-	assert.Equal(t, "development", variant.Node.Env)
+		test, _ := config.ExpandVariant(cfg, "test")
 
-	devVariant, _ := config.ExpandVariant(cfg, "development")
+		assert.Equal(t, "foo-devel", test.Base)
+		assert.Equal(t, "foo", test.Runs.As)
+		assert.Equal(t, uint(123), test.Runs.UID)
 
-	assert.True(t, variant.Node.Dependencies.True)
-	assert.False(t, devVariant.Node.Dependencies.True)
+		assert.True(t, test.Runs.Insecurely.True)
+	}
 }
 
 func TestMultiIncludes(t *testing.T) {

@@ -14,27 +14,29 @@ func TestNodeConfigYAML(t *testing.T) {
     version: v1
     base: foo
     node:
-      dependencies: true
+      requirements: [package.json]
       env: foo
     variants:
       build:
         node:
-          dependencies: false
+          requirements: []
           env: bar`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		assert.Equal(t, []string{"package.json"}, cfg.Node.Requirements)
+		assert.Equal(t, "foo", cfg.Node.Env)
 
-	assert.Equal(t, true, cfg.Node.Dependencies.True)
-	assert.Equal(t, "foo", cfg.Node.Env)
+		variant, err := config.ExpandVariant(cfg, "build")
 
-	variant, err := config.ExpandVariant(cfg, "build")
-
-	assert.Equal(t, false, variant.Node.Dependencies.True)
-	assert.Equal(t, "bar", variant.Node.Env)
+		if assert.NoError(t, err) {
+			assert.Empty(t, variant.Node.Requirements)
+			assert.Equal(t, "bar", variant.Node.Env)
+		}
+	}
 }
 
-func TestNodeConfigInstructionsNoDependencies(t *testing.T) {
-	cfg := config.NodeConfig{Dependencies: config.Flag{True: false}}
+func TestNodeConfigInstructionsNoRequirements(t *testing.T) {
+	cfg := config.NodeConfig{}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -54,7 +56,7 @@ func TestNodeConfigInstructionsNoDependencies(t *testing.T) {
 }
 
 func TestNodeConfigInstructionsNonProduction(t *testing.T) {
-	cfg := config.NodeConfig{Dependencies: config.Flag{True: true}, Env: "foo"}
+	cfg := config.NodeConfig{Requirements: []string{"package.json"}, Env: "foo"}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -92,7 +94,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 }
 
 func TestNodeConfigInstructionsProduction(t *testing.T) {
-	cfg := config.NodeConfig{Dependencies: config.Flag{True: true}, Env: "production"}
+	cfg := config.NodeConfig{Requirements: []string{"package.json", "package-lock.json"}, Env: "production"}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -105,7 +107,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json"}, "/opt/lib"},
+				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib"},
 				build.RunAll{[]build.Run{
 					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{"--production"}},

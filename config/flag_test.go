@@ -12,19 +12,19 @@ func TestFlagMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
     version: v1
     base: foo
-    node: { dependencies: true }
+    runs: { insecurely: true }
     sharedvolume: false
     variants:
       development:
         sharedvolume: true
-        node: { dependencies: false }`))
+        runs: { insecurely: false }`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		variant, err := config.ExpandVariant(cfg, "development")
 
-	variant, err := config.ExpandVariant(cfg, "development")
-
-	assert.Nil(t, err)
-
-	assert.False(t, variant.Node.Dependencies.True)
-	assert.True(t, variant.SharedVolume.True)
+		if assert.NoError(t, err) {
+			assert.False(t, variant.Runs.Insecurely.True)
+			assert.True(t, variant.SharedVolume.True)
+		}
+	}
 }
