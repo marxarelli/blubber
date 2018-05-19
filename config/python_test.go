@@ -85,15 +85,7 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.RunAll{[]build.Run{
-					{"python2.7", []string{"-m", "easy_install", "pip"}},
-					{"python2.7", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePrivileged),
-		)
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
 	})
 
 	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
@@ -101,25 +93,15 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 	})
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  "/opt/lib/python",
-					"PIP_FIND_LINKS": "file:///opt/lib/python",
-				}},
-				build.RunAll{[]build.Run{
-					{"mkdir -p", []string{"/opt/lib/python"}},
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
 	})
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
-					"PIP_NO_INDEX": "1",
+					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -182,10 +164,18 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 				}},
 				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
 				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
-				build.Run{"python2.7", []string{"-m", "pip", "wheel",
-					"-r", "requirements.txt",
-					"-r", "requirements-test.txt",
-					"-r", "docs/requirements.txt",
+				build.RunAll{[]build.Run{
+					{"python2.7", []string{"-m", "pip", "wheel",
+						"-r", "requirements.txt",
+						"-r", "requirements-test.txt",
+						"-r", "docs/requirements.txt",
+					}},
+					{"python2.7", []string{"-m", "pip", "install",
+						"--target", "/opt/lib/python/site-packages",
+						"-r", "requirements.txt",
+						"-r", "requirements-test.txt",
+						"-r", "docs/requirements.txt",
+					}},
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
@@ -197,6 +187,8 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 			[]build.Instruction{
 				build.Env{map[string]string{
 					"PIP_NO_INDEX": "1",
+					"PYTHONPATH":   "/opt/lib/python/site-packages",
+					"PATH":         "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
