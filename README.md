@@ -11,6 +11,7 @@ running ad-hoc commands.
 ## Example configuration
 
 ```yaml
+version: v1
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
@@ -70,6 +71,7 @@ In the example configuration, the `test` variant when expanded effectively
 becomes:
 
 ```yaml
+version: v1
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]
