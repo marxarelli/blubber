@@ -18,6 +18,7 @@ variants:
       dependencies: true
     python:
       requirements: [requirements.txt]
+    builder: [make, -f, Makefile]
 
   development:
     includes: [build]
