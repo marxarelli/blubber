@@ -11,7 +11,7 @@ import (
 
 func TestPythonConfigYAMLMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: foo
     python:
       version: python2.7
@@ -37,7 +37,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 
 func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: foo
     python:
       requirements: [requirements.txt]
@@ -59,7 +59,7 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 
 func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: foo
     python:
       requirements: [requirements.txt]

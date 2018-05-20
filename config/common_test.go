@@ -10,7 +10,7 @@ import (
 
 func TestCommonConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: fooimage
     sharedvolume: true
     entrypoint: ["/bin/foo"]

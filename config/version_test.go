@@ -10,21 +10,21 @@ import (
 
 func TestVersionConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     variants:
       foo: {}`))
 
 	assert.Nil(t, err)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "v1", cfg.Version)
+		assert.Equal(t, "v2", cfg.Version)
 	}
 }
 
 func TestVersionConfigValidation(t *testing.T) {
 	t.Run("supported version", func(t *testing.T) {
 		err := config.Validate(config.VersionConfig{
-			Version: "v1",
+			Version: "v2",
 		})
 
 		assert.False(t, config.IsValidationError(err))
@@ -32,13 +32,13 @@ func TestVersionConfigValidation(t *testing.T) {
 
 	t.Run("unsupported version", func(t *testing.T) {
 		err := config.Validate(config.VersionConfig{
-			Version: "v2",
+			Version: "vX",
 		})
 
 		if assert.True(t, config.IsValidationError(err)) {
 			msg := config.HumanizeValidationError(err)
 
-			assert.Equal(t, `version: config version "v2" is unsupported`, msg)
+			assert.Equal(t, `version: config version "vX" is unsupported`, msg)
 		}
 	})
 }

@@ -10,7 +10,7 @@ import (
 
 func TestFlagMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: foo
     runs: { insecurely: true }
     sharedvolume: false

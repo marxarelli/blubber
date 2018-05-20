@@ -11,7 +11,7 @@ import (
 
 func TestRunsConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v1
+    version: v2
     base: foo
     runs:
       as: someuser

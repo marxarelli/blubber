@@ -1,5 +1,5 @@
 ---
-version: v1
+version: v2
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
