@@ -25,6 +25,8 @@ to both users inside and outside of WMF and our communities.
  4. An account at [phabricator.wikimedia.org](https://phabricator.wikimedia.org)
     * See our [help article](https://www.mediawiki.org/wiki/Phabricator/Help)
       for setup instructions.
+ 5. (optional) `gox` is used for cross-compiling binary releases. To
+    install `gox` use `go get github.com/mitchellh/gox`.
 
 ## Get the source
 
@@ -92,3 +94,10 @@ Use `arc diff` to submit your changes to Differential.
 
 Once your changes have been accepted, run `arc land` on your local branch to
 merge/push the commit and close the diff.
+
+## Releases
+
+The `release` target of the `Makefile` in this repository uses `gox` to
+cross-compile binary releases of Blubber.
+
+    make release
