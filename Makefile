@@ -2,12 +2,16 @@ RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
 
 PACKAGE := phabricator.wikimedia.org/source/blubber
+REAL_CURDIR := $(shell readlink "$(CURDIR)" || echo "$(CURDIR)")
 
 GO_LDFLAGS := \
   -X $(PACKAGE)/meta.Version=$(shell cat VERSION) \
   -X $(PACKAGE)/meta.GitCommit=$(shell git rev-parse --short HEAD)
 
 install:
+	# workaround bug in case CURDIR is a symlink
+	# see https://github.com/golang/go/issues/24359
+	cd "$(REAL_CURDIR)" && \
 	go install -v -ldflags "$(GO_LDFLAGS)"
 
 release:
