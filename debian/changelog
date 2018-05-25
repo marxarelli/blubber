@@ -1,3 +1,36 @@
+blubber (0.4.0-1) unstable; urgency=medium
+
+  [ Dan Duvall ]
+  * Provide a CONTRIBUTING.md guide
+  * Include git as a build dependency
+  * Introduce strict/versioned config parsing
+  * Refactor validation tests without YAML parsing
+  * Ensure non-interactive front-end for APT
+
+  [ Alexandros Kosiaris ]
+  * Add a pip install step
+
+  [ Gilles Dubuc ]
+  * Add support for Builder arbitrary build commands
+
+  [ Dan Duvall ]
+  * Refactor config for node app dependencies
+
+  [ Gilles Dubuc ]
+  * Add now mandatory version config field to README
+
+  [ Dan Duvall ]
+  * Bump config version to v2
+
+  [ Tyler Cipriani ]
+  * Cross-compile using gox
+
+  [ Dan Duvall ]
+  * Attempt to resolve symlinked CURDIR in Makefile
+  * Release v0.4.0
+
+ -- Dan Duvall <dduvall@wikimedia.org>  Fri, 25 May 2018 16:57:24 +0000
+
 blubber (0.3.0-1) unstable; urgency=medium
 
   [ Tyler Cipriani ]
