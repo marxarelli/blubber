@@ -73,8 +73,8 @@ func TestEnforcementOnFlag(t *testing.T) {
 		Variants: map[string]config.VariantConfig{
 			"production": config.VariantConfig{
 				CommonConfig: config.CommonConfig{
-					Node: config.NodeConfig{
-						Dependencies: config.Flag{True: true},
+					Runs: config.RunsConfig{
+						Insecurely: config.Flag{True: true},
 					},
 				},
 			},
@@ -83,13 +83,13 @@ func TestEnforcementOnFlag(t *testing.T) {
 
 	policy := config.Policy{
 		Enforcements: []config.Enforcement{
-			{Path: "variants.production.node.dependencies", Rule: "isfalse"},
+			{Path: "variants.production.runs.insecurely", Rule: "isfalse"},
 		},
 	}
 
 	assert.Error(t,
 		policy.Validate(cfg),
-		`value for "variants.production.node.dependencies" violates policy rule "isfalse"`,
+		`value for "variants.production.runs.insecurely" violates policy rule "isfalse"`,
 	)
 
 }

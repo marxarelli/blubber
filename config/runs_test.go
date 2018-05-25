@@ -9,8 +9,9 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestRunsConfig(t *testing.T) {
+func TestRunsConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v2
     base: foo
     runs:
       as: someuser
@@ -82,87 +83,35 @@ func TestRunsConfigInstructions(t *testing.T) {
 }
 
 func TestRunsConfigValidation(t *testing.T) {
-	t.Run("as", func(t *testing.T) {
-		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          as: foo-bar.baz`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs: {}`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("no spaces", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          as: foo bar`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "foo bar" is not a valid user name`, msg)
-			}
-		})
-
-		t.Run("long enough", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          as: fo`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "fo" is not a valid user name`, msg)
-			}
-		})
-
-		t.Run("not root", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          as: root`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "root" is not a valid user name`, msg)
-			}
-		})
-	})
-
 	t.Run("environment", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs:
-          environment:
-            foo: bar
-            f1oo: bar
-            FOO: bar
-            foo_fighter: bar
-            FOO_FIGHTER: bar
-            _FOO_FIGHTER: bar`))
+			err := config.Validate(config.RunsConfig{
+				Environment: map[string]string{
+					"foo":          "bar",
+					"f1oo":         "bar",
+					"FOO":          "bar",
+					"foo_fighter":  "bar",
+					"FOO_FIGHTER":  "bar",
+					"_FOO_FIGHTER": "bar",
+				},
+			})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        runs: {}`))
+			err := config.Validate(config.RunsConfig{})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("bad", func(t *testing.T) {
 			t.Run("spaces", func(t *testing.T) {
-				_, err := config.ReadConfig([]byte(`---
-          runs:
-            environment:
-              foo fighter: bar`))
+				err := config.Validate(config.RunsConfig{
+					Environment: map[string]string{
+						"foo fighter": "bar",
+					},
+				})
 
 				if assert.True(t, config.IsValidationError(err)) {
 					msg := config.HumanizeValidationError(err)
@@ -172,10 +121,11 @@ func TestRunsConfigValidation(t *testing.T) {
 			})
 
 			t.Run("dashes", func(t *testing.T) {
-				_, err := config.ReadConfig([]byte(`---
-          runs:
-            environment:
-              foo-fighter: bar`))
+				err := config.Validate(config.RunsConfig{
+					Environment: map[string]string{
+						"foo-fighter": "bar",
+					},
+				})
 
 				if assert.True(t, config.IsValidationError(err)) {
 					msg := config.HumanizeValidationError(err)
@@ -185,10 +135,11 @@ func TestRunsConfigValidation(t *testing.T) {
 			})
 
 			t.Run("dots", func(t *testing.T) {
-				_, err := config.ReadConfig([]byte(`---
-          runs:
-            environment:
-              foo.fighter: bar`))
+				err := config.Validate(config.RunsConfig{
+					Environment: map[string]string{
+						"foo.fighter": "bar",
+					},
+				})
 
 				if assert.True(t, config.IsValidationError(err)) {
 					msg := config.HumanizeValidationError(err)
@@ -198,10 +149,11 @@ func TestRunsConfigValidation(t *testing.T) {
 			})
 
 			t.Run("starts with number", func(t *testing.T) {
-				_, err := config.ReadConfig([]byte(`---
-          runs:
-            environment:
-              1foo: bar`))
+				err := config.Validate(config.RunsConfig{
+					Environment: map[string]string{
+						"1foo": "bar",
+					},
+				})
 
 				if assert.True(t, config.IsValidationError(err)) {
 					msg := config.HumanizeValidationError(err)

@@ -31,20 +31,22 @@ var (
 	variantNameRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9\-\.]+[a-zA-Z0-9]$`)
 
 	humanizedErrors = map[string]string{
-		"abspath":       `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
-		"baseimage":     `{{.Field}}: "{{.Value}}" is not a valid base image reference`,
-		"debianpackage": `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
-		"envvars":       `{{.Field}}: contains invalid environment variable names`,
-		"nodeenv":       `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
-		"required":      `{{.Field}}: is required`,
-		"username":      `{{.Field}}: "{{.Value}}" is not a valid user name`,
-		"variantref":    `{{.Field}}: references an unknown variant "{{.Value}}"`,
-		"variants":      `{{.Field}}: contains a bad variant name`,
+		"abspath":        `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
+		"baseimage":      `{{.Field}}: "{{.Value}}" is not a valid base image reference`,
+		"currentversion": `{{.Field}}: config version "{{.Value}}" is unsupported`,
+		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
+		"envvars":        `{{.Field}}: contains invalid environment variable names`,
+		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
+		"required":       `{{.Field}}: is required`,
+		"username":       `{{.Field}}: "{{.Value}}" is not a valid user name`,
+		"variantref":     `{{.Field}}: references an unknown variant "{{.Value}}"`,
+		"variants":       `{{.Field}}: contains a bad variant name`,
 	}
 
 	validatorAliases = map[string]string{
-		"nodeenv":  "alphanum",
-		"username": "hostname,ne=root",
+		"currentversion": "eq=" + CurrentVersion,
+		"nodeenv":        "alphanum",
+		"username":       "hostname,ne=root",
 	}
 
 	validatorFuncs = map[string]validator.FuncCtx{
@@ -86,7 +88,7 @@ func newValidator() *validator.Validate {
 // Config value. If the returned error is not nil, it will contain a
 // user-friendly message describing all invalid field values.
 //
-func Validate(config Config) error {
+func Validate(config interface{}) error {
 	validate := newValidator()
 
 	ctx := context.WithValue(context.Background(), rootCfgCtx, config)

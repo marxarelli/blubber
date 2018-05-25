@@ -11,6 +11,7 @@ running ad-hoc commands.
 ## Example configuration
 
 ```yaml
+version: v2
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
@@ -28,7 +29,7 @@ variants:
     apt:
       packages: [libjpeg-dev, libyaml-dev]
     node:
-      dependencies: true
+      requirements: [package.json, package-lock.json]
 
   development:
     includes: [build]
@@ -70,6 +71,7 @@ In the example configuration, the `test` variant when expanded effectively
 becomes:
 
 ```yaml
+version: v2
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]
@@ -111,3 +113,8 @@ running (assuming you have go):
     ./bin/blubber blubber blubber.example.yaml development
     ./bin/blubber blubber blubber.example.yaml test
     ./bin/blubber blubber blubber.example.yaml production
+
+## Contribution
+
+If you'd like to make code contributions to Blubber, see
+[CONTRIBUTING.md](CONTRIBUTING.md).

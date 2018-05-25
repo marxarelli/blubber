@@ -1,0 +1,12 @@
+package config
+
+// CurrentVersion declares the currently supported config version.
+//
+const CurrentVersion string = "v2"
+
+// VersionConfig contains a single field that allows for validation of the
+// config version independent from an entire Config struct.
+//
+type VersionConfig struct {
+	Version string `yaml:"version" validate:"required,currentversion"`
+}

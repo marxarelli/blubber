@@ -9,8 +9,9 @@ import (
 	"phabricator.wikimedia.org/source/blubber/config"
 )
 
-func TestLivesConfig(t *testing.T) {
+func TestLivesConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v2
     base: foo
     lives:
       in: /some/directory
@@ -39,6 +40,7 @@ func TestLivesConfig(t *testing.T) {
 
 func TestLivesConfigDefaults(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
+    version: v2
     base: foo`))
 
 	if assert.NoError(t, err) {
@@ -93,24 +95,23 @@ func TestLivesConfigInstructions(t *testing.T) {
 func TestLivesConfigValidation(t *testing.T) {
 	t.Run("in", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          in: /foo`))
+			err := config.Validate(config.LivesConfig{
+				In: "/foo",
+			})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives: {}`))
+			err := config.Validate(config.LivesConfig{})
 
 			assert.False(t, config.IsValidationError(err))
 		})
 
 		t.Run("non-root", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          in: /`))
+			err := config.Validate(config.LivesConfig{
+				In: "/",
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
@@ -120,9 +121,9 @@ func TestLivesConfigValidation(t *testing.T) {
 		})
 
 		t.Run("non-root tricky", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          in: /foo/..`))
+			err := config.Validate(config.LivesConfig{
+				In: "/foo/..",
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
@@ -132,67 +133,14 @@ func TestLivesConfigValidation(t *testing.T) {
 		})
 
 		t.Run("absolute", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          in: foo/bar`))
+			err := config.Validate(config.LivesConfig{
+				In: "foo/bar",
+			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
 
 				assert.Equal(t, `in: "foo/bar" is not a valid absolute non-root path`, msg)
-			}
-		})
-	})
-
-	t.Run("as", func(t *testing.T) {
-		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          as: foo-bar.baz`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives: {}`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("no spaces", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          as: foo bar`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "foo bar" is not a valid user name`, msg)
-			}
-		})
-
-		t.Run("long enough", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          as: fo`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "fo" is not a valid user name`, msg)
-			}
-		})
-
-		t.Run("not root", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
-        lives:
-          as: root`))
-
-			if assert.True(t, config.IsValidationError(err)) {
-				msg := config.HumanizeValidationError(err)
-
-				assert.Equal(t, `as: "root" is not a valid user name`, msg)
 			}
 		})
 	})

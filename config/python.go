@@ -7,9 +7,17 @@ import (
 	"phabricator.wikimedia.org/source/blubber/build"
 )
 
-// PythonLocalLibPrefix is the path to installed dependency wheels.
+// PythonLibPrefix is the path to installed dependency wheels.
 //
-const PythonLocalLibPrefix = LocalLibPrefix + "/python"
+const PythonLibPrefix = LocalLibPrefix + "/python"
+
+// PythonSitePackages is the path to installed Python packages.
+//
+const PythonSitePackages = PythonLibPrefix + "/site-packages"
+
+// PythonSiteBin is the path to installed Python packages bin files.
+//
+const PythonSiteBin = PythonSitePackages + "/bin"
 
 // PythonConfig holds configuration fields related to pre-installation of project
 // dependencies via PIP.
@@ -61,58 +69,68 @@ func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 // network requests from said commands.
 //
 func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
-	if pc.Requirements != nil || pc.Version != "" {
+	if pc.Version != "" {
 		switch phase {
 		case build.PhasePrivileged:
-			return []build.Instruction{
-				build.RunAll{[]build.Run{
-					{pc.version(), []string{"-m", "easy_install", "pip"}},
-					{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
-				}},
+			if pc.Requirements != nil {
+				return []build.Instruction{
+					build.RunAll{[]build.Run{
+						{pc.version(), []string{"-m", "easy_install", "pip"}},
+						{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
+					}},
+				}
 			}
 
 		case build.PhasePreInstall:
-			envs := build.Env{map[string]string{
-				"PIP_WHEEL_DIR":  PythonLocalLibPrefix,
-				"PIP_FIND_LINKS": "file://" + PythonLocalLibPrefix,
-			}}
+			if pc.Requirements != nil {
+				envs := build.Env{map[string]string{
+					"PIP_WHEEL_DIR":  PythonLibPrefix,
+					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
+				}}
 
-			mkdirs := build.RunAll{
-				Runs: []build.Run{
-					build.CreateDirectory(PythonLocalLibPrefix),
-				},
-			}
-
-			dirs, bydir := pc.RequirementsByDir()
-			copies := make([]build.Instruction, len(dirs))
-
-			// make project subdirectories for requirements files if necessary, and
-			// copy in requirements files
-			for i, dir := range dirs {
-				if dir != "./" {
-					mkdirs.Runs = append(mkdirs.Runs, build.CreateDirectory(dir))
+				mkdirs := build.RunAll{
+					Runs: []build.Run{
+						build.CreateDirectory(PythonLibPrefix),
+					},
 				}
 
-				copies[i] = build.Copy{bydir[dir], dir}
+				dirs, bydir := pc.RequirementsByDir()
+				copies := make([]build.Instruction, len(dirs))
+
+				// make project subdirectories for requirements files if necessary, and
+				// copy in requirements files
+				for i, dir := range dirs {
+					if dir != "./" {
+						mkdirs.Runs = append(mkdirs.Runs, build.CreateDirectory(dir))
+					}
+
+					copies[i] = build.Copy{bydir[dir], dir}
+				}
+
+				ins := []build.Instruction{envs, mkdirs}
+				ins = append(ins, copies...)
+
+				if args := pc.RequirementsArgs(); len(args) > 0 {
+					ins = append(ins, build.RunAll{[]build.Run{
+						{pc.version(), append([]string{"-m", "pip", "wheel"}, args...)},
+						{pc.version(), append([]string{"-m", "pip", "install", "--target", PythonSitePackages}, args...)},
+					}})
+				}
+
+				return ins
 			}
-
-			ins := []build.Instruction{envs, mkdirs}
-			ins = append(ins, copies...)
-
-			if args := pc.RequirementsArgs(); len(args) > 0 {
-				ins = append(ins, build.Run{
-					pc.version(), append([]string{"-m", "pip", "wheel"}, args...),
-				})
-			}
-
-			return ins
 
 		case build.PhasePostInstall:
-			return []build.Instruction{
-				build.Env{map[string]string{
-					"PIP_NO_INDEX": "1",
-				}},
+			env := build.Env{map[string]string{
+				"PYTHONPATH": PythonSitePackages,
+				"PATH":       PythonSiteBin + ":${PATH}",
+			}}
+
+			if pc.Requirements != nil {
+				env.Definitions["PIP_NO_INDEX"] = "1"
 			}
+
+			return []build.Instruction{env}
 		}
 	}
 

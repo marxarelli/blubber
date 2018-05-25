@@ -30,6 +30,9 @@ func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 		switch phase {
 		case build.PhasePrivileged:
 			return []build.Instruction{
+				build.Env{map[string]string{
+					"DEBIAN_FRONTEND": "noninteractive",
+				}},
 				build.RunAll{[]build.Run{
 					{"apt-get update", []string{}},
 					{"apt-get install -y", apt.Packages},
