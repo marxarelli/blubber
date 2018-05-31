@@ -14,7 +14,7 @@ to both users inside and outside of WMF and our communities.
     * To install on macOS use [Homebrew](https://brew.sh) and run:
       `brew install go`
     * You can run `go version` to check the golang version.
-    * If your distro's go package is tool old or unavailable,
+    * If your distro's go package is too old or unavailable,
       [download](https://golang.org/dl/) a newer golang version.
  2. `dep` for dependency management
     * On macOS, try Homebrew: `brew install dep`
