@@ -37,7 +37,7 @@ func TestCopy(t *testing.T) {
 	di, err := docker.NewInstruction(i)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		assert.Equal(t, "COPY [\"foo1\", \"foo2\", \"bar/\"]\n", di.Compile())
 	}
 }
 
@@ -48,7 +48,7 @@ func TestCopyAs(t *testing.T) {
 		di, err := docker.NewInstruction(i)
 
 		if assert.NoError(t, err) {
-			assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+			assert.Equal(t, "COPY --chown=123:124 [\"foo1\", \"foo2\", \"bar/\"]\n", di.Compile())
 		}
 	})
 
@@ -58,7 +58,7 @@ func TestCopyAs(t *testing.T) {
 		di, err := docker.NewInstruction(i)
 
 		if assert.NoError(t, err) {
-			assert.Equal(t, "COPY --chown=123:124 --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+			assert.Equal(t, "COPY --chown=123:124 --from=foo [\"foo1\", \"foo2\", \"bar/\"]\n", di.Compile())
 		}
 	})
 }
@@ -69,7 +69,7 @@ func TestCopyFrom(t *testing.T) {
 	di, err := docker.NewInstruction(i)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "COPY --from=foo [\"foo1\", \"foo2\", \"bar\"]\n", di.Compile())
+		assert.Equal(t, "COPY --from=foo [\"foo1\", \"foo2\", \"bar/\"]\n", di.Compile())
 	}
 }
 
@@ -149,7 +149,7 @@ func TestEscapeCopy(t *testing.T) {
 	di, err := docker.NewInstruction(i)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "COPY [\"file.a\", \"file.b\", \"dest\"]\n", di.Compile())
+		assert.Equal(t, "COPY [\"file.a\", \"file.b\", \"dest/\"]\n", di.Compile())
 	}
 }
 
