@@ -1,7 +1,7 @@
 package config
 
 import (
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // CommonConfig holds the configuration fields common to both the root config

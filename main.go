@@ -9,9 +9,9 @@ import (
 
 	"github.com/pborman/getopt/v2"
 
-	"phabricator.wikimedia.org/source/blubber/config"
-	"phabricator.wikimedia.org/source/blubber/docker"
-	"phabricator.wikimedia.org/source/blubber/meta"
+	"gerrit.wikimedia.org/r/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/docker"
+	"gerrit.wikimedia.org/r/blubber/meta"
 )
 
 const parameters = "config.yaml variant"

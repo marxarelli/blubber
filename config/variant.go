@@ -1,7 +1,7 @@
 package config
 
 import (
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // VariantConfig holds configuration fields for each defined build variant.

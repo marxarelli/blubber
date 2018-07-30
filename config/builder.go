@@ -1,7 +1,7 @@
 package config
 
 import (
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // BuilderConfig contains configuration for the definition of an arbitrary

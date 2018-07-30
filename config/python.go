@@ -4,7 +4,7 @@ import (
 	"path"
 	"sort"
 
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // PythonLibPrefix is the path to installed dependency wheels.

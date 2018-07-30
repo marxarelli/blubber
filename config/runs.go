@@ -1,7 +1,7 @@
 package config
 
 import (
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // RunsConfig holds configuration fields related to the application's

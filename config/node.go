@@ -2,7 +2,7 @@ package config
 
 import (
 	"path"
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // NodeConfig holds configuration fields related to the Node environment and

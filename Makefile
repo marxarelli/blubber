@@ -1,7 +1,7 @@
 RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
 
-PACKAGE := phabricator.wikimedia.org/source/blubber
+PACKAGE := gerrit.wikimedia.org/r/blubber
 REAL_CURDIR := $(shell readlink "$(CURDIR)" || echo "$(CURDIR)")
 
 GO_LDFLAGS := \
