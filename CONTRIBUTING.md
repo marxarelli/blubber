@@ -60,14 +60,17 @@ If you do update `Gopkg.toml` to add, update, or remove a dependency, simply
 run `dep ensure && dep prune` after doing so, and commit the resulting
 `vendor` directory changes.
 
-## Running tests
+## Running tests and linters
 
 Tests and linters for packages/files you've changed will automatically run
-when you submit your changes to Gerrit for review. You can also run tests
-locally by running `go test`.
+when you submit your changes to Gerrit for review. You can also run them
+locally using the `Makefile`:
 
-    go test ./... # for everything, or
-    go test -run TestFuncName ./... # to run a single test
+    make lint # to run all linters
+    make unit # or all unit tests
+    make test # or all linters and unit tests
+
+    go test -run TestFuncName ./... # to run a single test function
 
 ## Getting your changes reviewed and merged
 
