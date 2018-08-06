@@ -69,7 +69,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json"}, "/opt/lib"},
+				build.Copy{[]string{"package.json"}, "/opt/lib/"},
 				build.RunAll{[]build.Run{
 					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{}},
@@ -107,7 +107,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib"},
+				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib/"},
 				build.RunAll{[]build.Run{
 					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{"--production"}},

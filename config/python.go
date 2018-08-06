@@ -1,9 +1,6 @@
 package config
 
 import (
-	"path"
-	"sort"
-
 	"gerrit.wikimedia.org/r/blubber/build"
 )
 
@@ -73,42 +70,23 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 		switch phase {
 		case build.PhasePrivileged:
 			if pc.Requirements != nil {
-				return []build.Instruction{
-					build.RunAll{[]build.Run{
-						{pc.version(), []string{"-m", "easy_install", "pip"}},
-						{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
-					}},
-				}
+				return []build.Instruction{build.RunAll{[]build.Run{
+					{pc.version(), []string{"-m", "easy_install", "pip"}},
+					{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
+				}}}
 			}
 
 		case build.PhasePreInstall:
 			if pc.Requirements != nil {
-				envs := build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  PythonLibPrefix,
-					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
-				}}
-
-				mkdirs := build.RunAll{
-					Runs: []build.Run{
-						build.CreateDirectory(PythonLibPrefix),
-					},
+				ins := []build.Instruction{
+					build.Env{map[string]string{
+						"PIP_WHEEL_DIR":  PythonLibPrefix,
+						"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
+					}},
+					build.CreateDirectory(PythonLibPrefix),
 				}
 
-				dirs, bydir := pc.RequirementsByDir()
-				copies := make([]build.Instruction, len(dirs))
-
-				// make project subdirectories for requirements files if necessary, and
-				// copy in requirements files
-				for i, dir := range dirs {
-					if dir != "./" {
-						mkdirs.Runs = append(mkdirs.Runs, build.CreateDirectory(dir))
-					}
-
-					copies[i] = build.Copy{bydir[dir], dir}
-				}
-
-				ins := []build.Instruction{envs, mkdirs}
-				ins = append(ins, copies...)
+				ins = append(ins, build.SyncFiles(pc.Requirements, ".")...)
 
 				if args := pc.RequirementsArgs(); len(args) > 0 {
 					ins = append(ins, build.RunAll{[]build.Run{
@@ -148,38 +126,6 @@ func (pc PythonConfig) RequirementsArgs() []string {
 	}
 
 	return args
-}
-
-// RequirementsByDir returns both the configured requirements files indexed by
-// parent directory and a sorted slice of those parent directories. The latter
-// is useful in ensuring deterministic iteration since the ordering of map
-// keys is not guaranteed.
-//
-func (pc PythonConfig) RequirementsByDir() ([]string, map[string][]string) {
-	bydir := make(map[string][]string)
-
-	for _, reqpath := range pc.Requirements {
-		dir := path.Dir(reqpath) + "/"
-		reqpath = path.Clean(reqpath)
-
-		if reqs, found := bydir[dir]; found {
-			bydir[dir] = append(reqs, reqpath)
-		} else {
-			bydir[dir] = []string{reqpath}
-		}
-	}
-
-	dirs := make([]string, len(bydir))
-	i := 0
-
-	for dir := range bydir {
-		dirs[i] = dir
-		i++
-	}
-
-	sort.Strings(dirs)
-
-	return dirs, bydir
 }
 
 func (pc PythonConfig) version() string {

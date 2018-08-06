@@ -31,6 +31,12 @@ func TestChown(t *testing.T) {
 	assert.Equal(t, []string{`chown "123":"124" "/foo"`}, i.Compile())
 }
 
+func TestCreateDirectories(t *testing.T) {
+	i := build.CreateDirectories([]string{"/foo", "/bar"})
+
+	assert.Equal(t, []string{`mkdir -p "/foo" "/bar"`}, i.Compile())
+}
+
 func TestCreateDirectory(t *testing.T) {
 	i := build.CreateDirectory("/foo")
 
@@ -60,4 +66,64 @@ func TestHome(t *testing.T) {
 			build.Home("foo"),
 		)
 	})
+}
+
+func TestSortFilesByDir(t *testing.T) {
+	files := []string{"foo", "./bar", "./d/d-foo", "./c/c/c-foo", "b/b-foo", "b/b-bar", "a/a-foo"}
+
+	sortedDirs, filesByDir := build.SortFilesByDir(files)
+
+	assert.Equal(t,
+		[]string{
+			"./",
+			"a/",
+			"b/",
+			"c/c/",
+			"d/",
+		},
+		sortedDirs,
+	)
+
+	assert.Equal(t,
+		map[string][]string{
+			"./":   []string{"foo", "bar"},
+			"d/":   []string{"d/d-foo"},
+			"c/c/": []string{"c/c/c-foo"},
+			"b/":   []string{"b/b-foo", "b/b-bar"},
+			"a/":   []string{"a/a-foo"},
+		},
+		filesByDir,
+	)
+}
+
+func TestSyncFiles(t *testing.T) {
+	files := []string{"foo", "./bar", "./d/d-foo", "./c/c/c-foo", "b/b-foo", "b/b-bar", "a/a-foo"}
+
+	assert.Equal(t,
+		[]build.Instruction{
+			build.Run{"mkdir -p", []string{"a/", "b/", "c/c/", "d/"}},
+			build.Copy{[]string{"foo", "bar"}, "./"},
+			build.Copy{[]string{"a/a-foo"}, "a/"},
+			build.Copy{[]string{"b/b-foo", "b/b-bar"}, "b/"},
+			build.Copy{[]string{"c/c/c-foo"}, "c/c/"},
+			build.Copy{[]string{"d/d-foo"}, "d/"},
+		},
+		build.SyncFiles(files, "."),
+	)
+}
+
+func TestSyncFilesWithDestination(t *testing.T) {
+	files := []string{"foo", "./bar", "./d/d-foo", "./c/c/c-foo", "b/b-foo", "b/b-bar", "a/a-foo"}
+
+	assert.Equal(t,
+		[]build.Instruction{
+			build.Run{"mkdir -p", []string{"/dir/a/", "/dir/b/", "/dir/c/c/", "/dir/d/"}},
+			build.Copy{[]string{"foo", "bar"}, "/dir/"},
+			build.Copy{[]string{"a/a-foo"}, "/dir/a/"},
+			build.Copy{[]string{"b/b-foo", "b/b-bar"}, "/dir/b/"},
+			build.Copy{[]string{"c/c/c-foo"}, "/dir/c/c/"},
+			build.Copy{[]string{"d/d-foo"}, "/dir/d/"},
+		},
+		build.SyncFiles(files, "/dir"),
+	)
 }

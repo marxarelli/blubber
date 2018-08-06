@@ -18,7 +18,9 @@ variants:
       requirements: [package.json, package-lock.json]
     python:
       requirements: [requirements.txt]
-    builder: [make, -f, Makefile]
+    builder:
+      command: [make, deps]
+      requirements: [Makefile, vendor]
 
   development:
     includes: [build]

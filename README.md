@@ -15,11 +15,9 @@ version: v2
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
-runs:
+lives:
   in: /srv/service
-  as: runuser
-  uid: 666
-  gid: 666
+runs:
   environment:
     FOO: bar
     BAR: baz

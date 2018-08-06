@@ -63,10 +63,10 @@ func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 				)
 			}
 
-			return []build.Instruction{
-				build.Copy{nc.Requirements, LocalLibPrefix},
+			return append(
+				build.SyncFiles(nc.Requirements, LocalLibPrefix),
 				npmInstall,
-			}
+			)
 		}
 	case build.PhasePostInstall:
 		if nc.Env != "" || len(nc.Requirements) > 0 {
