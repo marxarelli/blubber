@@ -29,9 +29,9 @@ lint:
 	@go list -f $(GO_LIST_GOFILES) ./... | while read f; do \
 		gofmt -e -d "$${f}" >> .lint-gofmt.diff; \
 	done
-	@test ! -s .lint-gofmt.diff || (echo "gofmt found errors:"; cat .lint-gofmt.diff; exit 1)
+	@test -z "$(grep '[^[:blank:]]' .lint-gofmt.diff)" || (echo "gofmt found errors:"; cat .lint-gofmt.diff; exit 1)
 	golint -set_exit_status $(GO_PACKAGES)
-	go tool vet -composites=false $(GO_PACKAGES)
+	go vet -composites=false $(GO_PACKAGES)
 
 unit:
 	go test -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
