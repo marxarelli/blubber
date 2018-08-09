@@ -11,7 +11,7 @@ import (
 
 func TestLivesConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     lives:
       in: /some/directory
@@ -40,7 +40,7 @@ func TestLivesConfigYAML(t *testing.T) {
 
 func TestLivesConfigDefaults(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo`))
 
 	if assert.NoError(t, err) {

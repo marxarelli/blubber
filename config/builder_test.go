@@ -11,7 +11,7 @@ import (
 
 func TestBuilderConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     builder:
       command: [make, -f, Makefile, test]

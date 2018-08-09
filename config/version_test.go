@@ -10,21 +10,21 @@ import (
 
 func TestVersionConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     variants:
       foo: {}`))
 
 	assert.Nil(t, err)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "v2", cfg.Version)
+		assert.Equal(t, "v3", cfg.Version)
 	}
 }
 
 func TestVersionConfigValidation(t *testing.T) {
 	t.Run("supported version", func(t *testing.T) {
 		err := config.Validate(config.VersionConfig{
-			Version: "v2",
+			Version: "v3",
 		})
 
 		assert.False(t, config.IsValidationError(err))
