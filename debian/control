@@ -9,8 +9,8 @@ Build-Depends: debhelper (>= 10),
                git,
                golang-any
 Standards-Version: 3.9.8
-Homepage: https://phabricator.wikimedia.org/source/blubber
-XS-Go-Import-Path: phabricator.wikimedia.org/source/blubber
+Homepage: https://gerrit.wikimedia.org/g/blubber
+XS-Go-Import-Path: gerrit.wikimedia.org/r/blubber
 
 Package: blubber
 Architecture: any
