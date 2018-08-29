@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 func TestRun(t *testing.T) {
@@ -33,7 +33,7 @@ func TestRunAll(t *testing.T) {
 func TestCopy(t *testing.T) {
 	i := build.Copy{[]string{"source1", "source2"}, "dest"}
 
-	assert.Equal(t, []string{`"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	assert.Equal(t, []string{`"source1"`, `"source2"`, `"dest/"`}, i.Compile())
 }
 
 func TestCopyAs(t *testing.T) {
@@ -44,7 +44,7 @@ func TestCopyAs(t *testing.T) {
 			build.Copy{[]string{"source1", "source2"}, "dest"},
 		}
 
-		assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+		assert.Equal(t, []string{"123:124", `"source1"`, `"source2"`, `"dest/"`}, i.Compile())
 	})
 
 	t.Run("wrapping CopyFrom", func(t *testing.T) {
@@ -54,14 +54,14 @@ func TestCopyAs(t *testing.T) {
 			build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}},
 		}
 
-		assert.Equal(t, []string{"123:124", "foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+		assert.Equal(t, []string{"123:124", "foo", `"source1"`, `"source2"`, `"dest/"`}, i.Compile())
 	})
 }
 
 func TestCopyFrom(t *testing.T) {
 	i := build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}}
 
-	assert.Equal(t, []string{"foo", `"source1"`, `"source2"`, `"dest"`}, i.Compile())
+	assert.Equal(t, []string{"foo", `"source1"`, `"source2"`, `"dest/"`}, i.Compile())
 }
 
 func TestEntryPoint(t *testing.T) {

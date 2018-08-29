@@ -1,8 +1,0 @@
-{
-  "phabricator.uri" : "https://phabricator.wikimedia.org/",
-  "repository.callsign" : "GBLBR",
-  "unit.engine": "GoTestEngine",
-  "load" : [
-    ".arcvendor/arcanist-go"
-  ]
-}

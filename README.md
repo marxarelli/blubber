@@ -11,15 +11,13 @@ running ad-hoc commands.
 ## Example configuration
 
 ```yaml
-version: v2
+version: v3
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml]
-runs:
+lives:
   in: /srv/service
-  as: runuser
-  uid: 666
-  gid: 666
+runs:
   environment:
     FOO: bar
     BAR: baz
@@ -71,7 +69,7 @@ In the example configuration, the `test` variant when expanded effectively
 becomes:
 
 ```yaml
-version: v2
+version: v3
 base: debian:jessie
 apt:
   packages: [libjpeg, libyaml, libjpeg-dev, libyaml-dev, chromium]

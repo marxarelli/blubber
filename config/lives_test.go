@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestLivesConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     lives:
       in: /some/directory
@@ -40,7 +40,7 @@ func TestLivesConfigYAML(t *testing.T) {
 
 func TestLivesConfigDefaults(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo`))
 
 	if assert.NoError(t, err) {

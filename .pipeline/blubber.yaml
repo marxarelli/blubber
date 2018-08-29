@@ -1,0 +1,9 @@
+version: v2
+base: golang:1.9-stretch
+lives: { in: /go/src/gerrit.wikimedia.org/r/blubber }
+
+variants:
+  test:
+    runs: { insecurely: true }
+    builder: [go, get, -u, github.com/golang/lint/golint]
+    entrypoint: [make, test]

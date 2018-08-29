@@ -1,22 +1,22 @@
 package config
 
 import (
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // CommonConfig holds the configuration fields common to both the root config
 // and each configured variant.
 //
 type CommonConfig struct {
-	Base          string           `yaml:"base" validate:"omitempty,baseimage"` // name/path to base image
-	Apt           AptConfig        `yaml:"apt"`                                 // APT related
-	Node          NodeConfig       `yaml:"node"`                                // Node related
-	Python        PythonConfig     `yaml:"python"`                              // Python related
-	BuilderConfig `yaml:",inline"` // Builder related
-	Lives         LivesConfig      `yaml:"lives"`        // application owner/dir
-	Runs          RunsConfig       `yaml:"runs"`         // runtime environment
-	SharedVolume  Flag             `yaml:"sharedvolume"` // use volume for app
-	EntryPoint    []string         `yaml:"entrypoint"`   // entry-point executable
+	Base         string        `yaml:"base" validate:"omitempty,baseimage"` // name/path to base image
+	Apt          AptConfig     `yaml:"apt"`                                 // APT related
+	Node         NodeConfig    `yaml:"node"`                                // Node related
+	Python       PythonConfig  `yaml:"python"`                              // Python related
+	Builder      BuilderConfig `yaml:"builder"`                             // Builder related
+	Lives        LivesConfig   `yaml:"lives"`                               // application owner/dir
+	Runs         RunsConfig    `yaml:"runs"`                                // runtime environment
+	SharedVolume Flag          `yaml:"sharedvolume"`                        // use volume for app
+	EntryPoint   []string      `yaml:"entrypoint"`                          // entry-point executable
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.
@@ -29,7 +29,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 	cc.Apt.Merge(cc2.Apt)
 	cc.Node.Merge(cc2.Node)
 	cc.Python.Merge(cc2.Python)
-	cc.BuilderConfig.Merge(cc2.BuilderConfig)
+	cc.Builder.Merge(cc2.Builder)
 	cc.Lives.Merge(cc2.Lives)
 	cc.Runs.Merge(cc2.Runs)
 	cc.SharedVolume.Merge(cc2.SharedVolume)
@@ -44,7 +44,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 // injected.
 //
 func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
-	return []build.PhaseCompileable{cc.Apt, cc.Node, cc.Python, cc.BuilderConfig, cc.Lives, cc.Runs}
+	return []build.PhaseCompileable{cc.Apt, cc.Node, cc.Python, cc.Builder, cc.Lives, cc.Runs}
 }
 
 // InstructionsForPhase injects instructions into the given build phase for

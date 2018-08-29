@@ -5,31 +5,45 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestBuilderConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
+    builder:
+      command: [make, -f, Makefile, test]
+      requirements: [Makefile]
     variants:
+      test: {}
       build:
-        builder: [make, -f, Makefile]`))
+        builder:
+          command: [make]
+          requirements: []`))
 
 	if assert.NoError(t, err) {
-		variant, err := config.ExpandVariant(cfg, "build")
+		variant, err := config.ExpandVariant(cfg, "test")
 
-		assert.Equal(t, []string{"make", "-f", "Makefile"}, variant.Builder)
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"make", "-f", "Makefile", "test"}, variant.Builder.Command)
+			assert.Equal(t, []string{"Makefile"}, variant.Builder.Requirements)
+		}
 
-		assert.Nil(t, err)
+		variant, err = config.ExpandVariant(cfg, "build")
+
+		if assert.NoError(t, err) {
+			assert.Equal(t, []string{"make"}, variant.Builder.Command)
+			assert.Equal(t, []string{}, variant.Builder.Requirements)
+		}
 	}
 }
 
 func TestBuilderConfigInstructions(t *testing.T) {
-	cfg := config.BuilderConfig{Builder: []string{"make", "-f", "Makefile"}}
+	cfg := config.BuilderConfig{Command: []string{"make", "-f", "Makefile"}}
 
-	t.Run("PhasePostInstall", func(t *testing.T) {
+	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Run{
@@ -37,7 +51,29 @@ func TestBuilderConfigInstructions(t *testing.T) {
 					[]string{"-f", "Makefile"},
 				},
 			},
-			cfg.InstructionsForPhase(build.PhasePostInstall),
+			cfg.InstructionsForPhase(build.PhasePreInstall),
+		)
+	})
+}
+
+func TestBuilderConfigInstructionsWithRequirements(t *testing.T) {
+	cfg := config.BuilderConfig{
+		Command:      []string{"make", "-f", "Makefile", "foo"},
+		Requirements: []string{"Makefile", "foo", "bar/baz"},
+	}
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Run{"mkdir -p", []string{"bar/"}},
+				build.Copy{[]string{"Makefile", "foo"}, "./"},
+				build.Copy{[]string{"bar/baz"}, "bar/"},
+				build.Run{
+					"make",
+					[]string{"-f", "Makefile", "foo"},
+				},
+			},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
 	})
 }

@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestPythonConfigYAMLMerge(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     python:
       version: python2.7
@@ -37,7 +37,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 
 func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     python:
       requirements: [requirements.txt]
@@ -59,7 +59,7 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 
 func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     python:
       requirements: [requirements.txt]
@@ -158,10 +158,8 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 					"PIP_WHEEL_DIR":  "/opt/lib/python",
 					"PIP_FIND_LINKS": "file:///opt/lib/python",
 				}},
-				build.RunAll{[]build.Run{
-					{"mkdir -p", []string{"/opt/lib/python"}},
-					{"mkdir -p", []string{"docs/"}},
-				}},
+				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
+				build.Run{"mkdir -p", []string{"docs/"}},
 				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
 				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
 				build.RunAll{[]build.Run{
@@ -194,34 +192,6 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 			cfg.InstructionsForPhase(build.PhasePostInstall),
 		)
 	})
-}
-
-func TestPythonConfigRequirementsByDir(t *testing.T) {
-	cfg := config.PythonConfig{
-		Requirements: []string{"foo", "./bar", "./c/c-foo", "b/b-foo", "b/b-bar", "a/a-foo"},
-	}
-
-	sortedDirs, reqsByDir := cfg.RequirementsByDir()
-
-	assert.Equal(t,
-		[]string{
-			"./",
-			"a/",
-			"b/",
-			"c/",
-		},
-		sortedDirs,
-	)
-
-	assert.Equal(t,
-		map[string][]string{
-			"./": []string{"foo", "bar"},
-			"c/": []string{"c/c-foo"},
-			"b/": []string{"b/b-foo", "b/b-bar"},
-			"a/": []string{"a/a-foo"},
-		},
-		reqsByDir,
-	)
 }
 
 func TestPythonConfigRequirementsArgs(t *testing.T) {

@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestVariantConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     variants:
       build: {}
@@ -216,7 +216,7 @@ func TestVariantConfigValidation(t *testing.T) {
 	t.Run("includes", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: { includes: [build] }`))
@@ -226,7 +226,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: {}`))
@@ -236,7 +236,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: { includes: [build, foobuild, foo_build] }`))
@@ -256,7 +256,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: { copies: build }`))
@@ -266,7 +266,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: {}`))
@@ -276,7 +276,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo: { copies: foobuild }`))

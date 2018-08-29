@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"phabricator.wikimedia.org/source/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/build"
 )
 
 // NewInstruction takes a general internal build.Instruction and returns

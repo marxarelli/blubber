@@ -75,7 +75,15 @@ type Copy struct {
 // Compile quotes the defined source files/directories and destination.
 //
 func (copy Copy) Compile() []string {
-	return append(quoteAll(copy.Sources), quote(copy.Destination))
+	dest := copy.Destination
+
+	// If there is more than 1 file being copied, the destination must be a
+	// directory ending with "/"
+	if len(copy.Sources) > 1 && !strings.HasSuffix(copy.Destination, "/") {
+		dest = dest + "/"
+	}
+
+	return append(quoteAll(copy.Sources), quote(dest))
 }
 
 // CopyAs is a concrete build instruction for copying source

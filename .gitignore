@@ -1,4 +1,5 @@
 /.build
+/.lint-*
 /bin
 /blubber
 /blubber.git

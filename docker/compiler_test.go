@@ -6,14 +6,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/config"
-	"phabricator.wikimedia.org/source/blubber/docker"
-	"phabricator.wikimedia.org/source/blubber/meta"
+	"gerrit.wikimedia.org/r/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/docker"
+	"gerrit.wikimedia.org/r/blubber/meta"
 )
 
 func TestSingleStageHasNoName(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo/bar
     variants:
       development: {}`))
@@ -28,7 +28,7 @@ func TestSingleStageHasNoName(t *testing.T) {
 
 func TestMultiStageIncludesStageNames(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo/bar
     variants:
       build: {}
@@ -52,7 +52,7 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
 
 func TestMultipleArtifactsFromSameStage(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo/bar
     variants:
       build: {}
@@ -79,7 +79,7 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 
 func TestMetaDataLabels(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo/bar
     variants:
       development: {}`))

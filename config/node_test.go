@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestNodeConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     node:
       requirements: [package.json]
@@ -69,7 +69,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json"}, "/opt/lib"},
+				build.Copy{[]string{"package.json"}, "/opt/lib/"},
 				build.RunAll{[]build.Run{
 					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{}},
@@ -107,7 +107,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib"},
+				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib/"},
 				build.RunAll{[]build.Run{
 					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{"--production"}},

@@ -5,13 +5,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/build"
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/build"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func TestArtifactsConfigYAML(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo
     variants:
       build: {}
@@ -80,7 +80,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 	t.Run("from", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo:
@@ -94,7 +94,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("missing", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo:
@@ -112,7 +112,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadConfig([]byte(`---
-        version: v2
+        version: v3
         variants:
           build: {}
           foo:

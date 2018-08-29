@@ -14,18 +14,15 @@ to both users inside and outside of WMF and our communities.
     * To install on macOS use [Homebrew](https://brew.sh) and run:
       `brew install go`
     * You can run `go version` to check the golang version.
-    * If your distro's go package is tool old or unavailable,
+    * If your distro's go package is too old or unavailable,
       [download](https://golang.org/dl/) a newer golang version.
  2. `dep` for dependency management
     * On macOS, try Homebrew: `brew install dep`
     * [Other](https://golang.github.io/dep/docs/installation.html)
- 3. `arcanist` for code review
-    * See our [help article](https://www.mediawiki.org/wiki/Phabricator/Arcanist)
-      for setup instructions.
- 4. An account at [phabricator.wikimedia.org](https://phabricator.wikimedia.org)
-    * See our [help article](https://www.mediawiki.org/wiki/Phabricator/Help)
-      for setup instructions.
- 5. (optional) `gox` is used for cross-compiling binary releases. To
+ 3. An account at [gerrit.wikimedia.org](https://gerrit.wikimedia.org)
+    * See the [guide](https://www.mediawiki.org/wiki/Gerrit/Getting_started)
+      on mediawiki.org for setup instructions.
+ 4. (optional) `gox` is used for cross-compiling binary releases. To
     install `gox` use `go get github.com/mitchellh/gox`.
 
 ## Get the source
@@ -33,28 +30,21 @@ to both users inside and outside of WMF and our communities.
 Use `go get` to install the source from our Git repo into `src` under your
 `GOPATH`. By default, this will be `~/go/src`.
 
-    go get phabricator.wikimedia.org/source/blubber
+    go get gerrit.wikimedia.org/r/blubber
 
 Symlink it to a different directory if you'd prefer not to work from your
 `GOPATH`. For example:
 
     cd ~/Projects
-    ln -s ~/go/src/phabricator.wikimedia.org/source/blubber
+    ln -s ~/go/src/gerrit.wikimedia.org/r/blubber
     cd blubber # yay.
-
-## Initialize submodules in `.arcvendor`
-
-We currently use a submodule for integrating Go testing tools into Arcanist
-which will run automatically upon submission to Differential via `arc diff`.
-
-    git submodule update --init
 
 ## Have a read through the documentation
 
 If you haven't already seen the [README.md](README.md), check it out.
 
 Run `godoc -http :9999` and peruse the HTML generated from inline docs
-at `localhost:9999/pkg/phabricator.wikimedia.org/source/blubber`.
+at `localhost:9999/pkg/gerrit.wikimedia.org/r/blubber`.
 
 ## Installing or updating dependencies
 
@@ -70,30 +60,23 @@ If you do update `Gopkg.toml` to add, update, or remove a dependency, simply
 run `dep ensure && dep prune` after doing so, and commit the resulting
 `vendor` directory changes.
 
-
-## Running tests
+## Running tests and linters
 
 Tests and linters for packages/files you've changed will automatically run
-when you submit your changes to Differential via `arc diff`. You can also do
-this manually.
+when you submit your changes to Gerrit for review. You can also run them
+locally using the `Makefile`:
 
-    arc unit # or
-    arc unit --everything # or simply
-    go test ./... # or
-    go test -run TestFuncName ./... # to run a single test
+    make lint # to run all linters
+    make unit # or all unit tests
+    make test # or all linters and unit tests
 
-    arc lint # or
-    arc lint --everything
+    go test -run TestFuncName ./... # to run a single test function
 
-## Getting your changes reviewed
+## Getting your changes reviewed and merged
 
-Use `arc diff` to submit your changes to Differential.
-
-
-## Landing your changes
-
-Once your changes have been accepted, run `arc land` on your local branch to
-merge/push the commit and close the diff.
+Push your changes to Gerrit for review. See the
+[guide](https://www.mediawiki.org/wiki/Gerrit/Tutorial#How_to_submit_a_patch)
+on mediawiki.org on how to correctly prepare and submit a patch.
 
 ## Releases
 

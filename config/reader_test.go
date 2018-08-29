@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"phabricator.wikimedia.org/source/blubber/config"
+	"gerrit.wikimedia.org/r/blubber/config"
 )
 
 func ExampleResolveIncludes() {
 	cfg, _ := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     variants:
       varA: { includes: [varB, varC] }
       varB: { includes: [varD, varE] }
@@ -29,7 +29,7 @@ func ExampleResolveIncludes() {
 
 func TestReadConfigErrorsOnUnknownYAML(t *testing.T) {
 	_, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     newphone: whodis
     variants:
       foo: {}`))
@@ -57,7 +57,7 @@ func TestReadConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
 
 func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     variants:
       varA: { includes: [varB] }
       varB: { includes: [varA] }`))
@@ -71,7 +71,7 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 
 func TestMultiLevelIncludes(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     base: foo-slim
     variants:
       build:
@@ -103,7 +103,7 @@ func TestMultiLevelIncludes(t *testing.T) {
 
 func TestMultiIncludes(t *testing.T) {
 	cfg, err := config.ReadConfig([]byte(`---
-    version: v2
+    version: v3
     variants:
       mammal:
         base: neutral
