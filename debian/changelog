@@ -1,3 +1,27 @@
+blubber (0.5.0-1) unstable; urgency=low
+
+  [ Tyler Cipriani ]
+  * tool -> too
+  * Add slash to directory path if copying > 1 file
+
+  [ Dan Duvall ]
+  * Change import paths from Phabricator to Gerrit
+
+  [ Antoine Musso ]
+  * Add .gitreview file
+
+  [ Dan Duvall ]
+  * Provide Makefile rules for running linters and tests
+  * Makefile lint rule now tests gofmt output and runs go vet correctly
+  * Test Blubber in CI using Blubber
+  * Refactor builder to support file requirements and run pre-install
+  * Bump Blubber config version to v3
+
+  [ Tyler Cipriani ]
+  * Change XS-Go-Import-Path after move to gerrit
+
+ -- Tyler Cipriani <tcipriani@wikimedia.org>  Wed, 29 Aug 2018 15:05:07 -0600
+
 blubber (0.4.0-1) unstable; urgency=medium
 
   [ Dan Duvall ]
