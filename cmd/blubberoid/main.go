@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	showHelp  *bool   = getopt.BoolLong("help", 'h', "show help/usage")
-	address   *string = getopt.StringLong("address", 'a', ":8748", "socket address/port to listen on (default ':8748')", "address:port")
-	endpoint  *string = getopt.StringLong("endpoint", 'e', "/", "server endpoint (default '/')", "path")
-	policyURI *string = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
+	showHelp  = getopt.BoolLong("help", 'h', "show help/usage")
+	address   = getopt.StringLong("address", 'a', ":8748", "socket address/port to listen on (default ':8748')", "address:port")
+	endpoint  = getopt.StringLong("endpoint", 'e', "/", "server endpoint (default '/')", "path")
+	policyURI = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
 	policy    *config.Policy
 )
 
