@@ -69,9 +69,8 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json"}, "/opt/lib/"},
+				build.Copy{[]string{"package.json"}, "./"},
 				build.RunAll{[]build.Run{
-					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{}},
 				}},
 			},
@@ -83,9 +82,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
-					"NODE_ENV":  "foo",
-					"NODE_PATH": "/opt/lib/node_modules",
-					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
+					"NODE_ENV": "foo",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -107,9 +104,8 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"package.json", "package-lock.json"}, "/opt/lib/"},
+				build.Copy{[]string{"package.json", "package-lock.json"}, "./"},
 				build.RunAll{[]build.Run{
-					{"cd", []string{"/opt/lib"}},
 					{"npm install", []string{"--production"}},
 					{"npm dedupe", []string{}},
 				}},
@@ -122,9 +118,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
-					"NODE_ENV":  "production",
-					"NODE_PATH": "/opt/lib/node_modules",
-					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
+					"NODE_ENV": "production",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -151,9 +145,7 @@ func TestNodeConfigInstructionsEnvironmentOnly(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
-					"NODE_ENV":  "production",
-					"NODE_PATH": "/opt/lib/node_modules",
-					"PATH":      "/opt/lib/node_modules/.bin:${PATH}",
+					"NODE_ENV": "production",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
