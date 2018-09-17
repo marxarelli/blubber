@@ -68,19 +68,6 @@ func TestVariantLoops(t *testing.T) {
 
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
-		t.Run("shared volume", func(t *testing.T) {
-			cfg := config.VariantConfig{}
-			cfg.Lives.In = "/srv/service"
-			cfg.SharedVolume.True = true
-
-			assert.Equal(t,
-				[]build.Instruction{
-					build.Volume{"/srv/service"},
-				},
-				cfg.InstructionsForPhase(build.PhaseInstall),
-			)
-		})
-
 		t.Run("standard source copy", func(t *testing.T) {
 			cfg := config.VariantConfig{}
 			cfg.Lives.UID = 123

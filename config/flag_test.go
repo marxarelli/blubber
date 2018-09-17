@@ -13,10 +13,8 @@ func TestFlagMerge(t *testing.T) {
     version: v3
     base: foo
     runs: { insecurely: true }
-    sharedvolume: false
     variants:
       development:
-        sharedvolume: true
         runs: { insecurely: false }`))
 
 	if assert.NoError(t, err) {
@@ -24,7 +22,6 @@ func TestFlagMerge(t *testing.T) {
 
 		if assert.NoError(t, err) {
 			assert.False(t, variant.Runs.Insecurely.True)
-			assert.True(t, variant.SharedVolume.True)
 		}
 	}
 }

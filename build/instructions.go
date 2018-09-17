@@ -173,19 +173,6 @@ func (user User) Compile() []string {
 	return []string{quote(user.Name)}
 }
 
-// Volume is a concrete build instruction for defining a volume mount point
-// within the container.
-//
-type Volume struct {
-	Path string // volume/mount path
-}
-
-// Compile returns the quoted volume path.
-//
-func (vol Volume) Compile() []string {
-	return []string{quote(vol.Path)}
-}
-
 // WorkingDirectory is a build instruction for defining the working directory
 // for future command and entrypoint instructions.
 //
