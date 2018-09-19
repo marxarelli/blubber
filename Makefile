@@ -16,10 +16,11 @@ GO_LDFLAGS := \
 #
 # workaround bug in case CURDIR is a symlink
 # see https://github.com/golang/go/issues/24359
+GO_GENERATE := cd "$(REAL_CURDIR)" && go generate
 GO_BUILD := cd "$(REAL_CURDIR)" && go build -v -ldflags "$(GO_LDFLAGS)"
 GO_INSTALL := cd "$(REAL_CURDIR)" && go install -v -ldflags "$(GO_LDFLAGS)"
 
-all: blubber blubberoid
+all: code blubber blubberoid
 
 blubber:
 	$(GO_BUILD) ./cmd/blubber
@@ -27,11 +28,14 @@ blubber:
 blubberoid:
 	$(GO_BUILD) ./cmd/blubberoid
 
+code:
+	$(GO_GENERATE) $(GO_PACKAGES)
+
 clean:
 	go clean
 	rm -f blubber blubberoid
 
-install:
+install: all
 	$(GO_INSTALL) $(GO_PACKAGES)
 
 release:

@@ -12,7 +12,7 @@ import (
 
 func TestBlubberoidYAMLRequest(t *testing.T) {
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/test", strings.NewReader(`---
+	req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`---
     version: v3
     base: foo
     variants:
@@ -33,7 +33,7 @@ func TestBlubberoidYAMLRequest(t *testing.T) {
 func TestBlubberoidJSONRequest(t *testing.T) {
 	t.Run("valid JSON syntax", func(t *testing.T) {
 		rec := httptest.NewRecorder()
-		req := httptest.NewRequest("POST", "/test", strings.NewReader(`{
+		req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`{
 			"version": "v3",
 			"base": "foo",
 			"variants": {
@@ -55,7 +55,7 @@ func TestBlubberoidJSONRequest(t *testing.T) {
 
 	t.Run("invalid JSON syntax", func(t *testing.T) {
 		rec := httptest.NewRecorder()
-		req := httptest.NewRequest("POST", "/test", strings.NewReader(`{
+		req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`{
 			version: "v3",
 			base: "foo",
 			variants: {
@@ -70,13 +70,13 @@ func TestBlubberoidJSONRequest(t *testing.T) {
 		body, _ := ioutil.ReadAll(resp.Body)
 
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-		assert.Equal(t, string(body), "'application/json' media type given but request contains invalid JSON\n")
+		assert.Equal(t, string(body), "Failed to read 'application/json' config from request body. Error: invalid character 'v' looking for beginning of object key string\n")
 	})
 }
 
 func TestBlubberoidUnsupportedMediaType(t *testing.T) {
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("POST", "/test", strings.NewReader(``))
+	req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(``))
 	req.Header.Set("Content-Type", "application/foo")
 
 	blubberoid(rec, req)

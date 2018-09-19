@@ -3,27 +3,32 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"strings"
+	"text/template"
 
 	"github.com/pborman/getopt/v2"
 
 	"gerrit.wikimedia.org/r/blubber/config"
 	"gerrit.wikimedia.org/r/blubber/docker"
+	"gerrit.wikimedia.org/r/blubber/meta"
 )
 
 var (
-	showHelp  = getopt.BoolLong("help", 'h', "show help/usage")
-	address   = getopt.StringLong("address", 'a', ":8748", "socket address/port to listen on (default ':8748')", "address:port")
-	endpoint  = getopt.StringLong("endpoint", 'e', "/", "server endpoint (default '/')", "path")
-	policyURI = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
-	policy    *config.Policy
+	showHelp    = getopt.BoolLong("help", 'h', "show help/usage")
+	address     = getopt.StringLong("address", 'a', ":8748", "socket address/port to listen on (default ':8748')", "address:port")
+	endpoint    = getopt.StringLong("endpoint", 'e', "/", "server endpoint (default '/')", "path")
+	policyURI   = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
+	policy      *config.Policy
+	openAPISpec []byte
 )
 
 func main() {
@@ -51,7 +56,10 @@ func main() {
 		*endpoint += "/"
 	}
 
-	log.Printf("listening on %s for requests to %s[variant]\n", *address, *endpoint)
+	// Evaluate OpenAPI spec template and store results for ?spec requests
+	openAPISpec = readOpenAPISpec()
+
+	log.Printf("listening on %s for requests to %sv1/[variant]\n", *address, *endpoint)
 
 	http.HandleFunc(*endpoint, blubberoid)
 	log.Fatal(http.ListenAndServe(*address, nil))
@@ -59,12 +67,35 @@ func main() {
 
 func blubberoid(res http.ResponseWriter, req *http.Request) {
 	if len(req.URL.Path) <= len(*endpoint) {
+		if req.URL.RawQuery == "spec" {
+			res.Header().Set("Content-Type", "text/plain")
+			res.Write(openAPISpec)
+			return
+		}
+
 		res.WriteHeader(http.StatusNotFound)
-		res.Write(responseBody("request a variant at %s[variant]", *endpoint))
+		res.Write(responseBody("request a variant at %sv1/[variant]", *endpoint))
 		return
 	}
 
-	variant := req.URL.Path[len(*endpoint):]
+	requestPath := req.URL.Path[len(*endpoint):]
+	pathSegments := strings.Split(requestPath, "/")
+
+	// Request should have been to v1/[variant]
+	if len(pathSegments) != 2 || pathSegments[0] != "v1" {
+		res.WriteHeader(http.StatusNotFound)
+		res.Write(responseBody("request a variant at %sv1/[variant]", *endpoint))
+		return
+	}
+
+	variant, err := url.PathUnescape(pathSegments[1])
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		log.Printf("failed to unescape variant name '%s': %s\n", pathSegments[1], err)
+		return
+	}
+
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
@@ -73,24 +104,24 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	switch mt, _, _ := mime.ParseMediaType(req.Header.Get("content-type")); mt {
-	case "application/json":
-		// Enforce strict JSON syntax if specified, even though the config parser
-		// would technically handle anything that's at least valid YAML
-		if !json.Valid(body) {
-			res.WriteHeader(http.StatusBadRequest)
-			res.Write(responseBody("'%s' media type given but request contains invalid JSON", mt))
-			return
-		}
-	case "application/yaml", "application/x-yaml":
-		// Let the config parser validate YAML syntax
-	default:
-		res.WriteHeader(http.StatusUnsupportedMediaType)
-		res.Write(responseBody("'%s' media type is not supported", mt))
-		return
+	var cfg *config.Config
+	mediaType, _, _ := mime.ParseMediaType(req.Header.Get("content-type"))
+
+	// Default to application/json
+	if mediaType == "" {
+		mediaType = "application/json"
 	}
 
-	cfg, err := config.ReadYAMLConfig(body)
+	switch mediaType {
+	case "application/json":
+		cfg, err = config.ReadConfig(body)
+	case "application/yaml", "application/x-yaml":
+		cfg, err = config.ReadYAMLConfig(body)
+	default:
+		res.WriteHeader(http.StatusUnsupportedMediaType)
+		res.Write(responseBody("'%s' media type is not supported", mediaType))
+		return
+	}
 
 	if err != nil {
 		if config.IsValidationError(err) {
@@ -101,8 +132,8 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 
 		res.WriteHeader(http.StatusBadRequest)
 		res.Write(responseBody(
-			"Failed to read config YAML from request body. "+
-				"Was it formatted correctly and encoded as binary data?\nerror: %s",
+			"Failed to read '%s' config from request body. Error: %s",
+			mediaType,
 			err.Error(),
 		))
 		return
@@ -135,4 +166,17 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 
 func responseBody(msg string, a ...interface{}) []byte {
 	return []byte(fmt.Sprintf(msg+"\n", a...))
+}
+
+func readOpenAPISpec() []byte {
+	var buffer bytes.Buffer
+	tmpl, _ := template.New("spec").Parse(openAPISpecTemplate)
+
+	tmpl.Execute(&buffer, struct {
+		Version string
+	}{
+		Version: meta.FullVersion(),
+	})
+
+	return buffer.Bytes()
 }
