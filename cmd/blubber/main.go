@@ -17,9 +17,9 @@ import (
 const parameters = "config.yaml variant"
 
 var (
-	showHelp    *bool   = getopt.BoolLong("help", 'h', "show help/usage")
-	showVersion *bool   = getopt.BoolLong("version", 'v', "show version information")
-	policyURI   *string = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
+	showHelp    = getopt.BoolLong("help", 'h', "show help/usage")
+	showVersion = getopt.BoolLong("version", 'v', "show version information")
+	policyURI   = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
 )
 
 func main() {
