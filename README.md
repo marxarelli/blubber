@@ -31,7 +31,6 @@ variants:
 
   development:
     includes: [build]
-    sharedvolume: true
 
   test:
     includes: [build]

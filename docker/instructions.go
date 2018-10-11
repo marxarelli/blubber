@@ -51,10 +51,6 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 	case build.User:
 		i.name = "USER"
 
-	case build.Volume:
-		i.name = "VOLUME"
-		i.array = true
-
 	case build.WorkingDirectory:
 		i.name = "WORKDIR"
 	}

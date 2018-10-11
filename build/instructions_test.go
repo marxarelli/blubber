@@ -104,12 +104,6 @@ func TestUser(t *testing.T) {
 	assert.Equal(t, []string{`"foo"`}, i.Compile())
 }
 
-func TestVolume(t *testing.T) {
-	i := build.Volume{"/foo/dir"}
-
-	assert.Equal(t, []string{`"/foo/dir"`}, i.Compile())
-}
-
 func TestWorkingDirectory(t *testing.T) {
 	i := build.WorkingDirectory{"/foo/path"}
 

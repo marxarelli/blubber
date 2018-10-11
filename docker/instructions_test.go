@@ -113,16 +113,6 @@ func TestUser(t *testing.T) {
 	}
 }
 
-func TestVolume(t *testing.T) {
-	i := build.Volume{"/foo/dir"}
-
-	di, err := docker.NewInstruction(i)
-
-	if assert.NoError(t, err) {
-		assert.Equal(t, "VOLUME [\"/foo/dir\"]\n", di.Compile())
-	}
-}
-
 func TestWorkingDirectory(t *testing.T) {
 	i := build.WorkingDirectory{"/foo/dir"}
 

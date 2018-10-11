@@ -23,14 +23,12 @@ func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 }
 
 // InstructionsForPhase injects build instructions related to artifact
-// copying, volume definition or copying of application files, and all common
-// configuration.
+// copying, copying of application files, and all common configuration.
 //
 // PhaseInstall
 //
-// If VariantConfig.Copies is not set, either copy in application files or
-// define a shared volume. Otherwise, delegate to
-// ArtifactsConfig.InstructionsForPhase.
+// If VariantConfig.Copies is not set, copy in application files. Otherwise,
+// delegate to ArtifactsConfig.InstructionsForPhase.
 //
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
@@ -53,11 +51,7 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 		if vc.Copies == "" {
-			if vc.SharedVolume.True {
-				instructions = append(instructions, build.Volume{vc.Lives.In})
-			} else {
-				instructions = append(instructions, build.Copy{[]string{"."}, "."})
-			}
+			instructions = append(instructions, build.Copy{[]string{"."}, "."})
 		}
 
 	case build.PhasePostInstall:

@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
 
@@ -15,18 +16,18 @@ install:
 	# workaround bug in case CURDIR is a symlink
 	# see https://github.com/golang/go/issues/24359
 	cd "$(REAL_CURDIR)" && \
-	go install -v -ldflags "$(GO_LDFLAGS)"
+	go install -v -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
 
 release:
-	gox -output="$(RELEASE_DIR)/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' -ldflags '$(GO_LDFLAGS)' $(PACKAGE)
+	gox -output="$(RELEASE_DIR)/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' -ldflags '$(GO_LDFLAGS)' $(GO_PACKAGES)
 	cp LICENSE "$(RELEASE_DIR)"
-	for f in "$(RELEASE_DIR)"/*/blubber; do \
+	for f in "$(RELEASE_DIR)"/*/{blubber,blubberoid}; do \
 		shasum -a 256 "$${f}" | awk '{print $$1}' > "$${f}.sha256"; \
 	done
 
 lint:
 	@echo > .lint-gofmt.diff
-	@go list -f $(GO_LIST_GOFILES) ./... | while read f; do \
+	@go list -f $(GO_LIST_GOFILES) $(GO_PACKAGES) | while read f; do \
 		gofmt -e -d "$${f}" >> .lint-gofmt.diff; \
 	done
 	@test -z "$(grep '[^[:blank:]]' .lint-gofmt.diff)" || (echo "gofmt found errors:"; cat .lint-gofmt.diff; exit 1)
