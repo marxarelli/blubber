@@ -1,3 +1,20 @@
+blubber (0.6.0-1) unstable; urgency=low
+
+  [ Dan Duvall ]
+  * Provide a stateless blubberoid microservice
+
+  [ Tyler Cipriani ]
+  * Fix make release
+  * Remove some types that will be inferred
+
+  [ Dan Duvall ]
+  * Update `.pipeline/blubber.yaml` to v3 format
+  * Install `node_modules` to application directory
+  * Test basic functionality of blubberoid
+  * Remove support for `sharedvolume` configuration
+
+ -- Tyler Cipriani <tcipriani@wikimedia.org>  Thu, 11 Oct 2018 08:36:32 -0600
+
 blubber (0.5.0-1) unstable; urgency=low
 
   [ Tyler Cipriani ]
