@@ -3,9 +3,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -68,6 +70,23 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		log.Printf("failed to read request body: %s\n", err)
+		return
+	}
+
+	switch mt, _, _ := mime.ParseMediaType(req.Header.Get("content-type")); mt {
+	case "application/json":
+		// Enforce strict JSON syntax if specified, even though the config parser
+		// would technically handle anything that's at least valid YAML
+		if !json.Valid(body) {
+			res.WriteHeader(http.StatusBadRequest)
+			res.Write(responseBody("'%s' media type given but request contains invalid JSON", mt))
+			return
+		}
+	case "application/yaml", "application/x-yaml":
+		// Let the config parser validate YAML syntax
+	default:
+		res.WriteHeader(http.StatusUnsupportedMediaType)
+		res.Write(responseBody("'%s' media type is not supported", mt))
 		return
 	}
 
