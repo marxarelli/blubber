@@ -6,5 +6,5 @@ variants:
   test:
     runs: { insecurely: true }
     builder:
-      command: [go, get, -u, github.com/golang/lint/golint]
+      command: [go, get, -u, golang.org/x/lint/golint]
     entrypoint: [make, test]
