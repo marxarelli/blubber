@@ -11,7 +11,7 @@ import (
 )
 
 func TestAptConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     apt:
       packages:

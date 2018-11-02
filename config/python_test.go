@@ -10,7 +10,7 @@ import (
 )
 
 func TestPythonConfigYAMLMerge(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     python:
@@ -36,7 +36,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 }
 
 func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     python:
@@ -58,7 +58,7 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 }
 
 func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     python:

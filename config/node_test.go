@@ -10,7 +10,7 @@ import (
 )
 
 func TestNodeConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     node:

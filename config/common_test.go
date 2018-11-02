@@ -9,7 +9,7 @@ import (
 )
 
 func TestCommonConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: fooimage
     entrypoint: ["/bin/foo"]

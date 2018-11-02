@@ -1,4 +1,5 @@
 package config
+import "strconv"
 
 // Flag represents a nullable boolean value that is considered null until
 // either parsed from YAML or merged in from another Flag value.
@@ -8,11 +9,13 @@ type Flag struct {
 	set  bool
 }
 
-// UnmarshalYAML implements yaml.Unmarshaler to parse the underlying boolean
+// UnmarshalJSON implements json.Unmarshaler to parse the underlying boolean
 // value and detect that the Flag should no longer be considered null.
 //
-func (flag *Flag) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&flag.True); err != nil {
+func (flag *Flag) UnmarshalJSON(unmarshal []byte) error {
+	var err error
+	flag.True, err = strconv.ParseBool(string(unmarshal))
+	if err != nil {
 		return err
 	}
 

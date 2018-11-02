@@ -7,7 +7,7 @@ package config
 // Config holds the root fields of a Blubber configuration.
 //
 type Config struct {
-	CommonConfig  `yaml:",inline"`
-	Variants      map[string]VariantConfig `yaml:"variants" validate:"variants,dive"`
-	VersionConfig `yaml:",inline"`
+	CommonConfig  `json:",inline"`
+	Variants      map[string]VariantConfig `json:"variants" validate:"variants,dive"`
+	VersionConfig `json:",inline"`
 }

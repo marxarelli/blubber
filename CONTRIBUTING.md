@@ -51,13 +51,13 @@ at `localhost:9999/pkg/gerrit.wikimedia.org/r/blubber`.
 Dealing with Go project dependencies is kind of a moving target at the moment,
 but for now we've opted to commit a minimal `vendor` directory which contains
 all the required packages. It has been automatically populated by `dep
-ensure && dep prune` according to our `Gopkg.toml` and `Gopkg.lock` files.
+ensure` according to our `Gopkg.toml` and `Gopkg.lock` files.
 
 If you're not making any changes to `Gopkg.toml`, adding, updating, or
 removing dependencies, you should already be good to go.
 
 If you do update `Gopkg.toml` to add, update, or remove a dependency, simply
-run `dep ensure && dep prune` after doing so, and commit the resulting
+run `dep ensure` after doing so, and commit the resulting
 `vendor` directory changes.
 
 ## Running tests and linters

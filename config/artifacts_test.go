@@ -10,7 +10,7 @@ import (
 )
 
 func TestArtifactsConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     variants:
@@ -79,7 +79,7 @@ func TestArtifactsConfigInstructions(t *testing.T) {
 func TestArtifactsConfigValidation(t *testing.T) {
 	t.Run("from", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -93,7 +93,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		})
 
 		t.Run("missing", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -111,7 +111,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}

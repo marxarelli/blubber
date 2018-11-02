@@ -8,14 +8,14 @@ import (
 // and each configured variant.
 //
 type CommonConfig struct {
-	Base       string        `yaml:"base" validate:"omitempty,baseimage"` // name/path to base image
-	Apt        AptConfig     `yaml:"apt"`                                 // APT related
-	Node       NodeConfig    `yaml:"node"`                                // Node related
-	Python     PythonConfig  `yaml:"python"`                              // Python related
-	Builder    BuilderConfig `yaml:"builder"`                             // Builder related
-	Lives      LivesConfig   `yaml:"lives"`                               // application owner/dir
-	Runs       RunsConfig    `yaml:"runs"`                                // runtime environment
-	EntryPoint []string      `yaml:"entrypoint"`                          // entry-point executable
+	Base       string        `json:"base" validate:"omitempty,baseimage"` // name/path to base image
+	Apt        AptConfig     `json:"apt"`                                 // APT related
+	Node       NodeConfig    `json:"node"`                                // Node related
+	Python     PythonConfig  `json:"python"`                              // Python related
+	Builder    BuilderConfig `json:"builder"`                             // Builder related
+	Lives      LivesConfig   `json:"lives"`                               // application owner/dir
+	Runs       RunsConfig    `json:"runs"`                                // runtime environment
+	EntryPoint []string      `json:"entrypoint"`                          // entry-point executable
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.

@@ -8,7 +8,7 @@ import (
 // existing APT sources.
 //
 type AptConfig struct {
-	Packages []string `yaml:"packages" validate:"dive,debianpackage"`
+	Packages []string `json:"packages" validate:"dive,debianpackage"`
 }
 
 // Merge takes another AptConfig and combines the packages declared within

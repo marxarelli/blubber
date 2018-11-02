@@ -8,5 +8,5 @@ const CurrentVersion string = "v3"
 // config version independent from an entire Config struct.
 //
 type VersionConfig struct {
-	Version string `yaml:"version" validate:"required,currentversion"`
+	Version string `json:"version" validate:"required,currentversion"`
 }

@@ -8,9 +8,9 @@ import (
 // runtime environment.
 //
 type RunsConfig struct {
-	UserConfig  `yaml:",inline"`
-	Insecurely  Flag              `yaml:"insecurely"`                     // runs user owns application files
-	Environment map[string]string `yaml:"environment" validate:"envvars"` // environment variables
+	UserConfig  `json:",inline"`
+	Insecurely  Flag              `json:"insecurely"`                     // runs user owns application files
+	Environment map[string]string `json:"environment" validate:"envvars"` // environment variables
 }
 
 // Merge takes another RunsConfig and overwrites this struct's fields. All

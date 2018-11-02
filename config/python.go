@@ -20,8 +20,8 @@ const PythonSiteBin = PythonSitePackages + "/bin"
 // dependencies via PIP.
 //
 type PythonConfig struct {
-	Version      string   `yaml:"version"`      // Python binary to use when installing dependencies
-	Requirements []string `yaml:"requirements"` // install requirements from given files
+	Version      string   `json:"version"`      // Python binary to use when installing dependencies
+	Requirements []string `json:"requirements"` // install requirements from given files
 }
 
 // Merge takes another PythonConfig and merges its fields into this one's,

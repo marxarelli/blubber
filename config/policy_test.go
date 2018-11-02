@@ -9,7 +9,7 @@ import (
 )
 
 func TestPolicyRead(t *testing.T) {
-	policy, err := config.ReadPolicy([]byte(`---
+	policy, err := config.ReadYAMLPolicy([]byte(`---
     enforcements:
       - path: variants.production.runs.as
         rule: ne=root
@@ -94,7 +94,7 @@ func TestEnforcementOnFlag(t *testing.T) {
 
 }
 
-func TestResolveYAMLPath(t *testing.T) {
+func TestResolveJSONPath(t *testing.T) {
 	cfg := config.Config{
 		Variants: map[string]config.VariantConfig{
 			"foo": config.VariantConfig{
@@ -109,7 +109,7 @@ func TestResolveYAMLPath(t *testing.T) {
 		},
 	}
 
-	val, err := config.ResolveYAMLPath("variants.foo.runs.as", cfg)
+	val, err := config.ResolveJSONPath("variants.foo.runs.as", cfg)
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, "root", val)

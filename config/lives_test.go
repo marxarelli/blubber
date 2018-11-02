@@ -10,7 +10,7 @@ import (
 )
 
 func TestLivesConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     lives:
@@ -39,7 +39,7 @@ func TestLivesConfigYAML(t *testing.T) {
 }
 
 func TestLivesConfigDefaults(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo`))
 

@@ -13,8 +13,8 @@ const LocalLibPrefix = "/opt/lib"
 // installed dependencies and application files.
 //
 type LivesConfig struct {
-	In         string `yaml:"in" validate:"omitempty,abspath"` // application directory
-	UserConfig `yaml:",inline"`
+	In         string `json:"in" validate:"omitempty,abspath"` // application directory
+	UserConfig `json:",inline"`
 }
 
 // Merge takes another LivesConfig and overwrites this struct's fields.

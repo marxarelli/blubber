@@ -8,8 +8,8 @@ import (
 // whether/how to install NPM packages.
 //
 type NodeConfig struct {
-	Requirements []string `yaml:"requirements"`                     // install requirements from given files
-	Env          string   `yaml:"env" validate:"omitempty,nodeenv"` // environment name ("production" install)
+	Requirements []string `json:"requirements"`                     // install requirements from given files
+	Env          string   `json:"env" validate:"omitempty,nodeenv"` // environment name ("production" install)
 }
 
 // Merge takes another NodeConfig and merges its fields into this one's,

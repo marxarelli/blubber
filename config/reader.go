@@ -1,26 +1,29 @@
 package config
 
 import (
+	"bytes"
 	"errors"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
-	"gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 )
 
 // DefaultConfig contains YAML that is applied before the user's
 // configuration.
 //
-const DefaultConfig = `---
-lives:
-  in: /srv/app
-  as: somebody
-  uid: 65533
-  gid: 65533
-runs:
-  as: runuser
-  uid: 900
-  gid: 900`
+const DefaultConfig = `{
+"lives": {
+  "in": "/srv/app",
+  "as": "somebody",
+  "uid": 65533,
+  "gid": 65533
+},
+"runs": {
+  "as": "runuser",
+  "uid": 900,
+  "gid": 900}}`
 
 // ResolveIncludes iterates over and recurses through a given variant's
 // includes to build a flat slice of variant names in the correct order by
@@ -87,6 +90,16 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 
 	return expanded, nil
 }
+// ReadYAMLConfig converts YAML bytes to json and returns new Config struct.
+//
+func ReadYAMLConfig(data []byte) (*Config, error) {
+	jsonData, err := yaml.YAMLToJSON(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return ReadConfig(jsonData)
+}
 
 // ReadConfig unmarshals the given YAML bytes into a new Config struct.
 //
@@ -96,8 +109,8 @@ func ReadConfig(data []byte) (*Config, error) {
 		config  Config
 	)
 
-	// Unmarshal (un-strictly) config version first for pre-validation
-	err := yaml.Unmarshal(data, &version)
+	// Unmarshal config version first for pre-validation
+	err := json.Unmarshal(data, &version)
 
 	if err != nil {
 		return nil, err
@@ -108,10 +121,12 @@ func ReadConfig(data []byte) (*Config, error) {
 	}
 
 	// Unmarshal the default config
-	yaml.Unmarshal([]byte(DefaultConfig), &config)
+	json.Unmarshal([]byte(DefaultConfig), &config)
 
-	// And finally strictly unmarshal the entire user-provided config
-	err = yaml.UnmarshalStrict(data, &config)
+	// And finally strictly decode the entire user-provided config
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	err = dec.Decode(&config)
 
 	if err != nil {
 		return nil, err
@@ -132,5 +147,5 @@ func ReadConfigFile(path string) (*Config, error) {
 		return nil, err
 	}
 
-	return ReadConfig(data)
+	return ReadYAMLConfig(data)
 }

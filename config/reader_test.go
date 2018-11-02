@@ -10,7 +10,7 @@ import (
 )
 
 func ExampleResolveIncludes() {
-	cfg, _ := config.ReadConfig([]byte(`---
+	cfg, _ := config.ReadYAMLConfig([]byte(`---
     version: v3
     variants:
       varA: { includes: [varB, varC] }
@@ -27,8 +27,8 @@ func ExampleResolveIncludes() {
 	// Output: [varF varD varE varB varC varA]
 }
 
-func TestReadConfigErrorsOnUnknownYAML(t *testing.T) {
-	_, err := config.ReadConfig([]byte(`---
+func TestReadYAMLConfigErrorsOnUnknownYAML(t *testing.T) {
+	_, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     newphone: whodis
     variants:
@@ -36,13 +36,11 @@ func TestReadConfigErrorsOnUnknownYAML(t *testing.T) {
 
 	assert.EqualError(t,
 		err,
-		"yaml: unmarshal errors:\n"+
-			"  line 2: field newphone not found in struct config.Config",
-	)
+		`json: unknown field "newphone"`)
 }
 
-func TestReadConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
-	_, err := config.ReadConfig([]byte(`---
+func TestReadYAMLConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
+	_, err := config.ReadYAMLConfig([]byte(`---
     version: foo
     newphone: whodis
     variants:
@@ -56,7 +54,7 @@ func TestReadConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
 }
 
 func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     variants:
       varA: { includes: [varB] }
@@ -70,7 +68,7 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 }
 
 func TestMultiLevelIncludes(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo-slim
     variants:
@@ -102,7 +100,7 @@ func TestMultiLevelIncludes(t *testing.T) {
 }
 
 func TestMultiIncludes(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     variants:
       mammal:

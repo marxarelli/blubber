@@ -5,7 +5,7 @@ lives:
 
 variants:
   build:
-    base: golang:1.9-stretch
+    base: golang:1.10-stretch
   test:
     includes: [build]
     runs: { insecurely: true }

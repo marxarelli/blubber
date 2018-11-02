@@ -7,10 +7,10 @@ import (
 // VariantConfig holds configuration fields for each defined build variant.
 //
 type VariantConfig struct {
-	Includes     []string          `yaml:"includes" validate:"dive,variantref"`    // other variants
-	Copies       string            `yaml:"copies" validate:"omitempty,variantref"` // copy artifacts from variant
-	Artifacts    []ArtifactsConfig `yaml:"artifacts" validate:"dive"`              // artifact configuration
-	CommonConfig `yaml:",inline"`
+	Includes     []string          `json:"includes" validate:"dive,variantref"`    // other variants
+	Copies       string            `json:"copies" validate:"omitempty,variantref"` // copy artifacts from variant
+	Artifacts    []ArtifactsConfig `json:"artifacts" validate:"dive"`              // artifact configuration
+	CommonConfig `json:",inline"`
 }
 
 // Merge takes another VariantConfig and overwrites this struct's fields.

@@ -71,7 +71,7 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cfg, err := config.ReadConfig(body)
+	cfg, err := config.ReadYAMLConfig(body)
 
 	if err != nil {
 		if config.IsValidationError(err) {

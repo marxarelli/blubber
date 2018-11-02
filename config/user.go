@@ -3,9 +3,9 @@ package config
 // UserConfig holds configuration fields related to a user account.
 //
 type UserConfig struct {
-	As  string `yaml:"as" validate:"omitempty,username"` // user name
-	UID uint   `yaml:"uid"`                              // user ID
-	GID uint   `yaml:"gid"`                              // group ID
+	As  string `json:"as" validate:"omitempty,username"` // user name
+	UID uint   `json:"uid"`                              // user ID
+	GID uint   `json:"gid"`                              // group ID
 }
 
 // Merge takes another UserConfig and overwrites this struct's fields.

@@ -11,7 +11,7 @@ import (
 )
 
 func TestVariantConfigYAML(t *testing.T) {
-	cfg, err := config.ReadConfig([]byte(`---
+	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v3
     base: foo
     variants:
@@ -202,7 +202,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 func TestVariantConfigValidation(t *testing.T) {
 	t.Run("includes", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -212,7 +212,7 @@ func TestVariantConfigValidation(t *testing.T) {
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -222,7 +222,7 @@ func TestVariantConfigValidation(t *testing.T) {
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -242,7 +242,7 @@ func TestVariantConfigValidation(t *testing.T) {
 	t.Run("copies", func(t *testing.T) {
 
 		t.Run("ok", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -252,7 +252,7 @@ func TestVariantConfigValidation(t *testing.T) {
 		})
 
 		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
@@ -262,7 +262,7 @@ func TestVariantConfigValidation(t *testing.T) {
 		})
 
 		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadConfig([]byte(`---
+			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}

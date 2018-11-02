@@ -8,8 +8,8 @@ import (
 // build command and the files required to successfully execute the command.
 //
 type BuilderConfig struct {
-	Command      []string `yaml:"command"`
-	Requirements []string `yaml:"requirements"`
+	Command      []string `json:"command"`
+	Requirements []string `json:"requirements"`
 }
 
 // Merge takes another BuilderConfig and merges its fields into this one's,

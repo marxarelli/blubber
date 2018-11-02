@@ -71,7 +71,7 @@ const rootCfgCtx ctxKey = iota
 func newValidator() *validator.Validate {
 	validate := validator.New()
 
-	validate.RegisterTagNameFunc(resolveYAMLTagName)
+	validate.RegisterTagNameFunc(resolveJSONTagName)
 
 	for name, tags := range validatorAliases {
 		validate.RegisterAlias(name, tags)
@@ -207,6 +207,6 @@ func isVariantReference(ctx context.Context, fl validator.FieldLevel) bool {
 	return false
 }
 
-func resolveYAMLTagName(field reflect.StructField) string {
-	return strings.SplitN(field.Tag.Get("yaml"), ",", 2)[0]
+func resolveJSONTagName(field reflect.StructField) string {
+	return strings.SplitN(field.Tag.Get("json"), ",", 2)[0]
 }
