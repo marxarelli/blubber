@@ -12,11 +12,27 @@ GO_LDFLAGS := \
   -X $(PACKAGE)/meta.Version=$(shell cat VERSION) \
   -X $(PACKAGE)/meta.GitCommit=$(shell git rev-parse --short HEAD)
 
+# go build/install commands
+#
+# workaround bug in case CURDIR is a symlink
+# see https://github.com/golang/go/issues/24359
+GO_BUILD := cd "$(REAL_CURDIR)" && go build -v -ldflags "$(GO_LDFLAGS)"
+GO_INSTALL := cd "$(REAL_CURDIR)" && go install -v -ldflags "$(GO_LDFLAGS)"
+
+all: blubber blubberoid
+
+blubber:
+	$(GO_BUILD) ./cmd/blubber
+
+blubberoid:
+	$(GO_BUILD) ./cmd/blubberoid
+
+clean:
+	go clean
+	rm -f blubber blubberoid
+
 install:
-	# workaround bug in case CURDIR is a symlink
-	# see https://github.com/golang/go/issues/24359
-	cd "$(REAL_CURDIR)" && \
-	go install -v -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
+	$(GO_INSTALL) $(GO_PACKAGES)
 
 release:
 	gox -output="$(RELEASE_DIR)/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' -ldflags '$(GO_LDFLAGS)' $(GO_PACKAGES)
