@@ -1,0 +1,22 @@
+version: v3
+base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+lives:
+  in: /app/go/src/gerrit.wikimedia.org/r/blubber
+runs:
+  environment:
+    GOPATH: /app/go
+
+variants:
+  build:
+    apt:
+      packages:
+        - build-essential
+        - git
+        - golang-go
+    builder:
+      requirements: [.]
+      command: [go, build, ./cmd/blubberoid]
+
+  production:
+    copies: build
+    entrypoint: [./blubberoid]
