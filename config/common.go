@@ -32,7 +32,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 	cc.Lives.Merge(cc2.Lives)
 	cc.Runs.Merge(cc2.Runs)
 
-	if len(cc.EntryPoint) < 1 {
+	if cc2.EntryPoint != nil {
 		cc.EntryPoint = cc2.EntryPoint
 	}
 }

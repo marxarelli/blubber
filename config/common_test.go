@@ -27,6 +27,15 @@ func TestCommonConfigYAML(t *testing.T) {
 	assert.Equal(t, []string{"/bin/foo"}, variant.EntryPoint)
 }
 
+// Ensure that entrypoints inherit correctly
+//
+func TestEntryPointMerge(t *testing.T) {
+	foo := config.CommonConfig{EntryPoint: []string{"/bin/foo"}}
+	bar := config.CommonConfig{EntryPoint: []string{"/bin/bar"}}
+	foo.Merge(bar)
+	assert.Equal(t, []string{"/bin/bar"}, foo.EntryPoint)
+}
+
 func TestCommonConfigValidation(t *testing.T) {
 	t.Run("base", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
