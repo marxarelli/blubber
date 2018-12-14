@@ -37,7 +37,10 @@ var (
 		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
 		"envvars":        `{{.Field}}: contains invalid environment variable names`,
 		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
+		"relativelocal":  `{{.Field}}: path must be relative when "from" is "local"`,
 		"required":       `{{.Field}}: is required`,
+		"requiredwith":   `{{.Field}}: is required if "{{.Param}}" is also set`,
+		"unique":         `{{.Field}}: cannot contain duplicates`,
 		"username":       `{{.Field}}: "{{.Value}}" is not a valid user name`,
 		"variantref":     `{{.Field}}: references an unknown variant "{{.Value}}"`,
 		"variants":       `{{.Field}}: contains a bad variant name`,
@@ -56,6 +59,8 @@ var (
 		"envvars":       isEnvironmentVariables,
 		"isfalse":       isFalse,
 		"istrue":        isTrue,
+		"relativelocal": isRelativePathForLocalArtifact,
+		"requiredwith":  isSetIfOtherFieldIsSet,
 		"variantref":    isVariantReference,
 		"variants":      hasVariantNames,
 	}
@@ -188,6 +193,26 @@ func isFalse(_ context.Context, fl validator.FieldLevel) bool {
 	return ok && val == false
 }
 
+func isRelativePathForLocalArtifact(_ context.Context, fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	from := fl.Parent().FieldByName("From").String()
+
+	if value == "" || from != LocalArtifactKeyword {
+		return true
+	}
+
+	// path must be relative and do no "../" funny business
+	return !(path.IsAbs(value) || strings.HasPrefix(path.Clean(value), ".."))
+}
+
+func isSetIfOtherFieldIsSet(_ context.Context, fl validator.FieldLevel) bool {
+	if otherField, err := ResolveJSONPath(fl.Param(), fl.Parent().Interface()); err == nil {
+		return isZeroValue(reflect.ValueOf(otherField)) || !isZeroValue(fl.Field())
+	}
+
+	return false
+}
+
 func isTrue(_ context.Context, fl validator.FieldLevel) bool {
 	val, ok := fl.Field().Interface().(bool)
 
@@ -198,6 +223,10 @@ func isVariantReference(ctx context.Context, fl validator.FieldLevel) bool {
 	cfg := ctx.Value(rootCfgCtx).(Config)
 	ref := fl.Field().String()
 
+	if ref == LocalArtifactKeyword {
+		return true
+	}
+
 	for name := range cfg.Variants {
 		if name == ref {
 			return true
@@ -205,6 +234,10 @@ func isVariantReference(ctx context.Context, fl validator.FieldLevel) bool {
 	}
 
 	return false
+}
+
+func isZeroValue(v reflect.Value) bool {
+	return reflect.DeepEqual(v.Interface(), reflect.Zero(v.Type()).Interface())
 }
 
 func resolveJSONTagName(field reflect.StructField) string {

@@ -33,21 +33,21 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
     variants:
       build: {}
       production:
-        artifacts:
+        copies:
           - from: build
             source: .
             destination: .`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		dockerOut, _ := docker.Compile(cfg, "production")
+		dockerfile := dockerOut.String()
 
-	dockerOut, _ := docker.Compile(cfg, "production")
-	dockerfile := dockerOut.String()
+		assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
+		assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")
 
-	assert.Contains(t, dockerfile, "FROM foo/bar AS build\n")
-	assert.Contains(t, dockerfile, "FROM foo/bar AS production\n")
-
-	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS build\n"))
-	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
+		assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS build\n"))
+		assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
+	}
 }
 
 func TestMultipleArtifactsFromSameStage(t *testing.T) {
@@ -57,7 +57,7 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
     variants:
       build: {}
       production:
-        artifacts:
+        copies:
           - from: build
             source: .
             destination: .

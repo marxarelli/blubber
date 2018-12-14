@@ -29,7 +29,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	mainStage := ""
 
 	// write multi-stage sections for each variant dependency
-	for _, stage := range vcfg.VariantDependencies() {
+	for _, stage := range vcfg.Copies.Variants() {
 		dependency, err := config.ExpandVariant(cfg, stage)
 
 		if err != nil {

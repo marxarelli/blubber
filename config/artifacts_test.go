@@ -16,7 +16,7 @@ func TestArtifactsConfigYAML(t *testing.T) {
     variants:
       build: {}
       production:
-        artifacts:
+        copies:
           - from: build
             source: /foo/src
             destination: /foo/dst
@@ -24,22 +24,22 @@ func TestArtifactsConfigYAML(t *testing.T) {
             source: /bar/src
             destination: /bar/dst`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		variant, err := config.ExpandVariant(cfg, "production")
 
-	variant, err := config.ExpandVariant(cfg, "production")
+		if assert.NoError(t, err) {
+			assert.Len(t, variant.Copies, 2)
 
-	assert.Nil(t, err)
-
-	assert.Len(t, variant.Artifacts, 2)
-
-	assert.Contains(t,
-		variant.Artifacts,
-		config.ArtifactsConfig{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
-	)
-	assert.Contains(t,
-		variant.Artifacts,
-		config.ArtifactsConfig{From: "build", Source: "/bar/src", Destination: "/bar/dst"},
-	)
+			assert.Contains(t,
+				variant.Copies,
+				config.ArtifactsConfig{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
+			)
+			assert.Contains(t,
+				variant.Copies,
+				config.ArtifactsConfig{From: "build", Source: "/bar/src", Destination: "/bar/dst"},
+			)
+		}
+	}
 }
 
 func TestArtifactsConfigInstructions(t *testing.T) {
@@ -84,7 +84,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
         variants:
           build: {}
           foo:
-            artifacts:
+            copies:
               - from: build
                 source: /foo
                 destination: /bar`))
@@ -98,7 +98,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
         variants:
           build: {}
           foo:
-            artifacts:
+            copies:
               - from: ~
                 source: /foo
                 destination: /bar`))
@@ -116,7 +116,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
         variants:
           build: {}
           foo:
-            artifacts:
+            copies:
               - from: foo bar
                 source: /foo
                 destination: /bar`))
@@ -126,6 +126,145 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 				assert.Equal(t, `from: references an unknown variant "foo bar"`, msg)
 			}
+		})
+	})
+
+	t.Run("from: variant", func(t *testing.T) {
+		t.Run("source", func(t *testing.T) {
+			t.Run("with no destination given can be empty", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            build: {}
+            foo:
+              copies:
+                - from: build`))
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("with destination given must not be empty", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            build: {}
+            foo:
+              copies:
+                - from: build
+                  destination: /bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `source: is required if "destination" is also set`, msg)
+				}
+			})
+		})
+
+		t.Run("destination", func(t *testing.T) {
+			t.Run("with no source given can be empty", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            build: {}
+            foo:
+              copies:
+                - from: build`))
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("with source given must not be empty", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            build: {}
+            foo:
+              copies:
+                - from: build
+                  source: /bar`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `destination: is required if "source" is also set`, msg)
+				}
+			})
+		})
+
+	})
+
+	t.Run("from: local", func(t *testing.T) {
+		t.Run("source", func(t *testing.T) {
+			t.Run("must be a relative path", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            foo:
+              copies:
+                - from: local
+                  source: /bad/path
+                  destination: ./foo`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `source: path must be relative when "from" is "local"`, msg)
+				}
+			})
+
+			t.Run("must not use ../", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            foo:
+              copies:
+                - from: local
+                  source: ./funny/../../business
+                  destination: ./foo`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `source: path must be relative when "from" is "local"`, msg)
+				}
+			})
+		})
+
+		t.Run("destination", func(t *testing.T) {
+			t.Run("must be a relative path", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            foo:
+              copies:
+                - from: local
+                  source: ./foo
+                  destination: /bad/path`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `destination: path must be relative when "from" is "local"`, msg)
+				}
+			})
+
+			t.Run("must not use ../", func(t *testing.T) {
+				_, err := config.ReadYAMLConfig([]byte(`---
+          version: v3
+          variants:
+            foo:
+              copies:
+                - from: local
+                  source: ./foo
+                  destination: ./funny/../../business`))
+
+				if assert.True(t, config.IsValidationError(err)) {
+					msg := config.HumanizeValidationError(err)
+
+					assert.Equal(t, `destination: path must be relative when "from" is "local"`, msg)
+				}
+			})
 		})
 	})
 }

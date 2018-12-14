@@ -28,6 +28,7 @@ variants:
       packages: [libjpeg-dev, libyaml-dev]
     node:
       requirements: [package.json, package-lock.json]
+    copies: [local]
 
   development:
     includes: [build]
@@ -47,7 +48,7 @@ variants:
     base: debian:jessie-slim
     node:
       env: production
-    copies: prep
+    copies: [prep]
     entrypoint: [node, server.js]
 ```
 
@@ -91,10 +92,10 @@ much more optimized image, using the latter for production.
 
 The Docker community has responded to this need by implementing
 [multi-stage builds](https://github.com/moby/moby/pull/32063) and Blubber
-makes use of this with its `artifacts` configuration property.
+makes use of this with its `copies` configuration property.
 
 In the example configuration, the `production` variant declares artifacts to
-be copied over from the result of building the `test` image.
+be copied over from the result of building the `prep` image.
 
 ## Usage
 

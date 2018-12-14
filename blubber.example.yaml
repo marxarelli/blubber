@@ -21,6 +21,7 @@ variants:
     builder:
       command: [make, deps]
       requirements: [Makefile, vendor]
+    copies: [local]
 
   development:
     includes: [build]
@@ -44,5 +45,5 @@ variants:
     base: debian:jessie-slim
     node:
       env: production
-    copies: prep
+    copies: [prep]
     entrypoint: [node, server.js]

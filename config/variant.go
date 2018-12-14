@@ -7,28 +7,44 @@ import (
 // VariantConfig holds configuration fields for each defined build variant.
 //
 type VariantConfig struct {
-	Includes     []string          `json:"includes" validate:"dive,variantref"`    // other variants
-	Copies       string            `json:"copies" validate:"omitempty,variantref"` // copy artifacts from variant
-	Artifacts    []ArtifactsConfig `json:"artifacts" validate:"dive"`              // artifact configuration
+	Includes     []string     `json:"includes" validate:"dive,variantref"`
+	Copies       CopiesConfig `json:"copies" validate:"omitempty,unique,dive"`
 	CommonConfig `json:",inline"`
 }
 
 // Merge takes another VariantConfig and overwrites this struct's fields.
-// Artifacts are merged additively.
 //
 func (vc *VariantConfig) Merge(vc2 VariantConfig) {
-	vc.Copies = vc2.Copies
-	vc.Artifacts = append(vc.Artifacts, vc2.Artifacts...)
+	vc.Copies.Merge(vc2.Copies)
 	vc.CommonConfig.Merge(vc2.CommonConfig)
 }
 
-// InstructionsForPhase injects build instructions related to artifact
-// copying, copying of application files, and all common configuration.
+// InstructionsForPhase injects build instructions related to dropping
+// priviledge and the application entrypoint, then it delegates to its common
+// and copies configurations. It also enforces the correct UID/GID on all copy
+// instructions returned from deeper config structs.
+//
+// PhasePrivileged
+//
+// Ensure the process and file owner is root.
+//
+// PhasePrivilegeDropped
+//
+// Ensure the process and file owner is the "lives.as" user.
+//
+// PhasePreInstall
+//
+// Ensure the process and file owner is the "lives.as" user.
 //
 // PhaseInstall
 //
-// If VariantConfig.Copies is not set, copy in application files. Otherwise,
-// delegate to ArtifactsConfig.InstructionsForPhase.
+// Ensure the process and file owner is the "lives.as" user.
+//
+// PhasePostInstall
+//
+// Ensure the process and file owner is the "runs.as" user, unless configured
+// to run insecurely as the "lives.as" user. Finally, sets the application
+// entrypoint.
 //
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
@@ -50,10 +66,6 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	case build.PhaseInstall:
 		uid, gid = vc.Lives.UID, vc.Lives.GID
 
-		if vc.Copies == "" {
-			instructions = append(instructions, build.Copy{[]string{"."}, "."})
-		}
-
 	case build.PhasePostInstall:
 		if vc.Runs.Insecurely.True {
 			uid, gid = vc.Lives.UID, vc.Lives.GID
@@ -67,9 +79,7 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		}
 	}
 
-	for _, artifact := range vc.allArtifacts() {
-		instructions = append(instructions, artifact.InstructionsForPhase(phase)...)
-	}
+	instructions = append(instructions, vc.Copies.Expand(vc.Lives.In).InstructionsForPhase(phase)...)
 
 	if switchUser != "" {
 		instructions = append(
@@ -86,45 +96,4 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	}
 
 	return instructions
-}
-
-// VariantDependencies returns all unique names of other variants that are
-// referenced in the VariantConfig.Artifacts configuration.
-//
-func (vc *VariantConfig) VariantDependencies() []string {
-	// get unique set of variant dependencies based on artifacts
-	existing := map[string]bool{}
-	dependencies := []string{}
-
-	for _, artifact := range vc.allArtifacts() {
-		if dependency := artifact.From; dependency != "" && !existing[dependency] {
-			existing[dependency] = true
-			dependencies = append(dependencies, dependency)
-		}
-	}
-
-	return dependencies
-}
-
-func (vc *VariantConfig) allArtifacts() []ArtifactsConfig {
-	return append(vc.defaultArtifacts(), vc.Artifacts...)
-}
-
-func (vc *VariantConfig) defaultArtifacts() []ArtifactsConfig {
-	if vc.Copies != "" {
-		return []ArtifactsConfig{
-			{
-				From:        vc.Copies,
-				Source:      vc.Lives.In,
-				Destination: vc.Lives.In,
-			},
-			{
-				From:        vc.Copies,
-				Source:      LocalLibPrefix,
-				Destination: LocalLibPrefix,
-			},
-		}
-	}
-
-	return []ArtifactsConfig{}
 }

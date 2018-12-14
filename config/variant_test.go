@@ -15,10 +15,10 @@ func TestVariantConfigYAML(t *testing.T) {
     version: v3
     base: foo
     variants:
-      build: {}
+      build:
+        copies: [local]
       production:
-        copies: build
-        artifacts:
+        copies:
           - from: build
             source: /foo/src
             destination: /foo/dst
@@ -26,25 +26,19 @@ func TestVariantConfigYAML(t *testing.T) {
             source: /bar/src
             destination: /bar/dst`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		variant, err := config.ExpandVariant(cfg, "build")
 
-	variant, err := config.ExpandVariant(cfg, "production")
+		if assert.NoError(t, err) {
+			assert.Len(t, variant.Copies, 1)
+		}
 
-	assert.Nil(t, err)
+		variant, err = config.ExpandVariant(cfg, "production")
 
-	assert.Equal(t, "build", variant.Copies)
-	assert.Len(t, variant.Artifacts, 2)
-}
-
-func TestVariantDependencies(t *testing.T) {
-	cfg := config.VariantConfig{
-		Copies: "foo",
-		Artifacts: []config.ArtifactsConfig{
-			{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
-		},
+		if assert.NoError(t, err) {
+			assert.Len(t, variant.Copies, 2)
+		}
 	}
-
-	assert.Equal(t, []string{"foo", "build"}, cfg.VariantDependencies())
 }
 
 func TestVariantLoops(t *testing.T) {
@@ -60,59 +54,28 @@ func TestVariantLoops(t *testing.T) {
 
 	// Configuration that contains a loop in "Includes" should error
 	_, err := config.ExpandVariant(&cfg, "bar")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
 	_, errTwo := config.ExpandVariant(&cfgTwo, "bar")
-	assert.Nil(t, errTwo)
+	assert.NoError(t, errTwo)
 }
 
 func TestVariantConfigInstructions(t *testing.T) {
 	t.Run("PhaseInstall", func(t *testing.T) {
-		t.Run("standard source copy", func(t *testing.T) {
+		t.Run("without copies", func(t *testing.T) {
 			cfg := config.VariantConfig{}
-			cfg.Lives.UID = 123
-			cfg.Lives.GID = 223
 
-			assert.Equal(t,
-				[]build.Instruction{
-					build.CopyAs{123, 223, build.Copy{[]string{"."}, "."}},
-				},
-				cfg.InstructionsForPhase(build.PhaseInstall),
-			)
+			assert.Empty(t, cfg.InstructionsForPhase(build.PhaseInstall))
 		})
 
-		t.Run("for copies and artifacts", func(t *testing.T) {
+		t.Run("with copies", func(t *testing.T) {
 			cfg := config.VariantConfig{
-				Copies: "foo",
-				Artifacts: []config.ArtifactsConfig{
-					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
-				},
-				CommonConfig: config.CommonConfig{Lives: config.LivesConfig{In: "/srv/service"}},
-			}
-
-			assert.Equal(t,
-				[]build.Instruction{
-					build.CopyFrom{"foo", build.Copy{[]string{"/srv/service"}, "/srv/service"}},
-					build.CopyFrom{"foo", build.Copy{[]string{config.LocalLibPrefix}, config.LocalLibPrefix}},
-					build.CopyFrom{"build", build.Copy{[]string{"/foo/src"}, "/foo/dst"}},
-				},
-				cfg.InstructionsForPhase(build.PhaseInstall),
-			)
-		})
-
-		t.Run("for just artifacts", func(t *testing.T) {
-			cfg := config.VariantConfig{
-				Artifacts: []config.ArtifactsConfig{
-					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
-				},
 				CommonConfig: config.CommonConfig{
-					Lives: config.LivesConfig{
-						In: "/srv/service",
-						UserConfig: config.UserConfig{
-							UID: 123,
-							GID: 223,
-						},
-					},
+					Lives: config.LivesConfig{UserConfig: config.UserConfig{UID: 123, GID: 223}},
+				},
+				Copies: config.CopiesConfig{
+					{From: "local"},
+					{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
 				},
 			}
 
@@ -124,7 +87,6 @@ func TestVariantConfigInstructions(t *testing.T) {
 				cfg.InstructionsForPhase(build.PhaseInstall),
 			)
 		})
-
 	})
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
@@ -241,37 +203,17 @@ func TestVariantConfigValidation(t *testing.T) {
 
 	t.Run("copies", func(t *testing.T) {
 
-		t.Run("ok", func(t *testing.T) {
+		t.Run("should not contain duplicates", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
         version: v3
         variants:
           build: {}
-          foo: { copies: build }`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("optional", func(t *testing.T) {
-			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
-        variants:
-          build: {}
-          foo: {}`))
-
-			assert.False(t, config.IsValidationError(err))
-		})
-
-		t.Run("bad", func(t *testing.T) {
-			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
-        variants:
-          build: {}
-          foo: { copies: foobuild }`))
+          foo: { copies: [foo, bar, foo] }`))
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
 
-				assert.Equal(t, `copies: references an unknown variant "foobuild"`, msg)
+				assert.Equal(t, `copies: cannot contain duplicates`, msg)
 			}
 		})
 	})
