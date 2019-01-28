@@ -79,6 +79,9 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		}
 	}
 
+	// CopiesConfig may not implement InstructionsForPhase for all possible
+	// phases, which makes the expansion of it here less than efficient, but to
+	// assume which phases it does implement would result in gross coupling
 	instructions = append(instructions, vc.Copies.Expand(vc.Lives.In).InstructionsForPhase(phase)...)
 
 	if switchUser != "" {
