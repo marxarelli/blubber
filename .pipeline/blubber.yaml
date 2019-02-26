@@ -5,7 +5,8 @@ lives:
 
 variants:
   build:
-    base: golang:1.10-stretch
+    base: docker-registry.wikimedia.org/golang:1.11.5-1
+    apt: {packages: [gcc, git, make]}
   test:
     includes: [build]
     runs: { insecurely: true }
