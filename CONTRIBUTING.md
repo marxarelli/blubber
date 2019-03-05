@@ -8,7 +8,7 @@ to both users inside and outside of WMF and our communities.
 
 ## Requirements
 
- 1. `go` >= 1.9 (>=1.10 recommended) and related tools
+ 1. `go` >= 1.11 (>=1.12 recommended) and related tools
     * To install on rpm style systems: `sudo dnf install golang golang-godoc`
     * To install on apt style systems: `sudo apt install golang golang-golang-x-tools`
     * To install on macOS use [Homebrew](https://brew.sh) and run:

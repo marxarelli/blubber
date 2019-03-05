@@ -1,7 +1,5 @@
 version: v3
 base: docker-registry.wikimedia.org/wikimedia-stretch:latest
-lives:
-  in: /go/src/gerrit.wikimedia.org/r/blubber
 
 variants:
   build:

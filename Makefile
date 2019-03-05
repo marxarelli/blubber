@@ -3,7 +3,6 @@ RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
 
 PACKAGE := gerrit.wikimedia.org/r/blubber
-REAL_CURDIR := $(shell readlink "$(CURDIR)" || echo "$(CURDIR)")
 
 GO_LIST_GOFILES := '{{range .GoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}{{range .XTestGoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}'
 GO_PACKAGES := $(shell go list ./...)
@@ -14,11 +13,8 @@ GO_LDFLAGS := \
 
 # go build/install commands
 #
-# workaround bug in case CURDIR is a symlink
-# see https://github.com/golang/go/issues/24359
-GO_GENERATE := cd "$(REAL_CURDIR)" && go generate
-GO_BUILD := cd "$(REAL_CURDIR)" && go build -v -ldflags "$(GO_LDFLAGS)"
-GO_INSTALL := cd "$(REAL_CURDIR)" && go install -v -ldflags "$(GO_LDFLAGS)"
+GO_BUILD := go build -v -ldflags "$(GO_LDFLAGS)"
+GO_INSTALL := go install -v -ldflags "$(GO_LDFLAGS)"
 
 all: code blubber blubberoid
 
@@ -29,7 +25,7 @@ blubberoid:
 	$(GO_BUILD) ./cmd/blubberoid
 
 code:
-	$(GO_GENERATE) $(GO_PACKAGES)
+	go generate $(GO_PACKAGES)
 
 clean:
 	go clean
