@@ -32,3 +32,7 @@
 [[constraint]]
   name = "github.com/ghodss/yaml"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/moby/buildkit"
+  version = "0.4.0"

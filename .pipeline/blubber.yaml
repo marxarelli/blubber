@@ -1,25 +1,41 @@
 version: v4
-base: docker-registry.wikimedia.org/wikimedia-stretch:latest
 
 variants:
   build:
-    base: docker-registry.wikimedia.org/golang:1.11.5-1
+    base: docker-registry.wikimedia.org/golang:1.13-3
     apt: {packages: [gcc, git, make]}
+    runs:
+      environment:
+        CGO_ENABLED: "0"
+    builder:
+      requirements: [.]
   test:
     includes: [build]
     copies: [local]
     runs: { insecurely: true }
     builder:
       command: [go, get, -u, golang.org/x/lint/golint]
-    entrypoint: [make, test]
+    entrypoint: [make, clean, test]
   prep:
     includes: [build]
     builder:
-      command: [make, blubberoid]
-      requirements: [.]
+      command: [make, clean, blubberoid]
   production:
+    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
     copies:
       - from: prep
         source: /srv/app/blubberoid
         destination: /srv/app/blubberoid
     entrypoint: [./blubberoid]
+
+  buildkit-prep:
+    includes: [build]
+    builder:
+      command: [make, clean, blubber-buildkit]
+  buildkit:
+    base: ~
+    copies:
+      - from: buildkit-prep
+        source: /srv/app/blubber-buildkit
+        destination: /blubber-buildkit
+    entrypoint: [/blubber-buildkit]

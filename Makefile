@@ -16,7 +16,7 @@ GO_LDFLAGS := \
 GO_BUILD := go build -v -ldflags "$(GO_LDFLAGS)"
 GO_INSTALL := go install -v -ldflags "$(GO_LDFLAGS)"
 
-all: code blubber blubberoid
+all: code blubber blubberoid blubber-buildkit
 
 blubber:
 	$(GO_BUILD) ./cmd/blubber
@@ -24,12 +24,18 @@ blubber:
 blubberoid:
 	$(GO_BUILD) ./cmd/blubberoid
 
+blubber-buildkit: mods
+	$(GO_BUILD) ./cmd/blubber-buildkit
+
 code:
 	go generate $(GO_PACKAGES)
 
+mods:
+	go mod download
+
 clean:
-	go clean $(GO_PACKAGES)
-	rm -f blubber blubberoid
+	go clean $(GO_PACKAGES) || true
+	rm -f blubber blubberoid || true
 
 install: all
 	$(GO_INSTALL) $(GO_PACKAGES)
@@ -54,5 +60,3 @@ unit:
 	go test -cover -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
 
 test: unit lint
-
-.PHONY: install release

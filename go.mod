@@ -1,13 +1,14 @@
 module gerrit.wikimedia.org/r/blubber
 
 require (
-	github.com/davecgh/go-spew v1.1.0
-	github.com/docker/distribution v2.6.2+incompatible
+	github.com/davecgh/go-spew v1.1.1
+	github.com/docker/distribution v0.0.0-20200223014041-6b972e50feee
 	github.com/getkin/kin-openapi v0.22.1
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-playground/locales v0.11.2
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/leodido/go-urn v1.1.0
+	github.com/moby/buildkit v0.7.0
 	github.com/pborman/getopt v0.0.0-20170112192656-0fd4e972e7f7
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.5.1
@@ -17,4 +18,8 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 )
 
-go 1.11
+replace github.com/containerd/containerd => github.com/containerd/containerd v1.3.1-0.20200227195959-4d242818bf55
+
+replace github.com/docker/docker => github.com/docker/docker v1.4.2-0.20200227233006-38f52c9fec82
+
+go 1.13
