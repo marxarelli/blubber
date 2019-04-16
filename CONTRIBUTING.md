@@ -70,3 +70,43 @@ The `release` target of the `Makefile` in this repository uses `gox` to
 cross-compile binary releases of Blubber.
 
     make release
+
+## Testing and debugging the BuildKit frontend
+
+Debugging the gRPC BuildKit gateway (`cmd/blubber-buildkit`) can be difficult
+as stack traces do not surface from the user-facing tools like `docker build`
+or `buildctl`. The easiest way to get access to the gateway's logging is to
+start `buildkitd` in a container and use `docker logs -f` to tail its logs
+while building.
+
+Start `buildkitd` in a Docker container.
+
+    docker run -d --name buildkitd --privileged moby/buildkit:latest
+    export BUILDKIT_HOST=docker-container://buildkitd
+
+Build the buildkit gateway image and tag it for distribution to a
+registry accessible by `buildkitd`.
+
+    ./blubber .pipeline/blubber.yaml buildkit \
+      | docker build -t my-docker-io-account/blubber-buildkit -f - .
+
+Publish the gateway image. (Requires that you first auth with `docker login`.)
+
+    docker push my-docker-io-account/blubber-buildkit
+
+Tail `buildkitd` logs in a terminal.
+
+    docker logs -f buildkitd
+
+Build a configuration using `buildctl` and the published gateway image.
+
+    buildctl build \
+        --frontend gateway.v0 \
+        --opt source=my-docker-io-account/blubber-buildkit \
+        --local context=. \
+        --local dockerfile=. \
+        --opt filename=.pipeline/blubber.yaml \
+        --opt variant=test
+
+If a fatal occurs, you should now see the full error and stack trace in the
+Docker logs.

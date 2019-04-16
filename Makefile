@@ -1,6 +1,9 @@
 SHELL := /bin/bash
 RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
+VERSION := $(shell cat VERSION)
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
+FULLVERSION := $(VERSION)-$(GIT_COMMIT)
 
 PACKAGE := gerrit.wikimedia.org/r/blubber
 
@@ -8,15 +11,15 @@ GO_LIST_GOFILES := '{{range .GoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}{{rang
 GO_PACKAGES := $(shell go list ./...)
 
 GO_LDFLAGS := \
-  -X $(PACKAGE)/meta.Version=$(shell cat VERSION) \
-  -X $(PACKAGE)/meta.GitCommit=$(shell git rev-parse --short HEAD)
+  -X $(PACKAGE)/meta.Version=$(VERSION) \
+  -X $(PACKAGE)/meta.GitCommit=$(GIT_COMMIT)
 
 # go build/install commands
 #
 GO_BUILD := go build -v -ldflags "$(GO_LDFLAGS)"
 GO_INSTALL := go install -v -ldflags "$(GO_LDFLAGS)"
 
-all: code blubber blubberoid
+all: code blubber blubberoid blubber-buildkit
 
 blubber:
 	$(GO_BUILD) ./cmd/blubber
@@ -24,12 +27,15 @@ blubber:
 blubberoid:
 	$(GO_BUILD) ./cmd/blubberoid
 
+blubber-buildkit: download
+	$(GO_BUILD) ./cmd/blubber-buildkit
+
 code:
 	go generate $(GO_PACKAGES)
 
 clean:
-	go clean $(GO_PACKAGES)
-	rm -f blubber blubberoid
+	go clean $(GO_PACKAGES) || true
+	rm -f blubber blubberoid || true
 
 download:
 	go mod download
@@ -61,4 +67,5 @@ unit:
 
 test: unit lint
 
-.PHONY: install release
+FULLVERSION:
+	@echo $(FULLVERSION) > FULLVERSION

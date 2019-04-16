@@ -1,10 +1,15 @@
+# syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
 version: v4
-base: docker-registry.wikimedia.org/wikimedia-buster:latest
 
 variants:
   build:
     base: docker-registry.wikimedia.org/golang1.17:1.17-1
     apt: {packages: [gcc, git, make]}
+    runs:
+      environment:
+        CGO_ENABLED: "0"
+    builder:
+      requirements: [.]
   test:
     includes: [build]
     copies: [local]
@@ -12,15 +17,37 @@ variants:
     builder:
       requirements: [Makefile, go.mod, go.sum, tools.go]
       command: [make, install-tools]
-    entrypoint: [make, test]
+    entrypoint: [make, clean, test]
   prep:
     includes: [build]
     builder:
-      command: [make, blubberoid]
-      requirements: [.]
+      command: [make, clean, blubberoid]
   production:
+    base: docker-registry.wikimedia.org/wikimedia-buster:latest
     copies:
       - from: prep
         source: /srv/app/blubberoid
         destination: /srv/app/blubberoid
     entrypoint: [./blubberoid]
+  buildkit-prep:
+    includes: [build]
+    builder:
+      command: [make, clean, blubber-buildkit]
+  buildkit-test:
+    includes: [test]
+    entrypoint: [go, test, ./buildkit]
+  buildkit:
+    copies:
+      - from: buildkit-prep
+        source: /srv/app/blubber-buildkit
+        destination: /blubber-buildkit
+      - from: buildkit-prep
+        source: /etc/ssl/certs/ca-certificates.crt
+        destination: /etc/ssl/certs/ca-certificates.crt
+    entrypoint: [/blubber-buildkit]
+  print-versions:
+    includes: [build]
+    builder:
+      command: [make, FULLVERSION]
+      requirements: [Makefile, .git, VERSION]
+    entrypoint: [cat, VERSION, FULLVERSION]

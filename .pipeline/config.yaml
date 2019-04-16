@@ -44,3 +44,25 @@ pipelines:
             tags: [stable]
         promote:
           - chart: blubberoid
+      - name: print-versions
+        build: print-versions
+        run:
+          tail: 10
+      - name: publish-buildkit-gateway
+        build: buildkit
+        publish:
+          image:
+            name: blubber-buildkit
+            tag: ''
+            tags: { $each: version, $in: '${print-versions.output}' }
+
+  # publish the buildkit gateway upon newly pushed git tags
+  publish-buildkit-gateway:
+    blubberfile: blubber.yaml
+    stages:
+      - name: publish-buildkit-gateway
+        build: buildkit
+        publish:
+          image:
+            name: blubber-buildkit
+            tag: '${setup.tag}'

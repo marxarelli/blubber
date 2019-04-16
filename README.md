@@ -114,3 +114,33 @@ running (assuming you have go):
 
 If you'd like to make code contributions to Blubber, see
 [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## BuildKit frontend for `buildctl` and `docker build`
+
+In addition to a CLI and a microservice, Blubber includes a [BuildKit gRPC
+gateway](https://github.com/moby/buildkit#exploring-dockerfiles) that works
+with both BuildKit's `buildctl` command and with `docker build`.
+
+To build from Blubber configuration using `buildctl`, do:
+
+    buildctl build --frontend gateway.v0 \
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0 \
+      --local context=. \
+      --local dockerfile=. \
+      --opt filename=blubber.yaml
+      --opt variant=test
+
+If you'd like to build directly with `docker build` (or other toolchains that
+invoke it like `docker-compose`), specify a [syntax
+directive](https://docs.docker.com/engine/reference/builder/#syntax) at the
+top of your Blubber configuration like so.
+
+    # syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
+    version: v4
+    variants:
+      my-variant:
+      [...]
+
+And invoke `docker build --target my-variant -f blubber.yaml .`. Note that
+Docker must have BuildKit enabled as the default builder. You can also use
+`docker buildx` which always uses BuildKit.

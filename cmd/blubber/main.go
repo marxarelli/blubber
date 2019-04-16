@@ -3,12 +3,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/pborman/getopt/v2"
 
+	"gerrit.wikimedia.org/r/blubber/buildkit"
 	"gerrit.wikimedia.org/r/blubber/config"
 	"gerrit.wikimedia.org/r/blubber/docker"
 	"gerrit.wikimedia.org/r/blubber/meta"
@@ -18,8 +20,9 @@ const parameters = "config.yaml variant"
 
 var (
 	showHelp    = getopt.BoolLong("help", 'h', "show help/usage")
-	showVersion = getopt.BoolLong("version", 'v', "show version information")
+	format      = getopt.StringLong("format", 'f', "dockerfile", "output format", "(dockerfile|llb)")
 	policyURI   = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
+	showVersion = getopt.BoolLong("version", 'v', "show version information")
 )
 
 func main() {
@@ -79,12 +82,22 @@ func main() {
 		}
 	}
 
-	dockerFile, err := docker.Compile(cfg, variant)
+	var output *bytes.Buffer
+
+	switch *format {
+	case "dockerfile":
+		output, err = docker.Compile(cfg, variant)
+	case "llb":
+		output, err = buildkit.Compile(cfg, variant)
+	default:
+		log.Printf("Invalid output format: %s\n", *format)
+		os.Exit(7)
+	}
 
 	if err != nil {
 		log.Printf("Error compiling config: %v\n", err)
 		os.Exit(3)
 	}
 
-	dockerFile.WriteTo(os.Stdout)
+	output.WriteTo(os.Stdout)
 }
