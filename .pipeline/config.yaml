@@ -1,0 +1,42 @@
+pipelines:
+  test:
+    blubberfile: blubber.yaml
+    stages:
+      - name: test
+      - name: candidate
+        build: production
+
+  rehearse:
+    blubberfile: blubber.yaml
+    stages:
+      - name: test
+      - name: candidate
+        build: production
+        publish:
+          image: true
+      - name: rehearsal
+        deploy:
+          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.6.tgz
+          image: '${candidate.imageName}'
+          tag: '${candidate.imageTag}'
+          test: true
+
+  publish:
+    blubberfile: blubber.yaml
+    stages:
+      - name: test
+      - name: candidate
+        build: production
+        publish:
+          image: true
+      - name: rehearsal
+        deploy:
+          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.6.tgz
+          image: '${candidate.imageName}'
+          tag: '${candidate.imageTag}'
+          test: true
+      - name: production
+        publish:
+          image:
+            id: '${candidate.imageID}'
+            tags: [stable]
