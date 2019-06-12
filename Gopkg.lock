@@ -48,6 +48,14 @@
   version = "v0.16.0"
 
 [[projects]]
+  digest = "1:c41a98ec16b8b053f921ad36d510f552321d6c86d2cd46d15b0ef3b85e67dd5f"
+  name = "github.com/leodido/go-urn"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "70078a794e8ea4b497ba7c19a78cd60f90ccf0f4"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "v2"
   digest = "1:981e58364d2283b4f5931e7a1c4a2c3c09f1336bacf2d64c63ca9356fd9a0099"
   name = "github.com/pborman/getopt"
@@ -80,12 +88,12 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:e396e0963c85b8a2b437e419b55aa0169a212eb06a7c88fd2bf16e5e5cfce2f2"
+  digest = "1:46be8f82a48108fd6e61e3214933c5678246533c270a687be501d788c8ad0a1b"
   name = "gopkg.in/go-playground/validator.v9"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "1b8c8e19cd250435025214492d9a08411d760fdd"
-  version = "v9.12.0"
+  revision = "884d31b8cad6a1ec877f2400d555924cea03bbea"
+  version = "v9.29.0"
 
 [[projects]]
   branch = "v2"
@@ -105,7 +113,6 @@
     "github.com/stretchr/testify/assert",
     "github.com/utahta/go-openuri",
     "gopkg.in/go-playground/validator.v9",
-    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

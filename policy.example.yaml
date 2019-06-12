@@ -1,5 +1,9 @@
 enforcements:
-  - path: variants.production.base
-    rule: oneof=debian:jessie debian:jessie-slim
+  - path: base
+    rule: oneof=docker-registry.wikimedia.org/wikimedia-stretch:latest docker-registry.wikimedia.org/wikimedia-jessie:latest
   - path: variants.production.runs.insecurely
     rule: isfalse
+  - path: variants.test.base
+    rule: omitempty,startswith=docker-registry.wikimedia.org
+  - path: variants.production.base
+    rule: omitempty,startswith=docker-registry.wikimedia.org

@@ -71,7 +71,7 @@ type Validate struct {
 	structCache      *structCache
 }
 
-// New returns a new instacne of 'validate' with sane defaults.
+// New returns a new instance of 'validate' with sane defaults.
 func New() *Validate {
 
 	tc := new(tagCache)
@@ -97,7 +97,7 @@ func New() *Validate {
 	for k, val := range bakedInValidators {
 
 		// no need to error check here, baked in will always be valid
-		v.registerValidation(k, wrapFunc(val), true)
+		_ = v.registerValidation(k, wrapFunc(val), true)
 	}
 
 	v.pool = &sync.Pool{
@@ -119,8 +119,17 @@ func (v *Validate) SetTagName(name string) {
 	v.tagName = name
 }
 
-// RegisterTagNameFunc registers a function to get another name from the
-// StructField eg. the JSON name
+// RegisterTagNameFunc registers a function to get alternate names for StructFields.
+//
+// eg. to use the names which have been specified for JSON representations of structs, rather than normal Go field names:
+//
+//    validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+//        name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+//        if name == "-" {
+//            return ""
+//        }
+//        return name
+//    })
 func (v *Validate) RegisterTagNameFunc(fn TagNameFunc) {
 	v.tagNameFunc = fn
 	v.hasTagNameFunc = true
@@ -198,6 +207,11 @@ func (v *Validate) RegisterStructValidationCtx(fn StructLevelFuncCtx, types ...i
 	}
 
 	for _, t := range types {
+		tv := reflect.ValueOf(t)
+		if tv.Kind() == reflect.Ptr {
+			t = reflect.Indirect(tv).Interface()
+		}
+
 		v.structLevelFuncs[reflect.TypeOf(t)] = fn
 	}
 }
@@ -318,7 +332,7 @@ func (v *Validate) StructFilteredCtx(ctx context.Context, s interface{}, fn Filt
 	vd.ffn = fn
 	// vd.hasExcludes = false // only need to reset in StructPartial and StructExcept
 
-	vd.validateStruct(context.Background(), top, val, val.Type(), vd.ns[0:0], vd.actualNs[0:0], nil)
+	vd.validateStruct(ctx, top, val, val.Type(), vd.ns[0:0], vd.actualNs[0:0], nil)
 
 	if len(vd.errs) > 0 {
 		err = vd.errs
@@ -489,7 +503,7 @@ func (v *Validate) StructExceptCtx(ctx context.Context, s interface{}, fields ..
 //
 // WARNING: a struct can be passed for validation eg. time.Time is a struct or
 // if you have a custom type and have registered a custom type handler, so must
-// allow it; however unforseen validations will occur if trying to validate a
+// allow it; however unforeseen validations will occur if trying to validate a
 // struct that is meant to be passed to 'validate.Struct'
 //
 // It returns InvalidValidationError for bad values passed in and nil or ValidationErrors as error otherwise.
@@ -507,7 +521,7 @@ func (v *Validate) Var(field interface{}, tag string) error {
 //
 // WARNING: a struct can be passed for validation eg. time.Time is a struct or
 // if you have a custom type and have registered a custom type handler, so must
-// allow it; however unforseen validations will occur if trying to validate a
+// allow it; however unforeseen validations will occur if trying to validate a
 // struct that is meant to be passed to 'validate.Struct'
 //
 // It returns InvalidValidationError for bad values passed in and nil or ValidationErrors as error otherwise.
@@ -541,7 +555,7 @@ func (v *Validate) VarCtx(ctx context.Context, field interface{}, tag string) (e
 //
 // WARNING: a struct can be passed for validation eg. time.Time is a struct or
 // if you have a custom type and have registered a custom type handler, so must
-// allow it; however unforseen validations will occur if trying to validate a
+// allow it; however unforeseen validations will occur if trying to validate a
 // struct that is meant to be passed to 'validate.Struct'
 //
 // It returns InvalidValidationError for bad values passed in and nil or ValidationErrors as error otherwise.
@@ -560,7 +574,7 @@ func (v *Validate) VarWithValue(field interface{}, other interface{}, tag string
 //
 // WARNING: a struct can be passed for validation eg. time.Time is a struct or
 // if you have a custom type and have registered a custom type handler, so must
-// allow it; however unforseen validations will occur if trying to validate a
+// allow it; however unforeseen validations will occur if trying to validate a
 // struct that is meant to be passed to 'validate.Struct'
 //
 // It returns InvalidValidationError for bad values passed in and nil or ValidationErrors as error otherwise.

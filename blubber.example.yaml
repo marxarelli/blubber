@@ -1,6 +1,6 @@
 ---
 version: v3
-base: debian:jessie
+base: docker-registry.wikimedia.org/wikimedia-stretch:latest
 apt:
   packages: [libjpeg, libyaml]
 python:
@@ -42,7 +42,7 @@ variants:
       env: production
 
   production:
-    base: debian:jessie-slim
+    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
     node:
       env: production
     copies: [prep]
