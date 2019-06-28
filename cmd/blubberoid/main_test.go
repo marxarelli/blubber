@@ -13,7 +13,7 @@ import (
 func TestBlubberoidYAMLRequest(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`---
-    version: v3
+    version: v4
     base: foo
     variants:
       test: {}`))
@@ -34,7 +34,7 @@ func TestBlubberoidJSONRequest(t *testing.T) {
 	t.Run("valid JSON syntax", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`{
-			"version": "v3",
+			"version": "v4",
 			"base": "foo",
 			"variants": {
 				"test": {}
@@ -56,7 +56,7 @@ func TestBlubberoidJSONRequest(t *testing.T) {
 	t.Run("invalid JSON syntax", func(t *testing.T) {
 		rec := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/v1/test", strings.NewReader(`{
-			version: "v3",
+			version: "v4",
 			base: "foo",
 			variants: {
 				test: {},

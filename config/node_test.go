@@ -11,7 +11,7 @@ import (
 
 func TestNodeConfigYAML(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo
     node:
       requirements: [package.json]

@@ -12,7 +12,7 @@ import (
 
 func TestVariantConfigYAML(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo
     variants:
       build:
@@ -165,7 +165,7 @@ func TestVariantConfigValidation(t *testing.T) {
 	t.Run("includes", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo: { includes: [build] }`))
@@ -175,7 +175,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("optional", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo: {}`))
@@ -185,7 +185,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo: { includes: [build, foobuild, foo_build] }`))
@@ -205,7 +205,7 @@ func TestVariantConfigValidation(t *testing.T) {
 
 		t.Run("should not contain duplicates", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo: { copies: [foo, bar, foo] }`))

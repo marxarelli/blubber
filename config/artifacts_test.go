@@ -11,7 +11,7 @@ import (
 
 func TestArtifactsConfigYAML(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo
     variants:
       build: {}
@@ -80,7 +80,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 	t.Run("from", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo:
@@ -94,7 +94,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("missing", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo:
@@ -112,7 +112,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			_, err := config.ReadYAMLConfig([]byte(`---
-        version: v3
+        version: v4
         variants:
           build: {}
           foo:
@@ -133,7 +133,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		t.Run("source", func(t *testing.T) {
 			t.Run("with no destination given can be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             build: {}
             foo:
@@ -145,7 +145,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 			t.Run("with destination given must not be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             build: {}
             foo:
@@ -164,7 +164,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		t.Run("destination", func(t *testing.T) {
 			t.Run("with no source given can be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             build: {}
             foo:
@@ -176,7 +176,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 			t.Run("with source given must not be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             build: {}
             foo:
@@ -198,7 +198,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		t.Run("source", func(t *testing.T) {
 			t.Run("must be a relative path", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             foo:
               copies:
@@ -215,7 +215,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 			t.Run("must not use ../", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             foo:
               copies:
@@ -234,7 +234,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		t.Run("destination", func(t *testing.T) {
 			t.Run("must be a relative path", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             foo:
               copies:
@@ -251,7 +251,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 
 			t.Run("must not use ../", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v3
+          version: v4
           variants:
             foo:
               copies:

@@ -13,7 +13,7 @@ import (
 
 func TestSingleStageHasNoName(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo/bar
     variants:
       development: {}`))
@@ -28,7 +28,7 @@ func TestSingleStageHasNoName(t *testing.T) {
 
 func TestMultiStageIncludesStageNames(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo/bar
     variants:
       build: {}
@@ -52,7 +52,7 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
 
 func TestMultipleArtifactsFromSameStage(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo/bar
     variants:
       build: {}
@@ -79,7 +79,7 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 
 func TestMetaDataLabels(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo/bar
     variants:
       development: {}`))

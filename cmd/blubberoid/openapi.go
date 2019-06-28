@@ -22,7 +22,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/v3.Config'
+              $ref: '#/components/schemas/v4.Config'
           application/yaml:
             schema:
               type: string
@@ -53,7 +53,7 @@ paths:
             headers:
               Content-Type: application/json
             body: {
-              "version": "v3",
+              "version": "v4",
               "base": "docker-registry.wikimedia.org/nodejs-slim",
               "apt": { "packages": ["librsvg2-2"] },
               "lives": { "in": "/srv/service" },
@@ -77,10 +77,10 @@ paths:
 
 components:
   schemas:
-    v3.Config:
-      title: Top-level blubber configuration (version v3)
+    v4.Config:
+      title: Top-level blubber configuration (version v4)
       allOf:
-        - $ref: '#/components/schemas/v3.CommonConfig'
+        - $ref: '#/components/schemas/v4.CommonConfig'
         - type: object
           properties:
             required: [version, variants]
@@ -99,9 +99,9 @@ components:
               #
               # patternProperties:
               #   "^[a-zA-Z][a-zA-Z0-9\-\.]+[a-zA-Z0-9]$":
-              #     $ref: '#/components/schemas/v3.VariantConfig'
+              #     $ref: '#/components/schemas/v4.VariantConfig'
 
-    v3.CommonConfig:
+    v4.CommonConfig:
       type: object
       properties:
         base:
@@ -189,9 +189,9 @@ components:
           description: Runtime entry point command and arguments
           items:
             type: string
-    v3.VariantConfig:
+    v4.VariantConfig:
       allOf:
-        - $ref: '#/components/schemas/v3.CommonConfig'
+        - $ref: '#/components/schemas/v4.CommonConfig'
         - type: object
           properties:
             includes:

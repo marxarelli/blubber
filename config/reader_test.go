@@ -11,7 +11,7 @@ import (
 
 func ExampleResolveIncludes() {
 	cfg, _ := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     variants:
       varA: { includes: [varB, varC] }
       varB: { includes: [varD, varE] }
@@ -29,7 +29,7 @@ func ExampleResolveIncludes() {
 
 func TestReadYAMLConfigErrorsOnUnknownYAML(t *testing.T) {
 	_, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     newphone: whodis
     variants:
       foo: {}`))
@@ -55,7 +55,7 @@ func TestReadYAMLConfigValidateVersionBeforeStrictUnmarshal(t *testing.T) {
 
 func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     variants:
       varA: { includes: [varB] }
       varB: { includes: [varA] }`))
@@ -69,7 +69,7 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 
 func TestMultiLevelIncludes(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     base: foo-slim
     variants:
       build:
@@ -101,7 +101,7 @@ func TestMultiLevelIncludes(t *testing.T) {
 
 func TestMultiIncludes(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v3
+    version: v4
     variants:
       mammal:
         base: neutral

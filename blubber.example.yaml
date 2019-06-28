@@ -1,5 +1,5 @@
 ---
-version: v3
+version: v4
 base: docker-registry.wikimedia.org/wikimedia-stretch:latest
 apt:
   packages: [libjpeg, libyaml]
