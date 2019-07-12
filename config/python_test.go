@@ -194,6 +194,43 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	})
 }
 
+func TestPythonConfigUseSystemFlag(t *testing.T) {
+	cfg := config.PythonConfig{
+		Version:	   "python2.7",
+		Requirements:  []string{"requirements.txt", "requirements-test.txt", "docs/requirements.txt"},
+		UseSystemFlag: true,
+	}
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Env{map[string]string{
+					"PIP_WHEEL_DIR":  "/opt/lib/python",
+					"PIP_FIND_LINKS": "file:///opt/lib/python",
+				}},
+				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
+				build.Run{"mkdir -p", []string{"docs/"}},
+				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
+				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
+				build.RunAll{[]build.Run{
+					{"python2.7", []string{"-m", "pip", "wheel",
+						"-r", "requirements.txt",
+						"-r", "requirements-test.txt",
+						"-r", "docs/requirements.txt",
+					}},
+					{"python2.7", []string{"-m", "pip", "install", "--system",
+						"--target", "/opt/lib/python/site-packages",
+						"-r", "requirements.txt",
+						"-r", "requirements-test.txt",
+						"-r", "docs/requirements.txt",
+					}},
+				}},
+			},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
+		)
+	})
+}
+
 func TestPythonConfigRequirementsArgs(t *testing.T) {
 	cfg := config.PythonConfig{
 		Requirements: []string{"foo", "bar", "baz/qux"},

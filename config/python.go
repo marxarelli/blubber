@@ -20,8 +20,9 @@ const PythonSiteBin = PythonSitePackages + "/bin"
 // dependencies via PIP.
 //
 type PythonConfig struct {
-	Version      string   `json:"version"`      // Python binary to use when installing dependencies
-	Requirements []string `json:"requirements"` // install requirements from given files
+	Version       string   `json:"version"`         // Python binary to use when installing dependencies
+	Requirements  []string `json:"requirements"`    // install requirements from given files
+	UseSystemFlag bool     `json:"use-system-flag"` // Inject the --system flag into the install command (T227919)
 }
 
 // Merge takes another PythonConfig and merges its fields into this one's,
@@ -34,6 +35,10 @@ func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 
 	if pc2.Requirements != nil {
 		pc.Requirements = pc2.Requirements
+	}
+
+	if pc2.UseSystemFlag {
+		pc.UseSystemFlag = true
 	}
 }
 
@@ -89,9 +94,13 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				ins = append(ins, build.SyncFiles(pc.Requirements, ".")...)
 
 				if args := pc.RequirementsArgs(); len(args) > 0 {
+					installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
+					if pc.UseSystemFlag {
+						installCmd = insertElement(installCmd, "--system", posOf(installCmd, "install") + 1)
+					}
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), append([]string{"-m", "pip", "wheel"}, args...)},
-						{pc.version(), append([]string{"-m", "pip", "install", "--target", PythonSitePackages}, args...)},
+						{pc.version(), append(installCmd, args...)},
 					}})
 				}
 
@@ -134,4 +143,22 @@ func (pc PythonConfig) version() string {
 	}
 
 	return pc.Version
+}
+
+// insert el into slice at pos
+func insertElement(slice []string, el string, pos int) []string {
+	slice = append(slice, "")
+	copy(slice[pos+1:], slice[pos:])
+	slice[pos] = el
+	return slice
+}
+
+// find position of an element in a slice
+func posOf(slice []string, el string) int {
+	for p, v := range slice {
+		if v == el {
+			return p
+		}
+	}
+	return -1
 }
