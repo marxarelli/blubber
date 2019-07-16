@@ -20,7 +20,8 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
       test:
         python:
           version: python3
-          requirements: [other-requirements.txt, requirements-test.txt]`))
+          requirements: [other-requirements.txt, requirements-test.txt]
+          use-system-flag: true`))
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
@@ -31,6 +32,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"other-requirements.txt", "requirements-test.txt"}, variant.Python.Requirements)
 			assert.Equal(t, "python3", variant.Python.Version)
+			assert.Equal(t, true, variant.Python.UseSystemFlag)
 		}
 	}
 }
