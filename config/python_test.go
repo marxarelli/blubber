@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -246,4 +247,54 @@ func TestPythonConfigRequirementsArgs(t *testing.T) {
 		},
 		cfg.RequirementsArgs(),
 	)
+}
+
+func TestSliceInsert(t *testing.T) {
+	t.Run("test inserting an element", func(t *testing.T) {
+		got := config.InsertElement([]string{"Hello", "World"}, "Beautiful", 1)
+		expected := []string{"Hello", "Beautiful", "World"}
+
+		if ! reflect.DeepEqual(got, expected) {
+			t.Errorf("Expected '%v'; got '%v'", expected, got)
+		}
+	})
+
+	t.Run("test inserting an element at the end", func(t *testing.T) {
+		orig := []string{"Foo", "Bar", "Baz"}
+		got := config.InsertElement(orig, "Beautiful", len(orig))
+		expected := []string{"Foo", "Bar", "Baz", "Beautiful"}
+
+		if ! reflect.DeepEqual(got, expected) {
+			t.Errorf("Expected '%v'; got '%v'", expected, got)
+		}
+	})
+
+	t.Run("test inserting an element at the beginning", func(t *testing.T) {
+		orig := []string{"Foo", "Bar", "Baz"}
+		got := config.InsertElement(orig, "Beautiful", 0)
+		expected := []string{"Beautiful", "Foo", "Bar", "Baz"}
+
+		if ! reflect.DeepEqual(got, expected) {
+			t.Errorf("Expected '%v'; got '%v'", expected, got)
+		}
+	})
+}
+
+func TestPosFinding(t *testing.T) {
+	t.Run("test finding string in slice", func(t *testing.T) {
+		got := config.PosOf([]string{"foo", "bar"}, "foo")
+		expected := 0
+		if got != expected {
+			t.Errorf("Expected '%v'; got '%v'", expected, got)
+		}
+	})
+
+	t.Run("test finding string NOT in slice", func(t *testing.T) {
+		got := config.PosOf([]string{"foo", "bar"}, "baz")
+		expected := -1
+		if got != expected {
+			t.Errorf("Expected '%v'; got '%v'", expected, got)
+		}
+	})
+
 }

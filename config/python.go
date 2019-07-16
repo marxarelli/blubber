@@ -96,7 +96,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				if args := pc.RequirementsArgs(); len(args) > 0 {
 					installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
 					if pc.UseSystemFlag {
-						installCmd = insertElement(installCmd, "--system", posOf(installCmd, "install") + 1)
+						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install") + 1)
 					}
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), append([]string{"-m", "pip", "wheel"}, args...)},
@@ -145,16 +145,16 @@ func (pc PythonConfig) version() string {
 	return pc.Version
 }
 
-// insert el into slice at pos
-func insertElement(slice []string, el string, pos int) []string {
+// InsertElement - insert el into slice at pos
+func InsertElement(slice []string, el string, pos int) []string {
 	slice = append(slice, "")
 	copy(slice[pos+1:], slice[pos:])
 	slice[pos] = el
 	return slice
 }
 
-// find position of an element in a slice
-func posOf(slice []string, el string) int {
+// PosOf - find position of an element in a slice
+func PosOf(slice []string, el string) int {
 	for p, v := range slice {
 		if v == el {
 			return p
