@@ -51,7 +51,7 @@ lint:
 	go vet -composites=false $(GO_PACKAGES)
 
 unit:
-	go test -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
+	go test -cover -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
 
 test: unit lint
 
