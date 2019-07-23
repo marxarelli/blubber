@@ -16,7 +16,7 @@ pipelines:
           image: true
       - name: rehearsal
         deploy:
-          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.6.tgz
+          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.8.tgz
           image: '${candidate.imageName}'
           tag: '${candidate.imageTag}'
           test: true
@@ -31,7 +31,7 @@ pipelines:
           image: true
       - name: rehearsal
         deploy:
-          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.6.tgz
+          chart: https://releases.wikimedia.org/charts/blubberoid-0.0.8.tgz
           image: '${candidate.imageName}'
           tag: '${candidate.imageTag}'
           test: true

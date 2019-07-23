@@ -1,4 +1,4 @@
-version: v3
+version: v4
 base: docker-registry.wikimedia.org/wikimedia-stretch:latest
 
 variants:
@@ -7,6 +7,7 @@ variants:
     apt: {packages: [gcc, git, make]}
   test:
     includes: [build]
+    copies: [local]
     runs: { insecurely: true }
     builder:
       command: [go, get, -u, golang.org/x/lint/golint]
@@ -17,5 +18,8 @@ variants:
       command: [make, blubberoid]
       requirements: [.]
   production:
-    copies: prep
+    copies:
+      - from: prep
+        source: /srv/app/blubberoid
+        destination: /srv/app/blubberoid
     entrypoint: [./blubberoid]
