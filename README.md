@@ -1,7 +1,5 @@
 ![Blubber](docs/logo-400.png)
 
-**Very experimental proof of concept.**
-
 Blubber is a highly opinionated abstraction for container build configurations
 and a command-line compiler which currently supports outputting multi-stage
 Dockerfiles. It aims to provide a handful of declarative constructs that
