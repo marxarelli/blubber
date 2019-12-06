@@ -28,7 +28,7 @@ code:
 	go generate $(GO_PACKAGES)
 
 clean:
-	go clean
+	go clean $(GO_PACKAGES)
 	rm -f blubber blubberoid
 
 install: all
