@@ -52,7 +52,7 @@ func TestRunsConfigInstructions(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{build.RunAll{[]build.Run{
 				{"groupadd -o -g %s -r", []string{"777", "someuser"}},
-				{"useradd -o -m -d %s -r -g %s -u %s", []string{"/home/someuser", "someuser", "666", "someuser"}},
+				{"useradd -l -o -m -d %s -r -g %s -u %s", []string{"/home/someuser", "someuser", "666", "someuser"}},
 			}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)

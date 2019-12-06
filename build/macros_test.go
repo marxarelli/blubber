@@ -48,7 +48,7 @@ func TestCreateUser(t *testing.T) {
 
 	if assert.Len(t, i, 2) {
 		assert.Equal(t, []string{`groupadd -o -g "124" -r "foo"`}, i[0].Compile())
-		assert.Equal(t, []string{`useradd -o -m -d "/home/foo" -r -g "foo" -u "123" "foo"`}, i[1].Compile())
+		assert.Equal(t, []string{`useradd -l -o -m -d "/home/foo" -r -g "foo" -u "123" "foo"`}, i[1].Compile())
 	}
 }
 
