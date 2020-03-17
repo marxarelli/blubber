@@ -54,12 +54,12 @@ paths:
               Content-Type: application/json
             body: {
               "version": "v4",
-              "base": "docker-registry.wikimedia.org/nodejs-slim",
+              "base": "docker-registry.wikimedia.org/buster-nodejs10-slim",
               "apt": { "packages": ["librsvg2-2"] },
               "lives": { "in": "/srv/service" },
               "variants": {
                 "build": {
-                  "base": "docker-registry.wikimedia.org/nodejs-devel",
+                  "base": "docker-registry.wikimedia.org/buster-nodejs10-devel",
                   "apt": {
                     "packages": ["librsvg2-dev", "git", "pkg-config", "build-essential"]
                   },
@@ -73,7 +73,7 @@ paths:
             status: 200
             headers:
               content-type: text/plain
-            body: /^FROM docker-registry.wikimedia.org\/nodejs-devel/
+            body: /^FROM docker-registry.wikimedia.org\/buster-nodejs10-devel/
 
 components:
   schemas:
