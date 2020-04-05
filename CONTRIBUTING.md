@@ -22,8 +22,11 @@ to both users inside and outside of WMF and our communities.
  3. An account at [gerrit.wikimedia.org](https://gerrit.wikimedia.org)
     * See the [guide](https://www.mediawiki.org/wiki/Gerrit/Getting_started)
       on mediawiki.org for setup instructions.
- 4. (optional) `gox` is used for cross-compiling binary releases. To
-    install `gox` use `go get github.com/mitchellh/gox`.
+ 4. (optional) `gox` is used for cross-compiling binary releases.
+    * To install `gox` use `go get github.com/mitchellh/gox`.
+ 5. (optional) `golint` is used in `make lint` for code checking.
+    * To install `golint` use `go get -u golang.org/x/lint/golint`
+    * More info at: https://github.com/golang/lint
 
 ## Get the source
 
