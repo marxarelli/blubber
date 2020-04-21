@@ -10,12 +10,15 @@ import (
 type NodeConfig struct {
 	Requirements []string `json:"requirements"`                     // install requirements from given files
 	Env          string   `json:"env" validate:"omitempty,nodeenv"` // environment name ("production" install)
+	UseNpmCi     Flag     `json:"use-npm-ci"`                       // whether to run npm ci
 }
 
 // Merge takes another NodeConfig and merges its fields into this one's,
-// overwriting both the environment and requirements files.
+// overwriting useNpmCi, the environment, and the requirements files.
 //
 func (nc *NodeConfig) Merge(nc2 NodeConfig) {
+	nc.UseNpmCi.Merge(nc2.UseNpmCi)
+
 	if nc2.Requirements != nil {
 		nc.Requirements = nc2.Requirements
 	}
@@ -47,12 +50,19 @@ func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 	switch phase {
 	case build.PhasePreInstall:
 		if len(nc.Requirements) > 0 {
-			npmInstall := build.RunAll{[]build.Run{
-				{"npm install", []string{}},
-			}}
+			var npmInstall build.RunAll
+			if nc.UseNpmCi.True {
+				npmInstall = build.RunAll{[]build.Run{
+					{"npm ci", []string{}},
+				}}
+			} else {
+				npmInstall = build.RunAll{[]build.Run{
+					{"npm install", []string{}},
+				}}
+			}
 
 			if nc.Env == "production" {
-				npmInstall.Runs[0].Arguments = []string{"--production"}
+				npmInstall.Runs[0].Arguments = []string{"--only=production"}
 				npmInstall.Runs = append(npmInstall.Runs,
 					build.Run{"npm dedupe", []string{}},
 				)

@@ -16,6 +16,7 @@ func TestNodeConfigYAML(t *testing.T) {
     node:
       requirements: [package.json]
       env: foo
+      use-npm-ci: true
     variants:
       build:
         node:
@@ -25,6 +26,7 @@ func TestNodeConfigYAML(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, []string{"package.json"}, cfg.Node.Requirements)
 		assert.Equal(t, "foo", cfg.Node.Env)
+		assert.Equal(t, true, cfg.Node.UseNpmCi.True)
 
 		variant, err := config.ExpandVariant(cfg, "build")
 
@@ -52,6 +54,30 @@ func TestNodeConfigInstructionsNoRequirements(t *testing.T) {
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
+	})
+}
+
+func TestNodeConfigInstructionsUseNpmCi(t * testing.T) {
+	cfg := config.NodeConfig{Requirements: []string{"package.json"}, UseNpmCi: config.Flag{True: true}}
+
+	t.Run("PhasePrivileged", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
+	})
+
+	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
+	})
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Copy{[]string{"package.json"}, "./"},
+				build.RunAll{[]build.Run{
+					{"npm ci", []string{}},
+				}},
+			},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
+		)
 	})
 }
 
@@ -106,7 +132,7 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 			[]build.Instruction{
 				build.Copy{[]string{"package.json", "package-lock.json"}, "./"},
 				build.RunAll{[]build.Run{
-					{"npm install", []string{"--production"}},
+					{"npm install", []string{"--only=production"}},
 					{"npm dedupe", []string{}},
 				}},
 			},
