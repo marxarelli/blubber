@@ -121,3 +121,36 @@ func TestMultiIncludes(t *testing.T) {
 		}
 	}
 }
+
+func TestGetVariant(t *testing.T) {
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: foo-slim
+    variants:
+      build:
+        base: foo-devel
+        runs: { as: foo }
+      development:
+        includes: [build]
+        runs: { uid: 123 }
+      test:
+        includes: [development]
+        runs: { insecurely: true }`))
+
+	assert.NoError(t, err)
+
+	dev, _ := config.GetVariant(cfg, "development")
+	assert.Equal(t, "", dev.Base)
+	assert.Equal(t, "", dev.Runs.As)
+	assert.Equal(t, uint(123), dev.Runs.UID)
+
+	vcfg, err := config.ExpandVariant(cfg, "development")
+	cfg.Variants["development"] = *vcfg
+	assert.NoError(t, err)
+
+	dev, _ = config.GetVariant(cfg, "development")
+	assert.Equal(t, "foo-devel", dev.Base)
+	assert.Equal(t, "foo", dev.Runs.As)
+	assert.Equal(t, uint(123), dev.Runs.UID)
+
+}

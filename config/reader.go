@@ -2,8 +2,8 @@ package config
 
 import (
 	"bytes"
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -90,6 +90,42 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 
 	return expanded, nil
 }
+
+// ExpandIncludesAndCopies resolves 'includes' and 'copies' for the
+// specified variant.  This should be run before policy verfication
+// so that the policy enforcement is applied to the final blubber spec
+//
+func ExpandIncludesAndCopies(config *Config, name string) error {
+	vcfg, err := ExpandVariant(config, name)
+
+	if err != nil {
+		return fmt.Errorf("expanding variant '%s': %s", name, err)
+	}
+
+	config.Variants[name] = *vcfg
+
+	for _, stage := range vcfg.Copies.Variants() {
+		dependency, err := ExpandVariant(config, stage)
+
+		if err != nil {
+			return fmt.Errorf("expanding dependency '%s': %s", name, err)
+		}
+
+		config.Variants[stage] = *dependency
+	}
+	return nil
+}
+
+// GetVariant retrieves a requested *VariantConfig from the main config
+//
+func GetVariant(config *Config, name string) (*VariantConfig, error) {
+	variant := new(VariantConfig)
+
+	variant.Merge(config.Variants[name])
+
+	return variant, nil
+}
+
 // ReadYAMLConfig converts YAML bytes to json and returns new Config struct.
 //
 func ReadYAMLConfig(data []byte) (*Config, error) {

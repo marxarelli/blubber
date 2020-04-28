@@ -1,15 +1,15 @@
 package config
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
 
-	"github.com/utahta/go-openuri"
 	"github.com/ghodss/yaml"
+	"github.com/utahta/go-openuri"
 )
 
 // Policy validates a number of rules against a given configuration.
@@ -41,8 +41,8 @@ func (pol Policy) Validate(config Config) error {
 
 		if err != nil {
 			return fmt.Errorf(
-				`value for "%s" violates policy rule "%s"`,
-				enforcement.Path, enforcement.Rule,
+				`value: "%s", for "%s" violates policy rule "%s"`,
+				cfg, enforcement.Path, enforcement.Rule,
 			)
 		}
 	}

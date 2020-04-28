@@ -20,6 +20,9 @@ func TestSingleStageHasNoName(t *testing.T) {
 
 	assert.Nil(t, err)
 
+	err = config.ExpandIncludesAndCopies(cfg, "development")
+	assert.Nil(t, err)
+
 	dockerOut, _ := docker.Compile(cfg, "development")
 	dockerfile := dockerOut.String()
 
@@ -39,6 +42,9 @@ func TestMultiStageIncludesStageNames(t *testing.T) {
             destination: .`))
 
 	if assert.NoError(t, err) {
+		err = config.ExpandIncludesAndCopies(cfg, "production")
+		assert.Nil(t, err)
+
 		dockerOut, _ := docker.Compile(cfg, "production")
 		dockerfile := dockerOut.String()
 
@@ -65,6 +71,9 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
             source: bar
             destination: bar`))
 
+	assert.Nil(t, err)
+
+	err = config.ExpandIncludesAndCopies(cfg, "production")
 	assert.Nil(t, err)
 
 	dockerOut, _ := docker.Compile(cfg, "production")

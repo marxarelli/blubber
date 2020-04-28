@@ -19,7 +19,7 @@ import (
 func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 
-	vcfg, err := config.ExpandVariant(cfg, variant)
+	vcfg, err := config.GetVariant(cfg, variant)
 
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 
 	// write multi-stage sections for each variant dependency
 	for _, stage := range vcfg.Copies.Variants() {
-		dependency, err := config.ExpandVariant(cfg, stage)
+		dependency, err := config.GetVariant(cfg, stage)
 
 		if err != nil {
 			return nil, err

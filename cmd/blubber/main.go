@@ -57,6 +57,12 @@ func main() {
 		}
 	}
 
+	err = config.ExpandIncludesAndCopies(cfg, variant)
+	if err != nil {
+		log.Printf("Error: Failed to process config for '%s': %s\n", variant, err)
+		os.Exit(3)
+	}
+
 	if *policyURI != "" {
 		policy, err := config.ReadPolicyFromURI(*policyURI)
 

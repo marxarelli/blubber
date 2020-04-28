@@ -53,7 +53,7 @@ func TestPolicyValidate(t *testing.T) {
 
 	assert.EqualError(t,
 		policy.Validate(cfg),
-		`value for "variants.foo.runs.as" violates policy rule "ne=root"`,
+		`value: "root", for "variants.foo.runs.as" violates policy rule "ne=root"`,
 	)
 
 	policy = config.Policy{
@@ -64,7 +64,7 @@ func TestPolicyValidate(t *testing.T) {
 
 	assert.EqualError(t,
 		policy.Validate(cfg),
-		`value for "base" violates policy rule "oneof=debian:jessie debian:stretch"`,
+		`value: "foo:tag", for "base" violates policy rule "oneof=debian:jessie debian:stretch"`,
 	)
 }
 
@@ -114,4 +114,72 @@ func TestResolveJSONPath(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, "root", val)
 	}
+}
+
+func TestIncludesPolicyVerification(t *testing.T) {
+	variant := "production"
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    variants:
+      dev:
+        base: foo
+      production:
+        includes: [dev]`))
+
+	assert.NoError(t, err)
+
+	vcfg, err := config.ExpandVariant(cfg, variant)
+
+	assert.NoError(t, err)
+
+	cfg.Variants[variant] = *vcfg
+
+	policy := config.Policy{
+		Enforcements: []config.Enforcement{
+			{Path: "variants.production.base", Rule: "omitempty,startswith=docker-registry.wikimedia.org"},
+		},
+	}
+
+	assert.Error(t,
+		policy.Validate(*cfg),
+		`value: foo, for "variants.production.base" violates policy rule "omitempty,startswith=docker-registry.wikimedia.org"`,
+	)
+}
+
+func TestCopiesPolicyVerification(t *testing.T) {
+	variant := "production"
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    variants:
+      dev:
+        base: foo
+      pred:
+        includes: [dev]
+      production:
+        copies: [pred]`))
+
+	assert.NoError(t, err)
+
+	vcfg, err := config.ExpandVariant(cfg, variant)
+	assert.NoError(t, err)
+	cfg.Variants[variant] = *vcfg
+
+	for _, stage := range vcfg.Copies.Variants() {
+		dependency, err := config.ExpandVariant(cfg, stage)
+		assert.NoError(t, err)
+		cfg.Variants[stage] = *dependency
+	}
+
+	policy := config.Policy{
+		Enforcements: []config.Enforcement{
+			{Path: "variants.pred.base", Rule: "omitempty,startswith=docker-registry.wikimedia.org"},
+		},
+	}
+
+	assert.Error(t,
+		policy.Validate(*cfg),
+		`value: foo, for "variants.pred.base" violates policy rule "omitempty,startswith=docker-registry.wikimedia.org"`,
+	)
 }
