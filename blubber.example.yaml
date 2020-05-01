@@ -16,6 +16,7 @@ variants:
       packages: [libjpeg-dev, libyaml-dev]
     node:
       requirements: [package.json, package-lock.json]
+      use-npm-ci: false
     python:
       requirements: [requirements.txt]
     builder:
@@ -40,6 +41,7 @@ variants:
     includes: [build]
     node:
       env: production
+      use-npm-ci: true
 
   production:
     base: docker-registry.wikimedia.org/wikimedia-stretch:latest

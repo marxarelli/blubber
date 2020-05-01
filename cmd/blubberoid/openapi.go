@@ -140,6 +140,9 @@ components:
               description: Files needed for Python package installation (e.g. requirements.txt, etc.)
               items:
                 type: string
+            use-system-flag:
+              type: boolean
+              description: Whether to inject the --system flag into the install command
         builder:
           type: object
           properties:

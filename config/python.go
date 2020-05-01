@@ -22,23 +22,20 @@ const PythonSiteBin = PythonSitePackages + "/bin"
 type PythonConfig struct {
 	Version       string   `json:"version"`         // Python binary to use when installing dependencies
 	Requirements  []string `json:"requirements"`    // install requirements from given files
-	UseSystemFlag bool     `json:"use-system-flag"` // Inject the --system flag into the install command (T227919)
+	UseSystemFlag Flag     `json:"use-system-flag"` // Inject the --system flag into the install command (T227919)
 }
 
 // Merge takes another PythonConfig and merges its fields into this one's,
 // overwriting both the dependencies flag and requirements.
 //
 func (pc *PythonConfig) Merge(pc2 PythonConfig) {
+	pc.UseSystemFlag.Merge(pc2.UseSystemFlag)
 	if pc2.Version != "" {
 		pc.Version = pc2.Version
 	}
 
 	if pc2.Requirements != nil {
 		pc.Requirements = pc2.Requirements
-	}
-
-	if pc2.UseSystemFlag {
-		pc.UseSystemFlag = true
 	}
 }
 
@@ -95,7 +92,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 
 				if args := pc.RequirementsArgs(); len(args) > 0 {
 					installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
-					if pc.UseSystemFlag {
+					if pc.UseSystemFlag.True {
 						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install") + 1)
 					}
 					ins = append(ins, build.RunAll{[]build.Run{

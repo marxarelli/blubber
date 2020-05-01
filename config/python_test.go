@@ -33,7 +33,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"other-requirements.txt", "requirements-test.txt"}, variant.Python.Requirements)
 			assert.Equal(t, "python3", variant.Python.Version)
-			assert.Equal(t, true, variant.Python.UseSystemFlag)
+			assert.Equal(t, true, variant.Python.UseSystemFlag.True)
 		}
 	}
 }
@@ -201,7 +201,7 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 	cfg := config.PythonConfig{
 		Version:	   "python2.7",
 		Requirements:  []string{"requirements.txt", "requirements-test.txt", "docs/requirements.txt"},
-		UseSystemFlag: true,
+		UseSystemFlag: config.Flag{True: true},
 	}
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
