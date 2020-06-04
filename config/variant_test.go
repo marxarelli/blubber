@@ -27,13 +27,19 @@ func TestVariantConfigYAML(t *testing.T) {
             destination: /bar/dst`))
 
 	if assert.NoError(t, err) {
-		variant, err := config.ExpandVariant(cfg, "build")
+		err := config.ExpandIncludesAndCopies(cfg, "build")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "build")
 
 		if assert.NoError(t, err) {
 			assert.Len(t, variant.Copies, 1)
 		}
 
-		variant, err = config.ExpandVariant(cfg, "production")
+		err = config.ExpandIncludesAndCopies(cfg, "production")
+		assert.Nil(t, err)
+
+		variant, err = config.GetVariant(cfg, "production")
 
 		if assert.NoError(t, err) {
 			assert.Len(t, variant.Copies, 2)
@@ -53,10 +59,10 @@ func TestVariantLoops(t *testing.T) {
 			"bar": config.VariantConfig{Includes: []string{"foo"}}}}
 
 	// Configuration that contains a loop in "Includes" should error
-	_, err := config.ExpandVariant(&cfg, "bar")
+	err := config.ExpandIncludesAndCopies(&cfg, "bar")
 	assert.Error(t, err)
 
-	_, errTwo := config.ExpandVariant(&cfgTwo, "bar")
+	errTwo := config.ExpandIncludesAndCopies(&cfgTwo, "bar")
 	assert.NoError(t, errTwo)
 }
 

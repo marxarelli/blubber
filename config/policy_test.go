@@ -129,11 +129,9 @@ func TestIncludesPolicyVerification(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	vcfg, err := config.ExpandVariant(cfg, variant)
+	err = config.ExpandIncludesAndCopies(cfg, variant)
 
 	assert.NoError(t, err)
-
-	cfg.Variants[variant] = *vcfg
 
 	policy := config.Policy{
 		Enforcements: []config.Enforcement{
@@ -162,15 +160,8 @@ func TestCopiesPolicyVerification(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	vcfg, err := config.ExpandVariant(cfg, variant)
+	err = config.ExpandIncludesAndCopies(cfg, variant)
 	assert.NoError(t, err)
-	cfg.Variants[variant] = *vcfg
-
-	for _, stage := range vcfg.Copies.Variants() {
-		dependency, err := config.ExpandVariant(cfg, stage)
-		assert.NoError(t, err)
-		cfg.Variants[stage] = *dependency
-	}
 
 	policy := config.Policy{
 		Enforcements: []config.Enforcement{

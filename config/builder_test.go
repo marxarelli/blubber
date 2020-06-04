@@ -24,14 +24,21 @@ func TestBuilderConfigYAML(t *testing.T) {
           requirements: []`))
 
 	if assert.NoError(t, err) {
-		variant, err := config.ExpandVariant(cfg, "test")
+		err := config.ExpandIncludesAndCopies(cfg, "test")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "test")
+
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"make", "-f", "Makefile", "test"}, variant.Builder.Command)
 			assert.Equal(t, []string{"Makefile"}, variant.Builder.Requirements)
 		}
 
-		variant, err = config.ExpandVariant(cfg, "build")
+		err = config.ExpandIncludesAndCopies(cfg, "build")
+		assert.Nil(t, err)
+
+		variant, err = config.GetVariant(cfg, "build")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"make"}, variant.Builder.Command)

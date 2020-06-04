@@ -28,7 +28,10 @@ func TestNodeConfigYAML(t *testing.T) {
 		assert.Equal(t, "foo", cfg.Node.Env)
 		assert.Equal(t, true, cfg.Node.UseNpmCi.True)
 
-		variant, err := config.ExpandVariant(cfg, "build")
+		err = config.ExpandIncludesAndCopies(cfg, "build")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "build")
 
 		if assert.NoError(t, err) {
 			assert.Empty(t, variant.Node.Requirements)

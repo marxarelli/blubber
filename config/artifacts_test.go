@@ -25,7 +25,10 @@ func TestArtifactsConfigYAML(t *testing.T) {
             destination: /bar/dst`))
 
 	if assert.NoError(t, err) {
-		variant, err := config.ExpandVariant(cfg, "production")
+		err := config.ExpandIncludesAndCopies(cfg, "production")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "production")
 
 		if assert.NoError(t, err) {
 			assert.Len(t, variant.Copies, 2)

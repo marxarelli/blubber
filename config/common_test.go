@@ -21,7 +21,8 @@ func TestCommonConfigYAML(t *testing.T) {
 	assert.Equal(t, "fooimage", cfg.Base)
 	assert.Equal(t, []string{"/bin/foo"}, cfg.EntryPoint)
 
-	variant, err := config.ExpandVariant(cfg, "build")
+	err = config.ExpandIncludesAndCopies(cfg, "build")
+	variant, err := config.GetVariant(cfg, "build")
 
 	assert.Equal(t, "fooimage", variant.Base)
 	assert.Equal(t, []string{"/bin/foo"}, variant.EntryPoint)
