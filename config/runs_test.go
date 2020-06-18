@@ -24,7 +24,10 @@ func TestRunsConfigYAML(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	variant, err := config.ExpandVariant(cfg, "development")
+	err = config.ExpandIncludesAndCopies(cfg, "development")
+	assert.Nil(t, err)
+
+	variant, err := config.GetVariant(cfg, "development")
 
 	assert.Nil(t, err)
 

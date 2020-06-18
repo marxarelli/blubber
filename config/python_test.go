@@ -28,7 +28,10 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
 		assert.Equal(t, "python2.7", cfg.Python.Version)
 
-		variant, err := config.ExpandVariant(cfg, "test")
+		err = config.ExpandIncludesAndCopies(cfg, "test")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "test")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"other-requirements.txt", "requirements-test.txt"}, variant.Python.Requirements)
@@ -52,7 +55,10 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
 
-		variant, err := config.ExpandVariant(cfg, "test")
+		err = config.ExpandIncludesAndCopies(cfg, "test")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "test")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{}, variant.Python.Requirements)
@@ -74,7 +80,10 @@ func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
 	if assert.NoError(t, err) {
 		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
 
-		variant, err := config.ExpandVariant(cfg, "test")
+		err = config.ExpandIncludesAndCopies(cfg, "test")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "test")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"requirements.txt"}, variant.Python.Requirements)

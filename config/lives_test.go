@@ -27,7 +27,10 @@ func TestLivesConfigYAML(t *testing.T) {
 		assert.Equal(t, uint(123), cfg.Lives.UID)
 		assert.Equal(t, uint(223), cfg.Lives.GID)
 
-		variant, err := config.ExpandVariant(cfg, "development")
+		err = config.ExpandIncludesAndCopies(cfg, "development")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "development")
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, "/some/directory", variant.Lives.In)

@@ -18,7 +18,10 @@ func TestFlagMerge(t *testing.T) {
         runs: { insecurely: false }`))
 
 	if assert.NoError(t, err) {
-		variant, err := config.ExpandVariant(cfg, "development")
+		err = config.ExpandIncludesAndCopies(cfg, "development")
+		assert.Nil(t, err)
+
+		variant, err := config.GetVariant(cfg, "development")
 
 		if assert.NoError(t, err) {
 			assert.False(t, variant.Runs.Insecurely.True)

@@ -27,8 +27,10 @@ func TestAptConfigYAML(t *testing.T) {
 
 	assert.Equal(t, []string{"libfoo", "libbar"}, cfg.Apt.Packages)
 
-	variant, err := config.ExpandVariant(cfg, "build")
+	err = config.ExpandIncludesAndCopies(cfg, "build")
+	assert.Nil(t, err)
 
+	variant, err := config.GetVariant(cfg, "build")
 	assert.Nil(t, err)
 
 	assert.Equal(t, []string{"libfoo", "libbar", "libfoo-dev"}, variant.Apt.Packages)

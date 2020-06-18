@@ -99,6 +99,40 @@ func TestMultiLevelIncludes(t *testing.T) {
 	}
 }
 
+func TestCopiesIncludes(t *testing.T) {
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: foo-slim
+    variants:
+      blah:
+        base: foo-test
+      build:
+        base: foo-devel
+        runs: { as: foo }
+      development:
+        includes: [build]
+        runs: { uid: 123 }
+      test:
+        includes: [blah]
+        copies: [development]
+        runs: { insecurely: true }`))
+
+	if assert.NoError(t, err) {
+
+    _ = config.ExpandIncludesAndCopies(cfg, "test")
+    test, _ := config.GetVariant(cfg, "test")
+    dev, _ := config.GetVariant(cfg, "development")
+
+    assert.Equal(t, "foo-devel", dev.Base)
+		assert.Equal(t, "foo", dev.Runs.As)
+
+		assert.Equal(t, "foo-test", test.Base)
+		assert.Equal(t, "runuser", test.Runs.As)
+
+		assert.True(t, test.Runs.Insecurely.True)
+	}
+}
+
 func TestMultiIncludes(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4
@@ -144,8 +178,9 @@ func TestGetVariant(t *testing.T) {
 	assert.Equal(t, "", dev.Runs.As)
 	assert.Equal(t, uint(123), dev.Runs.UID)
 
-	vcfg, err := config.ExpandVariant(cfg, "development")
-	cfg.Variants["development"] = *vcfg
+  err = config.ExpandIncludesAndCopies(cfg, "development")
+  assert.Nil(t, err)
+  _, err = config.GetVariant(cfg, "development")
 	assert.NoError(t, err)
 
 	dev, _ = config.GetVariant(cfg, "development")
