@@ -106,9 +106,9 @@ You can see the result of the example configuration by cloning this repo and
 running (assuming you have go):
 
     make
-    ./bin/blubber blubber blubber.example.yaml development
-    ./bin/blubber blubber blubber.example.yaml test
-    ./bin/blubber blubber blubber.example.yaml production
+    ./blubber blubber.example.yaml development
+    ./blubber blubber.example.yaml test
+    ./blubber blubber.example.yaml production
 
 ## Contribution
 
