@@ -10,4 +10,7 @@ type Config struct {
 	CommonConfig  `json:",inline"`
 	Variants      map[string]VariantConfig `json:"variants" validate:"variants,dive"`
 	VersionConfig `json:",inline"`
+
+	IncludesDepGraph *DepGraph
+	CopiesDepGraph   *DepGraph
 }

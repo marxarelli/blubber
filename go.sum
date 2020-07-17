@@ -18,6 +18,8 @@ github.com/stretchr/testify v1.1.4 h1:ToftOQTytwshuOSj6bDSolVUa3GINfJP/fg3OkkOzQ
 github.com/stretchr/testify v1.1.4/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/utahta/go-openuri v0.1.0 h1:5t+GPGBjwEt7oRTMArC47QMIiXarzNO6W3PDy8nXGoM=
 github.com/utahta/go-openuri v0.1.0/go.mod h1:wg5kOkfgUWHGFacyyH+FsrEzB++WPpFyKrwDSeo69Ng=
+github.com/wk8/go-ordered-map v0.1.0 h1:SlBlm5TXqq7Li9BTIzVF37Jn0vUvuNbeHuSTaf+zBK0=
+github.com/wk8/go-ordered-map v0.1.0/go.mod h1:Uil+Rubm5Tbv3NMjwcY83AJsaQ6MyQurzAA8MECOnbs=
 gopkg.in/go-playground/validator.v9 v9.29.0 h1:5ofssLNYgAA/inWn6rTZ4juWpRJUwEnXc1LG2IeXwgQ=
 gopkg.in/go-playground/validator.v9 v9.29.0/go.mod h1:+c9/zcJMFNgbLvly1L1V+PpxWdVbfP1avr/N00E2vyQ=
 gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7 h1:+t9dhfO+GNOIGJof6kPOAenx7YgrZMTdRPV+EsnPabk=

@@ -86,6 +86,34 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
 }
 
+// T254629
+func TestMultiLevelArtifacts(t *testing.T) {
+	cfg, err := config.ReadYAMLConfig([]byte(`
+---
+version: v4
+base: foo/bar
+variants:
+  one: {}
+  two:
+    copies: [one]
+  three:
+    copies: [two]
+        `))
+
+	assert.Nil(t, err)
+
+	err = config.ExpandIncludesAndCopies(cfg, "three")
+	assert.Nil(t, err)
+
+	dockerOut, _ := docker.Compile(cfg, "three")
+	dockerfile := dockerOut.String()
+
+	// Verify that both stages one and two are built.
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS one\n"))
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS two\n"))
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS three\n"))
+}
+
 func TestMetaDataLabels(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4
@@ -95,6 +123,7 @@ func TestMetaDataLabels(t *testing.T) {
 
 	assert.Nil(t, err)
 
+	config.ExpandIncludesAndCopies(cfg, "development")
 	dockerOut, _ := docker.Compile(cfg, "development")
 	dockerfile := dockerOut.String()
 

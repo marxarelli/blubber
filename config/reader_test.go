@@ -9,7 +9,7 @@ import (
 	"gerrit.wikimedia.org/r/blubber/config"
 )
 
-func ExampleResolveIncludes() {
+func ExampleBuildIncludesDepGraph() {
 	cfg, _ := config.ReadYAMLConfig([]byte(`---
     version: v4
     variants:
@@ -20,11 +20,12 @@ func ExampleResolveIncludes() {
       varE: {}
       varF: {}`))
 
-	includes, _ := config.ResolveIncludes(cfg, "varA")
+	config.BuildIncludesDepGraph(cfg)
+	includes, _ := cfg.IncludesDepGraph.GetDeps("varA")
 
 	fmt.Printf("%v\n", includes)
 
-	// Output: [varF varD varE varB varC varA]
+	// Output: [varF varD varE varB varC]
 }
 
 func TestReadYAMLConfigErrorsOnUnknownYAML(t *testing.T) {
@@ -62,9 +63,10 @@ func TestResolveIncludesPreventsInfiniteRecursion(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	_, err2 := config.ResolveIncludes(cfg, "varA")
+	config.BuildIncludesDepGraph(cfg)
+	_, err2 := cfg.IncludesDepGraph.GetDeps("varA")
 
-	assert.EqualError(t, err2, "variant expansion detected loop")
+	assert.EqualError(t, err2, "Detected dependency graph cycle at 'varA'")
 }
 
 func TestMultiLevelIncludes(t *testing.T) {
@@ -83,6 +85,7 @@ func TestMultiLevelIncludes(t *testing.T) {
         runs: { insecurely: true }`))
 
 	if assert.NoError(t, err) {
+		config.BuildIncludesDepGraph(cfg)
 		dev, _ := config.ExpandVariant(cfg, "development")
 
 		assert.Equal(t, "foo-devel", dev.Base)
@@ -119,11 +122,11 @@ func TestCopiesIncludes(t *testing.T) {
 
 	if assert.NoError(t, err) {
 
-    _ = config.ExpandIncludesAndCopies(cfg, "test")
-    test, _ := config.GetVariant(cfg, "test")
-    dev, _ := config.GetVariant(cfg, "development")
+		_ = config.ExpandIncludesAndCopies(cfg, "test")
+		test, _ := config.GetVariant(cfg, "test")
+		dev, _ := config.GetVariant(cfg, "development")
 
-    assert.Equal(t, "foo-devel", dev.Base)
+		assert.Equal(t, "foo-devel", dev.Base)
 		assert.Equal(t, "foo", dev.Runs.As)
 
 		assert.Equal(t, "foo-test", test.Base)
@@ -148,6 +151,7 @@ func TestMultiIncludes(t *testing.T) {
         includes: [human, lizard]`))
 
 	if assert.NoError(t, err) {
+		config.BuildIncludesDepGraph(cfg)
 		variant, err := config.ExpandVariant(cfg, "lizardman")
 
 		if assert.NoError(t, err) {
@@ -173,14 +177,15 @@ func TestGetVariant(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	config.BuildIncludesDepGraph(cfg)
 	dev, _ := config.GetVariant(cfg, "development")
 	assert.Equal(t, "", dev.Base)
 	assert.Equal(t, "", dev.Runs.As)
 	assert.Equal(t, uint(123), dev.Runs.UID)
 
-  err = config.ExpandIncludesAndCopies(cfg, "development")
-  assert.Nil(t, err)
-  _, err = config.GetVariant(cfg, "development")
+	err = config.ExpandIncludesAndCopies(cfg, "development")
+	assert.Nil(t, err)
+	_, err = config.GetVariant(cfg, "development")
 	assert.NoError(t, err)
 
 	dev, _ = config.GetVariant(cfg, "development")

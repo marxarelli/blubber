@@ -29,7 +29,13 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	mainStage := ""
 
 	// write multi-stage sections for each variant dependency
-	for _, stage := range vcfg.Copies.Variants() {
+	copiesDeps, err := cfg.CopiesDepGraph.GetDeps(variant)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, stage := range copiesDeps {
 		dependency, err := config.GetVariant(cfg, stage)
 
 		if err != nil {
@@ -63,6 +69,9 @@ func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig
 	for _, phase := range build.Phases() {
 		compilePhase(buffer, vcfg, phase)
 	}
+
+	// Add a blank line at the end of the stage for easier reading
+	writeln(buffer)
 }
 
 func compileInstructions(buffer *bytes.Buffer, instructions ...build.Instruction) {

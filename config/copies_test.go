@@ -70,13 +70,3 @@ func TestCopiesConfigUnmarshalJSON(t *testing.T) {
 		}
 	})
 }
-
-func TestCopiesConfigVariants(t *testing.T) {
-	cfg := config.CopiesConfig{
-		{From: "foo", Source: "/foo/src", Destination: "/foo/dst"},
-		{From: "build", Source: "/foo/src", Destination: "/foo/dst"},
-		{From: "foo"},
-	}
-
-	assert.Equal(t, []string{"foo", "build"}, cfg.Variants())
-}

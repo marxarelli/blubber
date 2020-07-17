@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -25,52 +24,6 @@ const DefaultConfig = `{
   "uid": 900,
   "gid": 900}}`
 
-// ResolveIncludes iterates over and recurses through a given variant's
-// includes to build a flat slice of variant names in the correct order by
-// which they should be expanded/merged. It checks for both the existence of
-// included variants and maintains a recursion stack to protect against
-// infinite loops.
-//
-// Variant names found at a greater depth of recursion are first and siblings
-// last, the order in which config should be merged.
-//
-func ResolveIncludes(config *Config, name string) ([]string, error) {
-	stack := map[string]bool{}
-	includes := []string{}
-
-	var resolve func(string) error
-
-	resolve = func(name string) error {
-		if instack, found := stack[name]; found && instack {
-			return errors.New("variant expansion detected loop")
-		}
-
-		stack[name] = true
-		defer func() { stack[name] = false }()
-
-		variant, found := config.Variants[name]
-
-		if !found {
-			return fmt.Errorf("variant '%s' does not exist", name)
-		}
-
-		for _, include := range variant.Includes {
-			if err := resolve(include); err != nil {
-				return err
-			}
-		}
-
-		// Appending _after_ recursion ensures the correct ordering
-		includes = append(includes, name)
-
-		return nil
-	}
-
-	err := resolve(name)
-
-	return includes, err
-}
-
 // ExpandVariant merges a named variant with a config. It also attempts to
 // recursively expand any included variants in the expanded variant.
 //
@@ -78,7 +31,7 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	expanded := new(VariantConfig)
 	expanded.CommonConfig.Merge(config.CommonConfig)
 
-	includes, err := ResolveIncludes(config, name)
+	includes, err := config.IncludesDepGraph.GetDeps(name)
 
 	if err != nil {
 		return nil, err
@@ -88,32 +41,79 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 		expanded.Merge(config.Variants[include])
 	}
 
+	expanded.Merge(config.Variants[name])
+
 	return expanded, nil
 }
 
-// ExpandIncludesAndCopies resolves 'includes' and 'copies' for the
-// specified variant.  This should be run before policy verfication
+// ExpandIncludesAndCopies resolves 'includes' for the
+// specified variant.  It also expands any variants that are referenced
+// directly or indirectly via 'copies' directives.
+// This should be run before policy verfication
 // so that the policy enforcement is applied to the final blubber spec
 //
 func ExpandIncludesAndCopies(config *Config, name string) error {
+	BuildIncludesDepGraph(config)
+	buildCopiesDepGraph(config)
+
 	vcfg, err := ExpandVariant(config, name)
 
 	if err != nil {
-		return fmt.Errorf("expanding variant '%s': %s", name, err)
+		return fmt.Errorf("processing includes for variant '%s': %s", name, err)
 	}
 
 	config.Variants[name] = *vcfg
 
-	for _, stage := range vcfg.Copies.Variants() {
-		dependency, err := ExpandVariant(config, stage)
+	copiesDeps, err := config.CopiesDepGraph.GetDeps(name)
 
-		if err != nil {
-			return fmt.Errorf("expanding dependency '%s': %s", name, err)
+	if err != nil {
+		return fmt.Errorf("processing copies for variant '%s': %s", name, err)
+	}
+
+	for _, stage := range copiesDeps {
+		// Skip the pseudo variant "local"
+		if stage == LocalArtifactKeyword {
+			continue
 		}
 
-		config.Variants[stage] = *dependency
+		vcfg, err := ExpandVariant(config, stage)
+		if err != nil {
+			return fmt.Errorf("processing includes for variant '%s': %s", stage, err)
+		}
+
+		config.Variants[stage] = *vcfg
 	}
+
 	return nil
+}
+
+// BuildIncludesDepGraph constructs the 'includes' dependency graph
+func BuildIncludesDepGraph(config *Config) {
+	graph := NewDepGraph()
+
+	for variant, vcfg := range config.Variants {
+		graph.EnsureNode(variant)
+		for _, include := range vcfg.Includes {
+			graph.AddDependency(variant, include)
+		}
+	}
+
+	config.IncludesDepGraph = graph
+}
+
+func buildCopiesDepGraph(config *Config) {
+	graph := NewDepGraph()
+
+	graph.EnsureNode(LocalArtifactKeyword)
+
+	for variant, vcfg := range config.Variants {
+		graph.EnsureNode(variant)
+		for _, ac := range vcfg.Copies {
+			graph.AddDependency(variant, ac.From)
+		}
+	}
+
+	config.CopiesDepGraph = graph
 }
 
 // GetVariant retrieves a requested *VariantConfig from the main config

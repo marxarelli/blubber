@@ -96,20 +96,3 @@ func (cc *CopiesConfig) UnmarshalJSON(unmarshal []byte) error {
 
 	return err
 }
-
-// Variants returns a unique slice of variant names that are referenced by
-// artifact definitions.
-//
-func (cc *CopiesConfig) Variants() []string {
-	existing := map[string]bool{}
-	variants := []string{}
-
-	for _, artifact := range *cc {
-		if v := artifact.From; v != "" && v != LocalArtifactKeyword && !existing[v] {
-			existing[v] = true
-			variants = append(variants, v)
-		}
-	}
-
-	return variants
-}

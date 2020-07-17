@@ -11,6 +11,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.1.4
 	github.com/utahta/go-openuri v0.1.0
+	github.com/wk8/go-ordered-map v0.1.0
 	gopkg.in/go-playground/validator.v9 v9.29.0
 	gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7
 )
