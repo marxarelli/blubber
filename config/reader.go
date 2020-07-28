@@ -71,11 +71,6 @@ func ExpandIncludesAndCopies(config *Config, name string) error {
 	}
 
 	for _, stage := range copiesDeps {
-		// Skip the pseudo variant "local"
-		if stage == LocalArtifactKeyword {
-			continue
-		}
-
 		vcfg, err := ExpandVariant(config, stage)
 		if err != nil {
 			return fmt.Errorf("processing includes for variant '%s': %s", stage, err)
@@ -104,12 +99,12 @@ func BuildIncludesDepGraph(config *Config) {
 func buildCopiesDepGraph(config *Config) {
 	graph := NewDepGraph()
 
-	graph.EnsureNode(LocalArtifactKeyword)
-
 	for variant, vcfg := range config.Variants {
 		graph.EnsureNode(variant)
 		for _, ac := range vcfg.Copies {
-			graph.AddDependency(variant, ac.From)
+			if ac.From != LocalArtifactKeyword {
+				graph.AddDependency(variant, ac.From)
+			}
 		}
 	}
 

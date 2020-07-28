@@ -86,14 +86,15 @@ func TestMultipleArtifactsFromSameStage(t *testing.T) {
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS production\n"))
 }
 
-// T254629
+// T254629, T259069
 func TestMultiLevelArtifacts(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`
 ---
 version: v4
 base: foo/bar
 variants:
-  one: {}
+  one:
+    copies: [local]
   two:
     copies: [one]
   three:
@@ -108,7 +109,9 @@ variants:
 	dockerOut, _ := docker.Compile(cfg, "three")
 	dockerfile := dockerOut.String()
 
-	// Verify that both stages one and two are built.
+	// There should be exactly 3 stages
+	assert.Equal(t, 3, strings.Count(dockerfile, "FROM "))
+	// Verify that both stages one and two are built in addition to the requested variant.
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS one\n"))
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS two\n"))
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS three\n"))
