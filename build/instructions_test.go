@@ -8,6 +8,18 @@ import (
 	"gerrit.wikimedia.org/r/blubber/build"
 )
 
+func TestBase(t *testing.T) {
+	i := build.Base{Image: "foo", Stage: "bar"}
+
+	assert.Equal(t, []string{"foo", "bar"}, i.Compile())
+}
+
+func TestScratchBase(t *testing.T) {
+	i := build.ScratchBase{Stage: "bar"}
+
+	assert.Equal(t, []string{"bar"}, i.Compile())
+}
+
 func TestRun(t *testing.T) {
 	i := build.Run{"echo %s %s", []string{"foo bar", "baz"}}
 

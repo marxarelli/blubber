@@ -17,6 +17,15 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 	i := instruction{arguments: bi.Compile()}
 
 	switch bi.(type) {
+	case build.ScratchBase:
+		i.name = "FROM"
+		i.separator = " AS "
+		i.arguments = []string{"scratch", i.arguments[0]}
+
+	case build.Base:
+		i.name = "FROM"
+		i.separator = " AS "
+
 	case build.Run, build.RunAll:
 		i.name = "RUN"
 

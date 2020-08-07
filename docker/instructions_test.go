@@ -9,6 +9,24 @@ import (
 	"gerrit.wikimedia.org/r/blubber/docker"
 )
 
+func TestBase(t *testing.T) {
+	i := build.Base{Image: "foo", Stage: "bar"}
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "FROM foo AS bar\n", di.Compile())
+	}
+}
+
+func TestScratchBase(t *testing.T) {
+	i := build.ScratchBase{Stage: "bar"}
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "FROM scratch AS bar\n", di.Compile())
+	}
+}
+
 func TestRun(t *testing.T) {
 	i := build.Run{"echo", []string{"hello"}}
 	di, err := docker.NewInstruction(i)

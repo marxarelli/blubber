@@ -58,16 +58,8 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 }
 
 func compileStage(buffer *bytes.Buffer, stage string, vcfg *config.VariantConfig) {
-	baseAndStage := vcfg.Base
-
-	if stage != "" {
-		baseAndStage += " AS " + stage
-	}
-
-	writeln(buffer, "FROM ", baseAndStage)
-
 	for _, phase := range build.Phases() {
-		compilePhase(buffer, vcfg, phase)
+		compileInstructions(buffer, vcfg.InstructionsForPhase(phase)...)
 	}
 
 	// Add a blank line at the end of the stage for easier reading
@@ -79,10 +71,6 @@ func compileInstructions(buffer *bytes.Buffer, instructions ...build.Instruction
 		dockerInstruction, _ := NewInstruction(instruction)
 		write(buffer, dockerInstruction.Compile())
 	}
-}
-
-func compilePhase(buffer *bytes.Buffer, vcfg *config.VariantConfig, phase build.Phase) {
-	compileInstructions(buffer, vcfg.InstructionsForPhase(phase)...)
 }
 
 func write(buffer *bytes.Buffer, strings ...string) {

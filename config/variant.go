@@ -4,12 +4,22 @@ import (
 	"gerrit.wikimedia.org/r/blubber/build"
 )
 
+// NewVariantConfig constructs a new VariantConfig with the given name.
+//
+func NewVariantConfig(name string) *VariantConfig {
+	vc := new(VariantConfig)
+	vc.name = name
+	return vc
+}
+
 // VariantConfig holds configuration fields for each defined build variant.
 //
 type VariantConfig struct {
 	Includes     []string     `json:"includes" validate:"dive,variantref"`
 	Copies       CopiesConfig `json:"copies" validate:"omitempty,unique,dive"`
 	CommonConfig `json:",inline"`
+
+	name string
 }
 
 // Merge takes another VariantConfig and overwrites this struct's fields.
@@ -49,9 +59,53 @@ func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
 
-	var switchUser string
-	var uid, gid uint
+	switch phase {
+	case build.PhasePostInstall:
+		if len(vc.EntryPoint) > 0 {
+			instructions = append(instructions, build.EntryPoint{vc.EntryPoint})
+		}
+	}
 
+	// CopiesConfig may not implement InstructionsForPhase for all possible
+	// phases, which makes the expansion of it here less than efficient, but to
+	// assume which phases it does implement would result in gross coupling
+	instructions = append(instructions, vc.Copies.Expand(vc.Lives.In).InstructionsForPhase(phase)...)
+
+	if !vc.IsScratch() {
+		switchUser, uid, gid := vc.userForPhase(phase)
+
+		if switchUser != "" {
+			instructions = append(
+				[]build.Instruction{
+					build.User{switchUser},
+					build.Home(switchUser),
+				},
+				instructions...,
+			)
+		}
+
+		if uid != 0 {
+			instructions = build.ApplyUser(uid, gid, instructions)
+		}
+	}
+
+	switch phase {
+	case build.PhasePrivileged:
+		var baseIns build.Instruction
+
+		if vc.IsScratch() {
+			baseIns = build.ScratchBase{Stage: vc.name}
+		} else {
+			baseIns = build.Base{Image: vc.Base, Stage: vc.name}
+		}
+
+		instructions = append([]build.Instruction{baseIns}, instructions...)
+	}
+
+	return instructions
+}
+
+func (vc *VariantConfig) userForPhase(phase build.Phase) (switchUser string, uid uint, gid uint) {
 	switch phase {
 	case build.PhasePrivileged:
 		switchUser = "root"
@@ -73,30 +127,7 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 			switchUser = vc.Runs.As
 			uid, gid = vc.Runs.UID, vc.Runs.GID
 		}
-
-		if len(vc.EntryPoint) > 0 {
-			instructions = append(instructions, build.EntryPoint{vc.EntryPoint})
-		}
 	}
 
-	// CopiesConfig may not implement InstructionsForPhase for all possible
-	// phases, which makes the expansion of it here less than efficient, but to
-	// assume which phases it does implement would result in gross coupling
-	instructions = append(instructions, vc.Copies.Expand(vc.Lives.In).InstructionsForPhase(phase)...)
-
-	if switchUser != "" {
-		instructions = append(
-			[]build.Instruction{
-				build.User{switchUser},
-				build.Home(switchUser),
-			},
-			instructions...,
-		)
-	}
-
-	if uid != 0 {
-		instructions = build.ApplyUser(uid, gid, instructions)
-	}
-
-	return instructions
+	return switchUser, uid, gid
 }

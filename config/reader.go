@@ -28,7 +28,7 @@ const DefaultConfig = `{
 // recursively expand any included variants in the expanded variant.
 //
 func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
-	expanded := new(VariantConfig)
+	expanded := NewVariantConfig(name)
 	expanded.CommonConfig.Merge(config.CommonConfig)
 
 	includes, err := config.IncludesDepGraph.GetDeps(name)
@@ -114,7 +114,7 @@ func buildCopiesDepGraph(config *Config) {
 // GetVariant retrieves a requested *VariantConfig from the main config
 //
 func GetVariant(config *Config, name string) (*VariantConfig, error) {
-	variant := new(VariantConfig)
+	variant := NewVariantConfig(name)
 
 	variant.Merge(config.Variants[name])
 

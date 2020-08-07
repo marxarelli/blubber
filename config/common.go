@@ -53,9 +53,18 @@ func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
 func (cc *CommonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := []build.Instruction{}
 
-	for _, phaseCompileable := range cc.PhaseCompileableConfig() {
-		instructions = append(instructions, phaseCompileable.InstructionsForPhase(phase)...)
+	if !cc.IsScratch() {
+		for _, phaseCompileable := range cc.PhaseCompileableConfig() {
+			instructions = append(instructions, phaseCompileable.InstructionsForPhase(phase)...)
+		}
 	}
 
 	return instructions
+}
+
+// IsScratch returns whether this is configuration for a scratch image (no
+// base image).
+//
+func (cc *CommonConfig) IsScratch() bool {
+	return cc.Base == ""
 }

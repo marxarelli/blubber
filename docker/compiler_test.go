@@ -26,7 +26,7 @@ func TestSingleStageHasNoName(t *testing.T) {
 	dockerOut, _ := docker.Compile(cfg, "development")
 	dockerfile := dockerOut.String()
 
-	assert.Contains(t, dockerfile, "FROM foo/bar\n")
+	assert.Contains(t, dockerfile, "FROM foo/bar AS development\n")
 }
 
 func TestMultiStageIncludesStageNames(t *testing.T) {

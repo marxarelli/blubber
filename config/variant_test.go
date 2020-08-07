@@ -67,6 +67,29 @@ func TestVariantLoops(t *testing.T) {
 }
 
 func TestVariantConfigInstructions(t *testing.T) {
+	t.Run("PhasePrivileged", func(t *testing.T) {
+		t.Run("with no given base", func(t *testing.T) {
+			cfg := config.NewVariantConfig("foovariant")
+
+			ins := cfg.InstructionsForPhase(build.PhasePrivileged)
+
+			if assert.NotEmpty(t, ins) {
+				assert.Equal(t, build.ScratchBase{Stage: "foovariant"}, ins[0])
+			}
+		})
+
+		t.Run("with a given base", func(t *testing.T) {
+			cfg := config.NewVariantConfig("foovariant")
+			cfg.Base = "foobase"
+
+			ins := cfg.InstructionsForPhase(build.PhasePrivileged)
+
+			if assert.NotEmpty(t, ins) {
+				assert.Equal(t, build.Base{Image: "foobase", Stage: "foovariant"}, ins[0])
+			}
+		})
+	})
+
 	t.Run("PhaseInstall", func(t *testing.T) {
 		t.Run("without copies", func(t *testing.T) {
 			cfg := config.VariantConfig{}
@@ -77,6 +100,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 		t.Run("with copies", func(t *testing.T) {
 			cfg := config.VariantConfig{
 				CommonConfig: config.CommonConfig{
+					Base:  "foobase",
 					Lives: config.LivesConfig{UserConfig: config.UserConfig{UID: 123, GID: 223}},
 				},
 				Copies: config.CopiesConfig{
@@ -114,6 +138,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 		t.Run("without Runs.Insecurely", func(t *testing.T) {
 			cfg := config.VariantConfig{
 				CommonConfig: config.CommonConfig{
+					Base: "foobase",
 					Lives: config.LivesConfig{
 						UserConfig: config.UserConfig{
 							As: "foouser",

@@ -18,6 +18,32 @@ type Instruction interface {
 	Compile() []string
 }
 
+// Base is a concrete build instruction for declaring the base container image
+// to start with.
+//
+type Base struct {
+	Image string // image identifier
+	Stage string // optional internal name used for multi-stage builds
+}
+
+// Compile returns the base image and stage name.
+//
+func (base Base) Compile() []string {
+	return []string{base.Image, base.Stage}
+}
+
+// ScratchBase is a concrete build instruction for declaring no base image.
+//
+type ScratchBase struct {
+	Stage string // optional internal name used for multi-stage builds
+}
+
+// Compile returns the stage name.
+//
+func (sb ScratchBase) Compile() []string {
+	return []string{sb.Stage}
+}
+
 // Run is a concrete build instruction for passing any number of arguments to
 // a shell command.
 //
