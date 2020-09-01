@@ -129,6 +129,15 @@ components:
             use-npm-ci:
               type: boolean
               description: Whether to run npm ci instead of npm install
+        php:
+          type: object
+          properties:
+            requirements:
+              type: array
+              description: Files needed for Php package installation (e.g. composer.json)
+            production:
+              type: boolean
+              description: Whether to inject the --no-dev flag into the install command
         python:
           type: object
           properties:

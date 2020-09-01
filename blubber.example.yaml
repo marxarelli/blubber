@@ -19,6 +19,8 @@ variants:
       use-npm-ci: false
     python:
       requirements: [requirements.txt]
+    php:
+      requirements: [composer.json]
     builder:
       command: [make, deps]
       requirements: [Makefile, vendor]

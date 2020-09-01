@@ -11,6 +11,7 @@ type CommonConfig struct {
 	Base       string        `json:"base" validate:"omitempty,baseimage"` // name/path to base image
 	Apt        AptConfig     `json:"apt"`                                 // APT related
 	Node       NodeConfig    `json:"node"`                                // Node related
+	Php        PhpConfig     `json:"php"`                                 // Php related
 	Python     PythonConfig  `json:"python"`                              // Python related
 	Builder    BuilderConfig `json:"builder"`                             // Builder related
 	Lives      LivesConfig   `json:"lives"`                               // application owner/dir
@@ -27,6 +28,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 
 	cc.Apt.Merge(cc2.Apt)
 	cc.Node.Merge(cc2.Node)
+	cc.Php.Merge(cc2.Php)
 	cc.Python.Merge(cc2.Python)
 	cc.Builder.Merge(cc2.Builder)
 	cc.Lives.Merge(cc2.Lives)
@@ -42,7 +44,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 // injected.
 //
 func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
-	return []build.PhaseCompileable{cc.Apt, cc.Node, cc.Python, cc.Builder, cc.Lives, cc.Runs}
+	return []build.PhaseCompileable{cc.Apt, cc.Node, cc.Php, cc.Python, cc.Builder, cc.Lives, cc.Runs}
 }
 
 // InstructionsForPhase injects instructions into the given build phase for
