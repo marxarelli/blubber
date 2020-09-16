@@ -42,3 +42,4 @@ pipelines:
           image:
             id: '${candidate.imageID}'
             tags: [stable]
+        promote: true
