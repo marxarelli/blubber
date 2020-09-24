@@ -152,6 +152,15 @@ components:
             use-system-flag:
               type: boolean
               description: Whether to inject the --system flag into the install command
+            poetry:
+              type: object
+              properties:
+                version:
+                  type: string
+                  description: Version constraint for installing Poetry package
+                devel:
+                  type: boolean
+                  description: Whether to install development dependencies or not when using Poetry
         builder:
           type: object
           properties:

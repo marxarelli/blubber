@@ -307,3 +307,57 @@ func TestPosFinding(t *testing.T) {
 	})
 
 }
+
+func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
+	cfg := config.PythonConfig{
+		Version:      "python3",
+		Requirements: []string{"pyproject.toml", "poetry.lock"},
+		Poetry:       config.PoetryConfig{
+			Version: "==10.0.1",
+		},
+	}
+
+	t.Run("PhasePrivileged", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.RunAll{[]build.Run{
+					{"python3", []string{"-m", "easy_install", "pip"}},
+					{"python3", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
+				}},
+				build.Env{map[string]string{
+					"POETRY_VIRTUALENVS_PATH": "/opt/lib/poetry",
+				}},
+				build.Run{
+					"python3", []string{
+						"-m", "pip", "install", "-U", "poetry==10.0.1",
+					},
+				},
+			},
+			cfg.InstructionsForPhase(build.PhasePrivileged),
+		)
+	})
+
+	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
+	})
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Copy{[]string{"pyproject.toml", "poetry.lock"}, "./"},
+				build.CreateDirectory("/opt/lib/poetry"),
+				build.Run{
+					"poetry", []string{"install", "--no-root", "--no-dev"},
+				},
+			},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
+		)
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{},
+			cfg.InstructionsForPhase(build.PhasePostInstall),
+		)
+	})
+}

@@ -30,6 +30,15 @@ var (
 	// Pattern for valid variant names
 	variantNameRegexp = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9\-\.]+[a-zA-Z0-9]$`)
 
+	// Pattern for Python package version constraints. We allow a subset of
+	// the spec that omits support for extras, environment markers, and urls.
+	// See https://www.python.org/dev/peps/pep-0508/#specification
+	pythonVersionCmp = `(?:<|<=|!=|==|>=|>|~=)`
+	pythonVersion = `[a-z-A-Z0-9\-_\.\*\+!]+`
+	pythonVersionOne = fmt.Sprintf(`%s%s`, pythonVersionCmp, pythonVersion)
+	pythonContraintRegexp = regexp.MustCompile(fmt.Sprintf(
+		`^%s(?:,%s)*$`, pythonVersionOne, pythonVersionOne))
+
 	humanizedErrors = map[string]string{
 		"abspath":        `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
 		"baseimage":      `{{.Field}}: "{{.Value}}" is not a valid base image reference`,
@@ -37,6 +46,7 @@ var (
 		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
 		"envvars":        `{{.Field}}: contains invalid environment variable names`,
 		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
+		"pypkgver":       `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
 		"relativelocal":  `{{.Field}}: path must be relative when "from" is "local"`,
 		"required":       `{{.Field}}: is required`,
 		"requiredwith":   `{{.Field}}: is required if "{{.Param}}" is also set`,
@@ -59,6 +69,7 @@ var (
 		"envvars":       isEnvironmentVariables,
 		"isfalse":       isFalse,
 		"istrue":        isTrue,
+		"pypkgver":      isPythonPackageVersion,
 		"relativelocal": isRelativePathForLocalArtifact,
 		"requiredwith":  isSetIfOtherFieldIsSet,
 		"variantref":    isVariantReference,
@@ -175,6 +186,12 @@ func isDebianPackage(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
 	return debianPackageRegexp.MatchString(value)
+}
+
+func isPythonPackageVersion(_ context.Context, fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	return pythonContraintRegexp.MatchString(value)
 }
 
 func isEnvironmentVariables(_ context.Context, fl validator.FieldLevel) bool {
