@@ -1,14 +1,43 @@
 package main
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	setup()
+	os.Exit(m.Run())
+}
+
+func TestBlubberoidSpecification(t *testing.T) {
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/?spec", nil)
+
+	blubberoid(rec, req)
+
+	resp := rec.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	if assert.NotEmpty(t, body) {
+		loader := openapi3.NewSwaggerLoader()
+		spec, err := loader.LoadSwaggerFromData(body)
+
+		if assert.NoError(t, err) {
+			assert.NoError(t, spec.Validate(context.Background()))
+		}
+	}
+}
 
 func TestBlubberoidYAMLRequest(t *testing.T) {
 	rec := httptest.NewRecorder()

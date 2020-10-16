@@ -49,15 +49,7 @@ func main() {
 		}
 	}
 
-	// Ensure endpoint is always an absolute path starting and ending with "/"
-	*endpoint = path.Clean("/" + *endpoint)
-
-	if *endpoint != "/" {
-		*endpoint += "/"
-	}
-
-	// Evaluate OpenAPI spec template and store results for ?spec requests
-	openAPISpec = readOpenAPISpec()
+	setup()
 
 	log.Printf("listening on %s for requests to %sv1/[variant]\n", *address, *endpoint)
 
@@ -189,4 +181,16 @@ func readOpenAPISpec() []byte {
 	})
 
 	return buffer.Bytes()
+}
+
+func setup() {
+	// Ensure endpoint is always an absolute path starting and ending with "/"
+	*endpoint = path.Clean("/" + *endpoint)
+
+	if *endpoint != "/" {
+		*endpoint += "/"
+	}
+
+	// Evaluate OpenAPI spec template and store results for ?spec requests
+	openAPISpec = readOpenAPISpec()
 }

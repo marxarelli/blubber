@@ -12,6 +12,13 @@ info:
   version: {{ .Version }}
 paths:
   /v1/{variant}:
+    parameters:
+      - name: variant
+        description: Name of the variant to generate
+        in: path
+        required: true
+        schema:
+          type: string
     post:
       summary: >
         Generates a valid Dockerfile based on Blubber YAML configuration
@@ -82,24 +89,16 @@ components:
       allOf:
         - $ref: '#/components/schemas/v4.CommonConfig'
         - type: object
+          required: [version, variants]
           properties:
-            required: [version, variants]
             version:
               type: string
               description: Blubber configuration version
             variants:
               type: object
               description: Configuration variants (e.g. development, test, production)
-              additionalProperties: true
-              # OpenAPI 3.0 supports only v4 of the JSON Schema draft spec and
-              # cannot define schema for object properties with arbitrary
-              # names, but the following commented section is included to be
-              # useful to humans for the time being. It patiently awaits v6
-              # json schema draft support before its uncommenting.
-              #
-              # patternProperties:
-              #   "^[a-zA-Z][a-zA-Z0-9\-\.]+[a-zA-Z0-9]$":
-              #     $ref: '#/components/schemas/v4.VariantConfig'
+              additionalProperties:
+                $ref: '#/components/schemas/v4.VariantConfig'
 
     v4.CommonConfig:
       type: object
@@ -134,7 +133,9 @@ components:
           properties:
             requirements:
               type: array
-              description: Files needed for Php package installation (e.g. composer.json)
+              description: Files needed for PHP package installation (e.g. composer.json)
+              items:
+                type: string
             production:
               type: boolean
               description: Whether to inject the --no-dev flag into the install command
