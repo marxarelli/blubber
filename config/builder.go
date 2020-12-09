@@ -8,12 +8,12 @@ import (
 // build command and the files required to successfully execute the command.
 //
 type BuilderConfig struct {
-	Command      []string `json:"command"`
-	Requirements []string `json:"requirements"`
+	Command      []string           `json:"command"`
+	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
 }
 
 // Merge takes another BuilderConfig and merges its fields into this one's,
-// overwriting the builder command.
+// overwriting the builder command and requirements.
 //
 func (bc *BuilderConfig) Merge(bc2 BuilderConfig) {
 	if bc2.Command != nil {
@@ -35,20 +35,23 @@ func (bc *BuilderConfig) Merge(bc2 BuilderConfig) {
 //
 func (bc BuilderConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	if len(bc.Command) == 0 {
+		// Don't do anything if we don't have a command. We don't want folks
+		// to abuse this config for requirements side-effects.
 		return []build.Instruction{}
 	}
 
+	instructions := bc.Requirements.InstructionsForPhase(phase)
+
 	switch phase {
 	case build.PhasePreInstall:
-		syncs := build.SyncFiles(bc.Requirements, ".")
 		run := build.Run{Command: bc.Command[0]}
 
 		if len(bc.Command) > 1 {
 			run.Arguments = bc.Command[1:]
 		}
 
-		return append(syncs, run)
+		instructions = append(instructions, run)
 	}
 
-	return []build.Instruction{}
+	return instructions
 }

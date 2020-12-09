@@ -31,7 +31,13 @@ func TestBuilderConfigYAML(t *testing.T) {
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"make", "-f", "Makefile", "test"}, variant.Builder.Command)
-			assert.Equal(t, []string{"Makefile"}, variant.Builder.Requirements)
+			assert.Equal(t, config.RequirementsConfig{
+				{
+					From:        config.LocalArtifactKeyword,
+					Source:      "Makefile",
+					Destination: "./",
+				},
+			}, variant.Builder.Requirements)
 		}
 
 		err = config.ExpandIncludesAndCopies(cfg, "build")
@@ -41,7 +47,7 @@ func TestBuilderConfigYAML(t *testing.T) {
 
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"make"}, variant.Builder.Command)
-			assert.Equal(t, []string{}, variant.Builder.Requirements)
+			assert.Equal(t, config.RequirementsConfig{}, variant.Builder.Requirements)
 		}
 	}
 }
@@ -64,14 +70,29 @@ func TestBuilderConfigInstructions(t *testing.T) {
 
 func TestBuilderConfigInstructionsWithRequirements(t *testing.T) {
 	cfg := config.BuilderConfig{
-		Command:      []string{"make", "-f", "Makefile", "foo"},
-		Requirements: []string{"Makefile", "foo", "bar/baz"},
+		Command: []string{"make", "-f", "Makefile", "foo"},
+		Requirements: config.RequirementsConfig{
+			{
+				From:        config.LocalArtifactKeyword,
+				Source:      "Makefile",
+				Destination: "",
+			},
+			{
+				From:        config.LocalArtifactKeyword,
+				Source:      "foo",
+				Destination: "",
+			},
+			{
+				From:        config.LocalArtifactKeyword,
+				Source:      "bar/baz",
+				Destination: "",
+			},
+		},
 	}
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{"mkdir -p", []string{"bar/"}},
 				build.Copy{[]string{"Makefile", "foo"}, "./"},
 				build.Copy{[]string{"bar/baz"}, "bar/"},
 				build.Run{

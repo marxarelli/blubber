@@ -58,12 +58,34 @@ variants:
       poetry:
         version: ==1.0.10
       requirements: [pyproject.toml, poetry.lock]
+
   test-poetry:
     includes: [build-poetry]
     python:
       poetry:
         devel: true
     copies: [local]
+
   production-poetry:
     includes: [build-poetry]
     copies: [local]
+
+  # Examples of using cross-variant requirements with builder
+  prep-node:
+    includes: [build]
+    node:
+      env: production
+      use-npm-ci: true
+    builder:
+      requirements: [vue.config.js, vue/]
+      command: [npm, run-script, build:vue]
+
+  prep-django:
+    includes: [build-poetry]
+    builder:
+      requirements:
+        - .
+        - from: prep-node
+          source: /srv/app/vue/dist
+          destination: ./vue/dist/
+      command: [poetry, run, python3, manage.py, collectstatic]

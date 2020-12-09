@@ -174,7 +174,22 @@ components:
               type: array
               description: Files needed by the build command (e.g. Makefile, ./src/, etc.)
               items:
-                type: string
+                anyOf:
+                  - type: string
+                    description: File or directory to copy from the local context
+                  - type: object
+                    description: Artifacts to copy from another variant, resulting in a multi-stage build
+                    required: [from, source, destination]
+                    properties:
+                      from:
+                        type: string
+                        description: Variant name
+                      source:
+                        type: string
+                        description: Path of files/directories to copy
+                      destination:
+                        type: string
+                        description: Destination path
         lives:
           type: object
           properties:

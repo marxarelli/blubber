@@ -106,6 +106,11 @@ func buildCopiesDepGraph(config *Config) {
 				graph.AddDependency(variant, ac.From)
 			}
 		}
+		for _, bc := range vcfg.Builder.Requirements {
+			if bc.From != LocalArtifactKeyword {
+				graph.AddDependency(variant, bc.From)
+			}
+		}
 	}
 
 	config.CopiesDepGraph = graph
