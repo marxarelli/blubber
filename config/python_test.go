@@ -208,7 +208,7 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 
 func TestPythonConfigUseSystemFlag(t *testing.T) {
 	cfg := config.PythonConfig{
-		Version:	   "python2.7",
+		Version:       "python2.7",
 		Requirements:  []string{"requirements.txt", "requirements-test.txt", "docs/requirements.txt"},
 		UseSystemFlag: config.Flag{True: true},
 	}
@@ -263,7 +263,7 @@ func TestSliceInsert(t *testing.T) {
 		got := config.InsertElement([]string{"Hello", "World"}, "Beautiful", 1)
 		expected := []string{"Hello", "Beautiful", "World"}
 
-		if ! reflect.DeepEqual(got, expected) {
+		if !reflect.DeepEqual(got, expected) {
 			t.Errorf("Expected '%v'; got '%v'", expected, got)
 		}
 	})
@@ -273,7 +273,7 @@ func TestSliceInsert(t *testing.T) {
 		got := config.InsertElement(orig, "Beautiful", len(orig))
 		expected := []string{"Foo", "Bar", "Baz", "Beautiful"}
 
-		if ! reflect.DeepEqual(got, expected) {
+		if !reflect.DeepEqual(got, expected) {
 			t.Errorf("Expected '%v'; got '%v'", expected, got)
 		}
 	})
@@ -283,7 +283,7 @@ func TestSliceInsert(t *testing.T) {
 		got := config.InsertElement(orig, "Beautiful", 0)
 		expected := []string{"Beautiful", "Foo", "Bar", "Baz"}
 
-		if ! reflect.DeepEqual(got, expected) {
+		if !reflect.DeepEqual(got, expected) {
 			t.Errorf("Expected '%v'; got '%v'", expected, got)
 		}
 	})
@@ -312,9 +312,7 @@ func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 	cfg := config.PythonConfig{
 		Version:      "python3",
 		Requirements: []string{"pyproject.toml", "poetry.lock"},
-		Poetry:       config.PoetryConfig{
-			Version: "==10.0.1",
-		},
+		Poetry:       config.PoetryConfig{Version: "==10.0.1"},
 	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {

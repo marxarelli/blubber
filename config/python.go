@@ -144,7 +144,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				} else if args := pc.RequirementsArgs(); len(args) > 0 {
 					installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
 					if pc.UseSystemFlag.True {
-						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install") + 1)
+						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
 					}
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), append([]string{"-m", "pip", "wheel"}, args...)},

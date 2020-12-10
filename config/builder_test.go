@@ -29,7 +29,6 @@ func TestBuilderConfigYAML(t *testing.T) {
 
 		variant, err := config.GetVariant(cfg, "test")
 
-
 		if assert.NoError(t, err) {
 			assert.Equal(t, []string{"make", "-f", "Makefile", "test"}, variant.Builder.Command)
 			assert.Equal(t, []string{"Makefile"}, variant.Builder.Requirements)

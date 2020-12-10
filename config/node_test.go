@@ -60,7 +60,7 @@ func TestNodeConfigInstructionsNoRequirements(t *testing.T) {
 	})
 }
 
-func TestNodeConfigInstructionsUseNpmCi(t * testing.T) {
+func TestNodeConfigInstructionsUseNpmCi(t *testing.T) {
 	cfg := config.NodeConfig{Requirements: []string{"package.json"}, UseNpmCi: config.Flag{True: true}}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {

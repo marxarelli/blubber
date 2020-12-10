@@ -46,7 +46,7 @@ lint:
 	@go list -f $(GO_LIST_GOFILES) $(GO_PACKAGES) | while read f; do \
 		gofmt -e -d "$${f}" >> .lint-gofmt.diff; \
 	done
-	@test -z "$(grep '[^[:blank:]]' .lint-gofmt.diff)" || (echo "gofmt found errors:"; cat .lint-gofmt.diff; exit 1)
+	@test -z "$$(grep '[^[:blank:]]' .lint-gofmt.diff)" || (echo "gofmt found errors:"; cat .lint-gofmt.diff; exit 1)
 	golint -set_exit_status $(GO_PACKAGES)
 	go vet -composites=false $(GO_PACKAGES)
 

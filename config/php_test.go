@@ -82,7 +82,7 @@ func TestPhpConfigInstructions(t *testing.T) {
 	})
 }
 
-func TestPhpConfigInstructionsProduction(t * testing.T) {
+func TestPhpConfigInstructionsProduction(t *testing.T) {
 	cfg := config.PhpConfig{Requirements: []string{"composer.json"}, Production: config.Flag{True: true}}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {

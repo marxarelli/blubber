@@ -33,9 +33,9 @@ var (
 	// Pattern for Python package version constraints. We allow a subset of
 	// the spec that omits support for extras, environment markers, and urls.
 	// See https://www.python.org/dev/peps/pep-0508/#specification
-	pythonVersionCmp = `(?:<|<=|!=|==|>=|>|~=)`
-	pythonVersion = `[a-z-A-Z0-9\-_\.\*\+!]+`
-	pythonVersionOne = fmt.Sprintf(`%s%s`, pythonVersionCmp, pythonVersion)
+	pythonVersionCmp      = `(?:<|<=|!=|==|>=|>|~=)`
+	pythonVersion         = `[a-z-A-Z0-9\-_\.\*\+!]+`
+	pythonVersionOne      = fmt.Sprintf(`%s%s`, pythonVersionCmp, pythonVersion)
 	pythonContraintRegexp = regexp.MustCompile(fmt.Sprintf(
 		`^%s(?:,%s)*$`, pythonVersionOne, pythonVersionOne))
 

@@ -1,4 +1,5 @@
 package config
+
 import "strconv"
 
 // Flag represents a nullable boolean value that is considered null until

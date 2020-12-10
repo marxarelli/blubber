@@ -7,8 +7,8 @@ import (
 // PhpConfig holds configuration for whether/how to install php packages.
 //
 type PhpConfig struct {
-	Requirements []string `json:"requirements"`                     // install requirements from given files
-	Production   Flag     `json:"production"`                       // whether to use the no-dev flag
+	Requirements []string `json:"requirements"` // install requirements from given files
+	Production   Flag     `json:"production"`   // whether to use the no-dev flag
 }
 
 // Merge takes another PhpConfig and merges its fields into this one's,
