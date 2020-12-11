@@ -179,7 +179,7 @@ components:
                     description: File or directory to copy from the local context
                   - type: object
                     description: Artifacts to copy from another variant, resulting in a multi-stage build
-                    required: [from, source, destination]
+                    required: [from, source]
                     properties:
                       from:
                         type: string
@@ -189,7 +189,7 @@ components:
                         description: Path of files/directories to copy
                       destination:
                         type: string
-                        description: Destination path
+                        description: Destination path. Defaults to source path
         lives:
           type: object
           properties:
@@ -248,7 +248,7 @@ components:
               items:
                 type: object
                 description: Artifacts to copy from another variant, resulting in a multi-stage build
-                required: [from, source, destination]
+                required: [from, source]
                 properties:
                   from:
                     type: string
@@ -258,5 +258,5 @@ components:
                     description: Path of files/directories to copy
                   destination:
                     type: string
-                    description: Destination path
+                    description: Destination path. Defaults to source path
 `

@@ -17,7 +17,7 @@ import (
 type ArtifactsConfig struct {
 	From        string `json:"from" validate:"required,variantref"`
 	Source      string `json:"source" validate:"requiredwith=destination,relativelocal"`
-	Destination string `json:"destination" validate:"requiredwith=source,relativelocal"`
+	Destination string `json:"destination" validate:"relativelocal"`
 }
 
 // Expand returns the longhand configured artifact and/or the default
@@ -48,6 +48,13 @@ func (ac ArtifactsConfig) Expand(appDirectory string) []ArtifactsConfig {
 				Source:      LocalLibPrefix,
 				Destination: LocalLibPrefix,
 			},
+		}
+	}
+
+	// if destination is empty, use the source value
+	if ac.Destination == "" {
+		return []ArtifactsConfig{
+			{From: ac.From, Source: ac.Source, Destination: ac.Source},
 		}
 	}
 

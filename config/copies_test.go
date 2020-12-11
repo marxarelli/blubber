@@ -8,11 +8,12 @@ import (
 	"gerrit.wikimedia.org/r/blubber/config"
 )
 
-func TestCopiesConfigAllArtifacts(t *testing.T) {
+func TestCopiesConfigExpand(t *testing.T) {
 	cfg := config.CopiesConfig{
 		{From: "foo"},
 		{From: "local"},
 		{From: "foo", Source: "./foo/dir", Destination: "./bar/dir"},
+		{From: "baz", Source: "./baz/dir"},
 	}
 
 	expanded := cfg.Expand("/app/dir")
@@ -22,6 +23,7 @@ func TestCopiesConfigAllArtifacts(t *testing.T) {
 		{From: "foo", Source: "/opt/lib", Destination: "/opt/lib"},
 		{From: "local", Source: ".", Destination: "."},
 		{From: "foo", Source: "./foo/dir", Destination: "./bar/dir"},
+		{From: "baz", Source: "./baz/dir", Destination: "./baz/dir"},
 	}, expanded)
 }
 

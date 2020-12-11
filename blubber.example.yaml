@@ -77,7 +77,10 @@ variants:
       env: production
       use-npm-ci: true
     builder:
-      requirements: [vue.config.js, vue/]
+      requirements:
+        - vue.config.js
+        - from: local
+          source: vue/
       command: [npm, run-script, build:vue]
 
   prep-django:

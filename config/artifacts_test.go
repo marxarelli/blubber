@@ -45,6 +45,41 @@ func TestArtifactsConfigYAML(t *testing.T) {
 	}
 }
 
+func TestArtifactsConfigExpand(t *testing.T) {
+	t.Run("local with no source/destination", func(t *testing.T) {
+		cfg := config.ArtifactsConfig{From: "local"}
+
+		assert.Equal(t, []config.ArtifactsConfig{
+			{From: "local", Source: ".", Destination: "."},
+		}, cfg.Expand("/app/dir"))
+	})
+
+	t.Run("variant with no source/destination", func(t *testing.T) {
+		cfg := config.ArtifactsConfig{From: "foo"}
+
+		assert.Equal(t, []config.ArtifactsConfig{
+			{From: "foo", Source: "/app/dir", Destination: "/app/dir"},
+			{From: "foo", Source: "/opt/lib", Destination: "/opt/lib"},
+		}, cfg.Expand("/app/dir"))
+	})
+
+	t.Run("variant with source/destination", func(t *testing.T) {
+		cfg := config.ArtifactsConfig{From: "foo", Source: "./foo/dir", Destination: "./bar/dir"}
+
+		assert.Equal(t, []config.ArtifactsConfig{
+			{From: "foo", Source: "./foo/dir", Destination: "./bar/dir"},
+		}, cfg.Expand("/app/dir"))
+	})
+
+	t.Run("source but no destination", func(t *testing.T) {
+		cfg := config.ArtifactsConfig{From: "foo", Source: "./foo/dir"}
+
+		assert.Equal(t, []config.ArtifactsConfig{
+			{From: "foo", Source: "./foo/dir", Destination: "./foo/dir"},
+		}, cfg.Expand("/app/dir"))
+	})
+}
+
 func TestArtifactsConfigInstructions(t *testing.T) {
 	cfg := config.ArtifactsConfig{
 		From:        "foo",
@@ -165,19 +200,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		})
 
 		t.Run("destination", func(t *testing.T) {
-			t.Run("with no source given can be empty", func(t *testing.T) {
-				_, err := config.ReadYAMLConfig([]byte(`---
-          version: v4
-          variants:
-            build: {}
-            foo:
-              copies:
-                - from: build`))
-
-				assert.False(t, config.IsValidationError(err))
-			})
-
-			t.Run("with source given must not be empty", func(t *testing.T) {
+			t.Run("can be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
           version: v4
           variants:
@@ -187,11 +210,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
                 - from: build
                   source: /bar`))
 
-				if assert.True(t, config.IsValidationError(err)) {
-					msg := config.HumanizeValidationError(err)
-
-					assert.Equal(t, `destination: is required if "source" is also set`, msg)
-				}
+				assert.False(t, config.IsValidationError(err))
 			})
 		})
 
