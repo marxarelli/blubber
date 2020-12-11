@@ -77,6 +77,42 @@ func TestRequirementsInstructionsForPhase(t *testing.T) {
 			)
 		}
 	})
+
+	t.Run("regression", func(t *testing.T) {
+		cfg := config.RequirementsConfig{}
+		err := cfg.UnmarshalJSON([]byte(`[
+			".git",
+			"Makefile",
+			"go.mod",
+			"go.sum",
+			"api/",
+			"build/",
+			"cmd/",
+			"config/",
+			"docker/",
+			"meta/",
+			"scripts/",
+			"vendor/"
+		]`))
+
+		if assert.NoError(t, err) {
+			instructions := cfg.InstructionsForPhase(build.PhasePreInstall)
+			assert.Len(t, instructions, 9)
+			assert.Equal(
+				t,
+				build.Copy{[]string{".git", "Makefile", "go.mod", "go.sum"}, "./"},
+				instructions[0],
+			)
+			assert.Equal(t, build.Copy{[]string{"api"}, "api/"}, instructions[1])
+			assert.Equal(t, build.Copy{[]string{"build"}, "build/"}, instructions[2])
+			assert.Equal(t, build.Copy{[]string{"cmd"}, "cmd/"}, instructions[3])
+			assert.Equal(t, build.Copy{[]string{"config"}, "config/"}, instructions[4])
+			assert.Equal(t, build.Copy{[]string{"docker"}, "docker/"}, instructions[5])
+			assert.Equal(t, build.Copy{[]string{"meta"}, "meta/"}, instructions[6])
+			assert.Equal(t, build.Copy{[]string{"scripts"}, "scripts/"}, instructions[7])
+			assert.Equal(t, build.Copy{[]string{"vendor"}, "vendor/"}, instructions[8])
+		}
+	})
 }
 func TestRequirementsConfigUnmarshalJSON(t *testing.T) {
 	t.Run("strings", func(t *testing.T) {

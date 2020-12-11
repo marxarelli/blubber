@@ -109,7 +109,7 @@ func NewFromShort(source string) ArtifactsConfig {
 		// destinations. The legacy behavior is to copy the file to
 		// a path matching the path it was imported from. Long form
 		// configuration allows the user to override this.
-		Destination: path.Dir(path.Clean(source)) + "/",
+		Destination: path.Clean(path.Dir(source)) + "/",
 	}
 }
 
