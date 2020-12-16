@@ -70,7 +70,7 @@ func TestPhpConfigInstructions(t *testing.T) {
 			[]build.Instruction{
 				build.Copy{[]string{"composer.json"}, "./"},
 				build.RunAll{[]build.Run{
-					{"composer install", []string{}},
+					{"composer install", []string{"--no-scripts"}},
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
@@ -98,7 +98,7 @@ func TestPhpConfigInstructionsProduction(t *testing.T) {
 			[]build.Instruction{
 				build.Copy{[]string{"composer.json"}, "./"},
 				build.RunAll{[]build.Run{
-					{"composer install", []string{"--no-dev"}},
+					{"composer install", []string{"--no-scripts", "--no-dev"}},
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),

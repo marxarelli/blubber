@@ -40,11 +40,11 @@ func (pc PhpConfig) InstructionsForPhase(phase build.Phase) []build.Instruction 
 		if len(pc.Requirements) > 0 {
 
 			composerInstall = build.RunAll{[]build.Run{
-				{"composer install", []string{}},
+				{"composer install", []string{"--no-scripts"}},
 			}}
 
 			if pc.Production.True {
-				composerInstall.Runs[0].Arguments = []string{"--no-dev"}
+				composerInstall.Runs[0].Arguments = append(composerInstall.Runs[0].Arguments, "--no-dev")
 			}
 
 			return append(
