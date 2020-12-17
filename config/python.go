@@ -24,10 +24,17 @@ const PythonPoetryVenvs = LocalLibPrefix + "/poetry"
 // dependencies via PIP.
 //
 type PythonConfig struct {
-	Version       string       `json:"version"`         // Python binary to use when installing dependencies
-	Requirements  []string     `json:"requirements"`    // install requirements from given files
-	UseSystemFlag Flag         `json:"use-system-flag"` // Inject the --system flag into the install command (T227919)
-	Poetry        PoetryConfig `json:"poetry"`          // Use Poetry for package management
+	// Python binary to use when installing dependencies
+	Version string `json:"version"`
+
+	// Install requirements from given files
+	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
+
+	// Inject the --system flag into the install command (T227919)
+	UseSystemFlag Flag `json:"use-system-flag"`
+
+	// Use Poetry for package management
+	Poetry PoetryConfig `json:"poetry"`
 }
 
 // PoetryConfig holds configuration fields related to installation of project
@@ -91,11 +98,16 @@ func (pc *PoetryConfig) Merge(pc2 PoetryConfig) {
 // network requests from said commands.
 //
 func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
+	ins := []build.Instruction{}
+
 	if pc.Version != "" {
+		if pc.Requirements != nil {
+			ins = append(ins, pc.Requirements.InstructionsForPhase(phase)...)
+		}
+
 		switch phase {
 		case build.PhasePrivileged:
 			if pc.Requirements != nil || pc.usePoetry() {
-				var ins []build.Instruction
 				if pc.Requirements != nil {
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), []string{"-m", "easy_install", "pip"}},
@@ -113,14 +125,10 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 						},
 					})
 				}
-
-				return ins
 			}
 
 		case build.PhasePreInstall:
 			if pc.Requirements != nil {
-				var ins []build.Instruction
-
 				if !pc.usePoetry() {
 					ins = append(ins, []build.Instruction{
 						build.Env{map[string]string{
@@ -130,8 +138,6 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 						build.CreateDirectory(PythonLibPrefix),
 					}...)
 				}
-
-				ins = append(ins, build.SyncFiles(pc.Requirements, ".")...)
 
 				if pc.usePoetry() {
 					cmd := []string{"install", "--no-root"}
@@ -151,8 +157,6 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 						{pc.version(), append(installCmd, args...)},
 					}})
 				}
-
-				return ins
 			}
 
 		case build.PhasePostInstall:
@@ -170,12 +174,12 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 					env.Definitions["PIP_NO_INDEX"] = "1"
 				}
 
-				return []build.Instruction{env}
+				ins = append(ins, env)
 			}
 		}
 	}
 
-	return []build.Instruction{}
+	return ins
 }
 
 // RequirementsArgs returns the configured requirements as pip `-r` arguments.
@@ -185,7 +189,7 @@ func (pc PythonConfig) RequirementsArgs() []string {
 
 	for i, req := range pc.Requirements {
 		args[i*2] = "-r"
-		args[(i*2)+1] = req
+		args[(i*2)+1] = req.EffectiveDestination()
 	}
 
 	return args

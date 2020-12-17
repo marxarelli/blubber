@@ -21,7 +21,9 @@ func TestPhpConfigYAML(t *testing.T) {
           requirements: []`))
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, []string{"composer.json"}, cfg.Php.Requirements)
+		assert.Equal(t, config.RequirementsConfig{
+			{From: "local", Source: "composer.json"},
+		}, cfg.Php.Requirements)
 
 		err = config.ExpandIncludesAndCopies(cfg, "build")
 		assert.Nil(t, err)
@@ -55,7 +57,11 @@ func TestPhpConfigInstructionsNoRequirements(t *testing.T) {
 }
 
 func TestPhpConfigInstructions(t *testing.T) {
-	cfg := config.PhpConfig{Requirements: []string{"composer.json"}}
+	cfg := config.PhpConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "composer.json"},
+		},
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -83,7 +89,12 @@ func TestPhpConfigInstructions(t *testing.T) {
 }
 
 func TestPhpConfigInstructionsProduction(t *testing.T) {
-	cfg := config.PhpConfig{Requirements: []string{"composer.json"}, Production: config.Flag{True: true}}
+	cfg := config.PhpConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "composer.json"},
+		},
+		Production: config.Flag{True: true},
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))

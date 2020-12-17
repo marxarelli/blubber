@@ -33,9 +33,8 @@ func TestBuilderConfigYAML(t *testing.T) {
 			assert.Equal(t, []string{"make", "-f", "Makefile", "test"}, variant.Builder.Command)
 			assert.Equal(t, config.RequirementsConfig{
 				{
-					From:        config.LocalArtifactKeyword,
-					Source:      "Makefile",
-					Destination: "./",
+					From:   config.LocalArtifactKeyword,
+					Source: "Makefile",
 				},
 			}, variant.Builder.Requirements)
 		}

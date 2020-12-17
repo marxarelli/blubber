@@ -25,7 +25,9 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
           use-system-flag: true`))
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
+		assert.Equal(t, config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+		}, cfg.Python.Requirements)
 		assert.Equal(t, "python2.7", cfg.Python.Version)
 
 		err = config.ExpandIncludesAndCopies(cfg, "test")
@@ -34,7 +36,10 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 		variant, err := config.GetVariant(cfg, "test")
 
 		if assert.NoError(t, err) {
-			assert.Equal(t, []string{"other-requirements.txt", "requirements-test.txt"}, variant.Python.Requirements)
+			assert.Equal(t, config.RequirementsConfig{
+				{From: "local", Source: "other-requirements.txt"},
+				{From: "local", Source: "requirements-test.txt"},
+			}, variant.Python.Requirements)
 			assert.Equal(t, "python3", variant.Python.Version)
 			assert.Equal(t, true, variant.Python.UseSystemFlag.True)
 		}
@@ -53,7 +58,9 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
           requirements: []`))
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
+		assert.Equal(t, config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+		}, cfg.Python.Requirements)
 
 		err = config.ExpandIncludesAndCopies(cfg, "test")
 		assert.Nil(t, err)
@@ -61,32 +68,7 @@ func TestPythonConfigYAMLMergeEmpty(t *testing.T) {
 		variant, err := config.GetVariant(cfg, "test")
 
 		if assert.NoError(t, err) {
-			assert.Equal(t, []string{}, variant.Python.Requirements)
-		}
-	}
-}
-
-func TestPythonConfigYAMLDoNotMergeNil(t *testing.T) {
-	cfg, err := config.ReadYAMLConfig([]byte(`---
-    version: v4
-    base: foo
-    python:
-      requirements: [requirements.txt]
-    variants:
-      test:
-        python:
-          requirements: ~`))
-
-	if assert.NoError(t, err) {
-		assert.Equal(t, []string{"requirements.txt"}, cfg.Python.Requirements)
-
-		err = config.ExpandIncludesAndCopies(cfg, "test")
-		assert.Nil(t, err)
-
-		variant, err := config.GetVariant(cfg, "test")
-
-		if assert.NoError(t, err) {
-			assert.Equal(t, []string{"requirements.txt"}, variant.Python.Requirements)
+			assert.Equal(t, config.RequirementsConfig{}, variant.Python.Requirements)
 		}
 	}
 }
@@ -143,8 +125,12 @@ func TestPythonConfigInstructionsNoRequirementsNoVersion(t *testing.T) {
 
 func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	cfg := config.PythonConfig{
-		Version:      "python2.7",
-		Requirements: []string{"requirements.txt", "requirements-test.txt", "docs/requirements.txt"},
+		Version: "python2.7",
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+			{From: "local", Source: "requirements-test.txt"},
+			{From: "local", Source: "docs/requirements.txt"},
+		},
 	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
@@ -166,14 +152,13 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
+				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
+				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
 				build.Env{map[string]string{
 					"PIP_WHEEL_DIR":  "/opt/lib/python",
 					"PIP_FIND_LINKS": "file:///opt/lib/python",
 				}},
 				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
-				build.Run{"mkdir -p", []string{"docs/"}},
-				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
-				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
 				build.RunAll{[]build.Run{
 					{"python2.7", []string{"-m", "pip", "wheel",
 						"-r", "requirements.txt",
@@ -208,22 +193,25 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 
 func TestPythonConfigUseSystemFlag(t *testing.T) {
 	cfg := config.PythonConfig{
-		Version:       "python2.7",
-		Requirements:  []string{"requirements.txt", "requirements-test.txt", "docs/requirements.txt"},
+		Version: "python2.7",
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+			{From: "local", Source: "requirements-test.txt"},
+			{From: "local", Source: "docs/requirements.txt"},
+		},
 		UseSystemFlag: config.Flag{True: true},
 	}
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
+				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
+				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
 				build.Env{map[string]string{
 					"PIP_WHEEL_DIR":  "/opt/lib/python",
 					"PIP_FIND_LINKS": "file:///opt/lib/python",
 				}},
 				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
-				build.Run{"mkdir -p", []string{"docs/"}},
-				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
-				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
 				build.RunAll{[]build.Run{
 					{"python2.7", []string{"-m", "pip", "wheel",
 						"-r", "requirements.txt",
@@ -245,7 +233,11 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 
 func TestPythonConfigRequirementsArgs(t *testing.T) {
 	cfg := config.PythonConfig{
-		Requirements: []string{"foo", "bar", "baz/qux"},
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "foo"},
+			{From: "local", Source: "bar"},
+			{From: "local", Source: "baz/qux"},
+		},
 	}
 
 	assert.Equal(t,
@@ -310,9 +302,12 @@ func TestPosFinding(t *testing.T) {
 
 func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 	cfg := config.PythonConfig{
-		Version:      "python3",
-		Requirements: []string{"pyproject.toml", "poetry.lock"},
-		Poetry:       config.PoetryConfig{Version: "==10.0.1"},
+		Version: "python3",
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "pyproject.toml"},
+			{From: "local", Source: "poetry.lock"},
+		},
+		Poetry: config.PoetryConfig{Version: "==10.0.1"},
 	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {

@@ -290,3 +290,149 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		})
 	})
 }
+
+func TestArtifactsEffectiveDestination(t *testing.T) {
+	t.Run("where source is a file and destination is a file", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "local",
+			Source:      "foo/bar",
+			Destination: "foo2/bar2",
+		}
+
+		assert.Equal(t, "foo2/bar2", artifact.EffectiveDestination())
+	})
+
+	t.Run("where source is a directory", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "local",
+			Source:      "foo/bar/",
+			Destination: "foo2/bar2",
+		}
+
+		assert.Equal(t, "foo2/bar2/", artifact.EffectiveDestination())
+	})
+
+	t.Run("where source is a file and destination is a directory", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "local",
+			Source:      "foo/bar",
+			Destination: "foo2/bar2/",
+		}
+
+		assert.Equal(t, "foo2/bar2/bar", artifact.EffectiveDestination())
+	})
+
+	t.Run("where source is a file and destination is ./", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "local",
+			Source:      "foo/bar",
+			Destination: ".",
+		}
+
+		assert.Equal(t, "bar", artifact.EffectiveDestination())
+	})
+
+	t.Run("where destination is /", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "foo",
+			Source:      "foo/bar",
+			Destination: "/",
+		}
+
+		assert.Equal(t, "/bar", artifact.EffectiveDestination())
+	})
+
+	t.Run("where source is /", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "foo",
+			Source:      "/",
+			Destination: "foo",
+		}
+
+		assert.Equal(t, "foo/", artifact.EffectiveDestination())
+	})
+
+	t.Run("where source and destination are /", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From:        "foo",
+			Source:      "/",
+			Destination: "/",
+		}
+
+		assert.Equal(t, "/", artifact.EffectiveDestination())
+	})
+}
+
+func TestArtifactsNormalizedDestination(t *testing.T) {
+	t.Run("where source and destination are omitted", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			From: "local",
+		}
+
+		assert.Equal(t, "./", artifact.NormalizedDestination())
+	})
+
+	t.Run("where destination is omitted", func(t *testing.T) {
+		t.Run("and source is a directory", func(t *testing.T) {
+			artifact := config.ArtifactsConfig{
+				Source: "foo/dir/",
+			}
+
+			assert.Equal(t, "foo/dir/", artifact.NormalizedDestination())
+		})
+
+		t.Run("and source is a file", func(t *testing.T) {
+			artifact := config.ArtifactsConfig{
+				Source: "foo/dir",
+			}
+
+			assert.Equal(t, "foo/", artifact.NormalizedDestination())
+		})
+	})
+
+	t.Run("where destination is present", func(t *testing.T) {
+		t.Run("and destination is a directory", func(t *testing.T) {
+			artifact := config.ArtifactsConfig{
+				Destination: "foo/dir/",
+			}
+
+			assert.Equal(t, "foo/dir/", artifact.NormalizedDestination())
+		})
+
+		t.Run("and source is a directory", func(t *testing.T) {
+			artifact := config.ArtifactsConfig{
+				Source:      "foo/dir/",
+				Destination: "foo/dir",
+			}
+
+			assert.Equal(t, "foo/dir/", artifact.NormalizedDestination())
+		})
+
+		t.Run("and destination is a file", func(t *testing.T) {
+			artifact := config.ArtifactsConfig{
+				Source:      "foo",
+				Destination: "foo/bar",
+			}
+
+			assert.Equal(t, "foo/bar", artifact.NormalizedDestination())
+		})
+	})
+}
+
+func TestArtifactsNormalizedSource(t *testing.T) {
+	t.Run("where source is a directory", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			Source: "foo/../bar//",
+		}
+
+		assert.Equal(t, "bar/", artifact.NormalizedSource())
+	})
+
+	t.Run("where source is a file", func(t *testing.T) {
+		artifact := config.ArtifactsConfig{
+			Source: "foo/../bar",
+		}
+
+		assert.Equal(t, "bar", artifact.NormalizedSource())
+	})
+}

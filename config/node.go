@@ -8,9 +8,14 @@ import (
 // whether/how to install NPM packages.
 //
 type NodeConfig struct {
-	Requirements []string `json:"requirements"`                     // install requirements from given files
-	Env          string   `json:"env" validate:"omitempty,nodeenv"` // environment name ("production" install)
-	UseNpmCi     Flag     `json:"use-npm-ci"`                       // whether to run npm ci
+	// Install requirements from given files
+	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
+
+	// Environment name ("production" install)
+	Env string `json:"env" validate:"omitempty,nodeenv"`
+
+	// Whether to run npm ci
+	UseNpmCi Flag `json:"use-npm-ci"`
 }
 
 // Merge takes another NodeConfig and merges its fields into this one's,
@@ -47,6 +52,8 @@ func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 // according to the configuration.
 //
 func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
+	ins := nc.Requirements.InstructionsForPhase(phase)
+
 	switch phase {
 	case build.PhasePreInstall:
 		if len(nc.Requirements) > 0 {
@@ -68,18 +75,15 @@ func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 				)
 			}
 
-			return append(
-				build.SyncFiles(nc.Requirements, "."),
-				npmInstall,
-			)
+			ins = append(ins, npmInstall)
 		}
 	case build.PhasePostInstall:
 		if nc.Env != "" || len(nc.Requirements) > 0 {
-			return []build.Instruction{build.Env{map[string]string{
+			ins = append(ins, build.Env{map[string]string{
 				"NODE_ENV": nc.Env,
-			}}}
+			}})
 		}
 	}
 
-	return []build.Instruction{}
+	return ins
 }

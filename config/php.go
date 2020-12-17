@@ -7,8 +7,11 @@ import (
 // PhpConfig holds configuration for whether/how to install php packages.
 //
 type PhpConfig struct {
-	Requirements []string `json:"requirements"` // install requirements from given files
-	Production   Flag     `json:"production"`   // whether to use the no-dev flag
+	// Install requirements from given files
+	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
+
+	// Whether to use the no-dev flag
+	Production Flag `json:"production"`
 }
 
 // Merge takes another PhpConfig and merges its fields into this one's,
@@ -34,6 +37,8 @@ func (pc *PhpConfig) Merge(pc2 PhpConfig) {
 // build.
 //
 func (pc PhpConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
+	ins := pc.Requirements.InstructionsForPhase(phase)
+
 	switch phase {
 	case build.PhasePreInstall:
 		var composerInstall build.RunAll
@@ -47,13 +52,10 @@ func (pc PhpConfig) InstructionsForPhase(phase build.Phase) []build.Instruction 
 				composerInstall.Runs[0].Arguments = append(composerInstall.Runs[0].Arguments, "--no-dev")
 			}
 
-			return append(
-				build.SyncFiles(pc.Requirements, "."),
-				composerInstall,
-			)
+			ins = append(ins, composerInstall)
 		}
 
 	}
 
-	return []build.Instruction{}
+	return ins
 }
