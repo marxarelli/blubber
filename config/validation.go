@@ -21,6 +21,7 @@ var (
 	debianPackageName   = `[a-z0-9][a-z0-9+.-]+`
 	debianVersionSpec   = `(?:[0-9]+:)?[0-9]+[a-zA-Z0-9\.\+\-~]*`
 	debianReleaseName   = `[a-zA-Z](?:[a-zA-Z0-9\-]*[a-zA-Z0-9]+)?`
+	debianReleaseRegexp = regexp.MustCompile(debianReleaseName)
 	debianPackageRegexp = regexp.MustCompile(fmt.Sprintf(
 		`^%s(?:=%s|/%s)?$`, debianPackageName, debianVersionSpec, debianReleaseName))
 
@@ -44,6 +45,7 @@ var (
 		"baseimage":      `{{.Field}}: "{{.Value}}" is not a valid base image reference`,
 		"currentversion": `{{.Field}}: config version "{{.Value}}" is unsupported`,
 		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
+		"debianrelease":  `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
 		"envvars":        `{{.Field}}: contains invalid environment variable names`,
 		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
 		"pypkgver":       `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
@@ -66,6 +68,7 @@ var (
 		"abspath":       isAbsNonRootPath,
 		"baseimage":     isBaseImage,
 		"debianpackage": isDebianPackage,
+		"debianrelease": isDebianRelease,
 		"envvars":       isEnvironmentVariables,
 		"isfalse":       isFalse,
 		"istrue":        isTrue,
@@ -186,6 +189,12 @@ func isDebianPackage(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
 	return debianPackageRegexp.MatchString(value)
+}
+
+func isDebianRelease(_ context.Context, fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	return debianReleaseRegexp.MatchString(value)
 }
 
 func isPythonPackageVersion(_ context.Context, fl validator.FieldLevel) bool {

@@ -21,11 +21,14 @@ func TestAptConfigYAML(t *testing.T) {
       build:
         apt:
           packages:
-            - libfoo-dev`))
+            default:
+              - libfoo-dev
+            baz-backports:
+              - libbaz-dev`))
 
 	assert.Nil(t, err)
 
-	assert.Equal(t, []string{"libfoo", "libbar"}, cfg.Apt.Packages)
+	assert.Equal(t, map[string][]string{"default": {"libfoo", "libbar"}}, cfg.Apt.Packages)
 
 	err = config.ExpandIncludesAndCopies(cfg, "build")
 	assert.Nil(t, err)
@@ -33,11 +36,11 @@ func TestAptConfigYAML(t *testing.T) {
 	variant, err := config.GetVariant(cfg, "build")
 	assert.Nil(t, err)
 
-	assert.Equal(t, []string{"libfoo", "libbar", "libfoo-dev"}, variant.Apt.Packages)
+	assert.Equal(t, map[string][]string{"default": {"libfoo", "libbar", "libfoo-dev"}, "baz-backports": {"libbaz-dev"}}, variant.Apt.Packages)
 }
 
 func TestAptConfigInstructions(t *testing.T) {
-	cfg := config.AptConfig{Packages: []string{"libfoo", "libbar"}}
+	cfg := config.AptConfig{Packages: map[string][]string{"default": {"libfoo", "libbar"}, "baz-backports": {"libbaz"}}}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
@@ -46,11 +49,11 @@ func TestAptConfigInstructions(t *testing.T) {
 					"DEBIAN_FRONTEND": "noninteractive",
 				}},
 				build.RunAll{[]build.Run{
-					{"apt-get update", []string{}},
-					{"apt-get install -y", []string{"libfoo", "libbar"}},
-					{"rm -rf /var/lib/apt/lists/*", []string{}},
-				}},
-			},
+					build.Run{"apt-get update", []string{}},
+					build.Run{"apt-get install -y -t", []string{"baz-backports", "libbaz"}},
+					build.Run{"apt-get install -y", []string{"libfoo", "libbar"}},
+					build.Run{"rm -rf /var/lib/apt/lists/*", []string{}},
+				}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
 	})
@@ -72,14 +75,15 @@ func TestAptConfigValidation(t *testing.T) {
 	t.Run("packages", func(t *testing.T) {
 		t.Run("ok", func(t *testing.T) {
 			err := config.Validate(config.AptConfig{
-				Packages: []string{
-					"f1",
-					"foo-fighter",
-					"bar+b.az",
-					"bar+b.az=0:0.1~foo1-1",
-					"bar+b.az/stable",
-					"bar+b.az/jessie-wikimedia",
-				},
+				Packages: map[string][]string{
+					"default": {
+						"f1",
+						"foo-fighter",
+						"bar+b.az",
+						"bar+b.az=0:0.1~foo1-1",
+						"bar+b.az/stable",
+						"bar+b.az/jessie-wikimedia",
+					}},
 			})
 
 			assert.False(t, config.IsValidationError(err))
@@ -87,23 +91,24 @@ func TestAptConfigValidation(t *testing.T) {
 
 		t.Run("bad", func(t *testing.T) {
 			err := config.Validate(config.AptConfig{
-				Packages: []string{
-					"f1",
-					"foo fighter",
-					"bar_baz",
-					"bar=0.1*bad version",
-					"bar/0bad_release",
-				},
+				Packages: map[string][]string{
+					"default": {
+						"f1",
+						"foo fighter",
+						"bar_baz",
+						"bar=0.1*bad version",
+						"bar/0bad_release",
+					}},
 			})
 
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
 
 				assert.Equal(t, strings.Join([]string{
-					`packages[1]: "foo fighter" is not a valid Debian package name`,
-					`packages[2]: "bar_baz" is not a valid Debian package name`,
-					`packages[3]: "bar=0.1*bad version" is not a valid Debian package name`,
-					`packages[4]: "bar/0bad_release" is not a valid Debian package name`,
+					`packages[default][1]: "foo fighter" is not a valid Debian package name`,
+					`packages[default][2]: "bar_baz" is not a valid Debian package name`,
+					`packages[default][3]: "bar=0.1*bad version" is not a valid Debian package name`,
+					`packages[default][4]: "bar/0bad_release" is not a valid Debian package name`,
 				}, "\n"), msg)
 			}
 		})
