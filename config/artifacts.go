@@ -1,6 +1,8 @@
 package config
 
 import (
+	"path"
+
 	"gerrit.wikimedia.org/r/blubber/build"
 )
 
@@ -18,6 +20,16 @@ type ArtifactsConfig struct {
 	From        string `json:"from" validate:"required,variantref"`
 	Source      string `json:"source" validate:"requiredwith=destination,relativelocal"`
 	Destination string `json:"destination" validate:"relativelocal"`
+}
+
+// NewArtifactsConfigFromSource creates an local ArtifactsConfig from the
+// given source. This helps to support legacy requirements definitions.
+//
+func NewArtifactsConfigFromSource(source string) ArtifactsConfig {
+	return ArtifactsConfig{
+		From:   LocalArtifactKeyword,
+		Source: source,
+	}
 }
 
 // Expand returns the longhand configured artifact and/or the default
@@ -86,4 +98,72 @@ func (ac ArtifactsConfig) InstructionsForPhase(phase build.Phase) []build.Instru
 	}
 
 	return []build.Instruction{}
+}
+
+// EffectiveDestination returns the destination as a file path that amounts to
+// the location of the artifact after a copy is performed.
+//
+// If the destination is a file path or source is a directory, the effective
+// destination is identical to the normalized destination path.
+//
+// If the source is a file path (e.g. "foo/bar"), and the destination is a
+// directory (e.g. "foo2/"), the effective destination is the directory + the
+// base name of the source file (e.g. "foo2/bar").
+//
+func (ac ArtifactsConfig) EffectiveDestination() string {
+	dest := ac.NormalizedDestination()
+
+	if !isDir(dest) || isDir(ac.Source) {
+		return dest
+	}
+
+	base := path.Base(ac.Source)
+
+	if dest == "./" {
+		return base
+	}
+
+	return dest + base
+}
+
+// NormalizedDestination returns the destination defaulted to the source
+// directory and sanitized by path.Clean but with any original trailing '/'
+// retained to indicate a directory path.
+//
+func (ac ArtifactsConfig) NormalizedDestination() string {
+	// Default behavior is to derive Destination from Source
+	if ac.Destination == "" {
+		// If source is a directory, use it as is
+		if ac.Source != "" && isDir(ac.Source) {
+			return ac.Source
+		}
+
+		// Otherwise, use the source directory
+		return path.Dir(ac.NormalizedSource()) + "/"
+	}
+
+	dest := path.Clean(ac.Destination)
+
+	if dest != "/" && (isDir(ac.Destination) || isDir(ac.Source)) {
+		dest += "/"
+	}
+
+	return dest
+}
+
+// NormalizedSource returns the source sanitized by path.Clean but retaining
+// any terminating "/" to denote a directory.
+//
+func (ac ArtifactsConfig) NormalizedSource() string {
+	cleaned := path.Clean(ac.Source)
+
+	if cleaned != "/" && isDir(ac.Source) {
+		return cleaned + "/"
+	}
+
+	return cleaned
+}
+
+func isDir(aPath string) bool {
+	return path.Clean(aPath) == "." || aPath[len(aPath)-1:] == "/"
 }

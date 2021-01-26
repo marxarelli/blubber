@@ -24,7 +24,9 @@ func TestNodeConfigYAML(t *testing.T) {
           env: bar`))
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, []string{"package.json"}, cfg.Node.Requirements)
+		assert.Equal(t, config.RequirementsConfig{
+			{From: "local", Source: "package.json"},
+		}, cfg.Node.Requirements)
 		assert.Equal(t, "foo", cfg.Node.Env)
 		assert.Equal(t, true, cfg.Node.UseNpmCi.True)
 
@@ -61,7 +63,12 @@ func TestNodeConfigInstructionsNoRequirements(t *testing.T) {
 }
 
 func TestNodeConfigInstructionsUseNpmCi(t *testing.T) {
-	cfg := config.NodeConfig{Requirements: []string{"package.json"}, UseNpmCi: config.Flag{True: true}}
+	cfg := config.NodeConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "package.json"},
+		},
+		UseNpmCi: config.Flag{True: true},
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -85,7 +92,12 @@ func TestNodeConfigInstructionsUseNpmCi(t *testing.T) {
 }
 
 func TestNodeConfigInstructionsNonProduction(t *testing.T) {
-	cfg := config.NodeConfig{Requirements: []string{"package.json"}, Env: "foo"}
+	cfg := config.NodeConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "package.json"},
+		},
+		Env: "foo",
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
@@ -120,7 +132,13 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 }
 
 func TestNodeConfigInstructionsProduction(t *testing.T) {
-	cfg := config.NodeConfig{Requirements: []string{"package.json", "package-lock.json"}, Env: "production"}
+	cfg := config.NodeConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "package.json"},
+			{From: "local", Source: "package-lock.json"},
+		},
+		Env: "production",
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))

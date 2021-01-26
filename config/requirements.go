@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"path"
 
 	"gerrit.wikimedia.org/r/blubber/build"
 )
@@ -47,37 +46,24 @@ func (rc RequirementsConfig) InstructionsForPhase(phase build.Phase) []build.Ins
 				artifacts[artifact.From] = map[string][]string{}
 			}
 
-			// Sanitize Source and Destination paths
-			srcFile := path.Clean(artifact.Source)
-			destDir := path.Clean(artifact.Destination)
-			destLen := len(artifact.Destination)
+			src := artifact.NormalizedSource()
+			dest := artifact.NormalizedDestination()
 
-			if artifact.Destination == "" {
-				// Preserve legacy behavior from build.SyncFiles for implicit
-				// destinations. The legacy behavior is to copy the file to
-				// a path matching the path it was imported from. Long form
-				// configuration allows the user to override this.
-				destDir = path.Dir(srcFile) + "/"
-			} else if artifact.Destination[destLen-1:] == "/" {
-
-				destDir = destDir + "/"
-			}
-
-			_, haveSeenDest := artifacts[artifact.From][destDir]
+			_, haveSeenDest := artifacts[artifact.From][dest]
 			if !haveSeenDest {
 				// First time seeing this Destination for this From:
 				// - remeber the order it was seen in the config
 				destOrder[artifact.From] = append(
 					destOrder[artifact.From],
-					destDir,
+					dest,
 				)
 				// - make a slice to track related Source values
-				artifacts[artifact.From][destDir] = []string{}
+				artifacts[artifact.From][dest] = []string{}
 			}
 
-			artifacts[artifact.From][destDir] = append(
-				artifacts[artifact.From][destDir],
-				srcFile,
+			artifacts[artifact.From][dest] = append(
+				artifacts[artifact.From][dest],
+				src,
 			)
 		}
 
@@ -97,20 +83,6 @@ func (rc RequirementsConfig) InstructionsForPhase(phase build.Phase) []build.Ins
 	}
 
 	return instructions
-}
-
-// NewFromShort creates a legacy short form requirements artifact.
-//
-func NewFromShort(source string) ArtifactsConfig {
-	return ArtifactsConfig{
-		From:   LocalArtifactKeyword,
-		Source: source,
-		// Preserve legacy behavior from build.SyncFiles for implicit
-		// destinations. The legacy behavior is to copy the file to
-		// a path matching the path it was imported from. Long form
-		// configuration allows the user to override this.
-		Destination: path.Clean(path.Dir(source)) + "/",
-	}
 }
 
 // IsUnmarshalTypeError returns true if the provided error is of type
@@ -133,7 +105,7 @@ func (rc *RequirementsConfig) UnmarshalJSON(unmarshal []byte) error {
 		*rc = make(RequirementsConfig, len(shorthand))
 
 		for i, source := range shorthand {
-			(*rc)[i] = NewFromShort(source)
+			(*rc)[i] = NewArtifactsConfigFromSource(source)
 		}
 
 		return nil
@@ -169,7 +141,7 @@ func (rc *RequirementsConfig) UnmarshalJSON(unmarshal []byte) error {
 	// of the long form results.
 	for i, source := range shorthand {
 		if source != "" {
-			longhand[i] = NewFromShort(source)
+			longhand[i] = NewArtifactsConfigFromSource(source)
 		}
 	}
 	*rc = RequirementsConfig(longhand)
