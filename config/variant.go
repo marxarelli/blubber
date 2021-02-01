@@ -77,7 +77,7 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 		if switchUser != "" {
 			instructions = append(
 				[]build.Instruction{
-					build.User{switchUser},
+					build.User{UID: uid},
 					build.Home(switchUser),
 				},
 				instructions...,

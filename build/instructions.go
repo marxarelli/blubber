@@ -190,13 +190,13 @@ func (label Label) Compile() []string {
 // commands.
 //
 type User struct {
-	Name string // user name
+	UID uint // user ID
 }
 
-// Compile returns the quoted user name.
+// Compile returns the users UID as string
 //
 func (user User) Compile() []string {
-	return []string{quote(user.Name)}
+	return []string{strconv.FormatUint(uint64(user.UID), 10)}
 }
 
 // WorkingDirectory is a build instruction for defining the working directory
