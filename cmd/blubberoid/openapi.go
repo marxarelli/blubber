@@ -110,10 +110,22 @@ components:
           type: object
           properties:
             packages:
-              type: array
-              description: Packages to install from APT sources of base image
-              items:
-                type: string
+              oneOf:
+                - type: array
+                  description: Packages to install from APT sources of base image
+                  items:
+                    type: string
+                  example: ["librsvg2-dev", "git", "pkg-config", "build-essential"]
+                - type: object
+                  description: Key-Value pairs of target release and packages to install from APT sources
+                  additionalProperties:
+                    type: array
+                    description: The packages to install using the target release
+                    items:
+                      type: string
+                  example:
+                    buster-backports: ["npm"]
+
         node:
           type: object
           properties:

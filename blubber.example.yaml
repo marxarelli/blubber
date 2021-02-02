@@ -1,6 +1,6 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+base: docker-registry.wikimedia.org/wikimedia-buster:latest
 apt:
   packages: [libjpeg, libyaml]
 python:
@@ -13,7 +13,9 @@ runs:
 variants:
   build:
     apt:
-      packages: [libjpeg-dev, libyaml-dev]
+      packages:
+        default: [libjpeg-dev, libyaml-dev]
+        buster-backports: [npm]
     node:
       requirements: [package.json, package-lock.json]
       use-npm-ci: false
@@ -44,6 +46,8 @@ variants:
     node:
       env: production
       use-npm-ci: true
+    php:
+      production: true
 
   production:
     base: docker-registry.wikimedia.org/wikimedia-stretch:latest
