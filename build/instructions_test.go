@@ -111,9 +111,9 @@ func TestLabel(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	i := build.User{"foo"}
+	i := build.User{UID: 1000}
 
-	assert.Equal(t, []string{`"foo"`}, i.Compile())
+	assert.Equal(t, []string{`1000`}, i.Compile())
 }
 
 func TestWorkingDirectory(t *testing.T) {

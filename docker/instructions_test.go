@@ -122,12 +122,12 @@ func TestLabel(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	i := build.User{"foo"}
+	i := build.User{UID: 1000}
 
 	di, err := docker.NewInstruction(i)
 
 	if assert.NoError(t, err) {
-		assert.Equal(t, "USER \"foo\"\n", di.Compile())
+		assert.Equal(t, "USER 1000\n", di.Compile())
 	}
 }
 

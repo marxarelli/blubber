@@ -147,7 +147,8 @@ func TestVariantConfigInstructions(t *testing.T) {
 					Runs: config.RunsConfig{
 						Insecurely: config.Flag{True: false},
 						UserConfig: config.UserConfig{
-							As: "baruser",
+							As:  "baruser",
+							UID: 1000,
 						},
 					},
 					EntryPoint: []string{"/foo", "bar"},
@@ -156,7 +157,7 @@ func TestVariantConfigInstructions(t *testing.T) {
 
 			assert.Equal(t,
 				[]build.Instruction{
-					build.User{"baruser"},
+					build.User{UID: 1000},
 					build.Env{map[string]string{"HOME": "/home/baruser"}},
 					build.EntryPoint{[]string{"/foo", "bar"}},
 				},
