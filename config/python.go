@@ -110,7 +110,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 			if pc.Requirements != nil || pc.usePoetry() {
 				if pc.Requirements != nil {
 					ins = append(ins, build.RunAll{[]build.Run{
-						{pc.version(), []string{"-m", "easy_install", "pip"}},
+						{pc.version(), []string{"-m", "easy_install", pc.pipPackage()}},
 						{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
 					}})
 				}
@@ -193,6 +193,14 @@ func (pc PythonConfig) RequirementsArgs() []string {
 	}
 
 	return args
+}
+
+func (pc PythonConfig) pipPackage() string {
+	if pc.version()[0:7] == "python2" {
+		return "pip<21"
+	}
+
+	return "pip"
 }
 
 func (pc PythonConfig) version() string {

@@ -137,7 +137,7 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.RunAll{[]build.Run{
-					{"python2.7", []string{"-m", "easy_install", "pip"}},
+					{"python2.7", []string{"-m", "easy_install", "pip<21"}},
 					{"python2.7", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
 				}},
 			},
