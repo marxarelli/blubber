@@ -138,7 +138,7 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 			[]build.Instruction{
 				build.RunAll{[]build.Run{
 					{"python2.7", []string{"-m", "easy_install", "pip<21"}},
-					{"python2.7", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
+					{"python2.7", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox", "pip<21"}},
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
@@ -315,7 +315,7 @@ func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 			[]build.Instruction{
 				build.RunAll{[]build.Run{
 					{"python3", []string{"-m", "easy_install", "pip"}},
-					{"python3", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox"}},
+					{"python3", []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox", "pip"}},
 				}},
 				build.Env{map[string]string{
 					"POETRY_VIRTUALENVS_PATH": "/opt/lib/poetry",
