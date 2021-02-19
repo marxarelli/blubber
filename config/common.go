@@ -8,15 +8,15 @@ import (
 // and each configured variant.
 //
 type CommonConfig struct {
-	Base       string        `json:"base" validate:"omitempty,baseimage"` // name/path to base image
-	Apt        AptConfig     `json:"apt"`                                 // APT related
-	Node       NodeConfig    `json:"node"`                                // Node related
-	Php        PhpConfig     `json:"php"`                                 // Php related
-	Python     PythonConfig  `json:"python"`                              // Python related
-	Builder    BuilderConfig `json:"builder"`                             // Builder related
-	Lives      LivesConfig   `json:"lives"`                               // application owner/dir
-	Runs       RunsConfig    `json:"runs"`                                // runtime environment
-	EntryPoint []string      `json:"entrypoint"`                          // entry-point executable
+	Base       string        `json:"base" validate:"omitempty,imageref"` // name/path to base image
+	Apt        AptConfig     `json:"apt"`                                // APT related
+	Node       NodeConfig    `json:"node"`                               // Node related
+	Php        PhpConfig     `json:"php"`                                // Php related
+	Python     PythonConfig  `json:"python"`                             // Python related
+	Builder    BuilderConfig `json:"builder"`                            // Builder related
+	Lives      LivesConfig   `json:"lives"`                              // application owner/dir
+	Runs       RunsConfig    `json:"runs"`                               // runtime environment
+	EntryPoint []string      `json:"entrypoint"`                         // entry-point executable
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.

@@ -162,12 +162,12 @@ func TestArtifactsConfigValidation(t *testing.T) {
 			if assert.True(t, config.IsValidationError(err)) {
 				msg := config.HumanizeValidationError(err)
 
-				assert.Equal(t, `from: references an unknown variant "foo bar"`, msg)
+				assert.Equal(t, `from: "foo bar" is not a valid image reference or known variant`, msg)
 			}
 		})
 	})
 
-	t.Run("from: variant", func(t *testing.T) {
+	t.Run("from: variant|imageref", func(t *testing.T) {
 		t.Run("source", func(t *testing.T) {
 			t.Run("with no destination given can be empty", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---

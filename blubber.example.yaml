@@ -96,3 +96,9 @@ variants:
           source: /srv/app/vue/dist
           destination: ./vue/dist/
       command: [poetry, run, python3, manage.py, collectstatic]
+
+  copy-from-base-image:
+    copies:
+      - from: docker-registry.wikimedia.org/wikimedia/mediawiki:wmf-1.36.0-wmf.31
+        source: /srv/mediawiki
+        destination: /srv/mediawiki/php-1.36.0-wmf.31

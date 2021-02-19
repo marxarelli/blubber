@@ -42,11 +42,12 @@ var (
 
 	humanizedErrors = map[string]string{
 		"abspath":        `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
-		"baseimage":      `{{.Field}}: "{{.Value}}" is not a valid base image reference`,
+		"artifactfrom":   `{{.Field}}: "{{.Value}}" is not a valid image reference or known variant`,
 		"currentversion": `{{.Field}}: config version "{{.Value}}" is unsupported`,
 		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
 		"debianrelease":  `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
 		"envvars":        `{{.Field}}: contains invalid environment variable names`,
+		"imageref":       `{{.Field}}: "{{.Value}}" is not a valid image reference`,
 		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
 		"pypkgver":       `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
 		"relativelocal":  `{{.Field}}: path must be relative when "from" is "local"`,
@@ -62,14 +63,15 @@ var (
 		"currentversion": "eq=" + CurrentVersion,
 		"nodeenv":        "alphanum",
 		"username":       "hostname,ne=root",
+		"artifactfrom":   "variantref|imageref",
 	}
 
 	validatorFuncs = map[string]validator.FuncCtx{
 		"abspath":       isAbsNonRootPath,
-		"baseimage":     isBaseImage,
 		"debianpackage": isDebianPackage,
 		"debianrelease": isDebianRelease,
 		"envvars":       isEnvironmentVariables,
+		"imageref":      isImageRef,
 		"isfalse":       isFalse,
 		"istrue":        isTrue,
 		"pypkgver":      isPythonPackageVersion,
@@ -179,12 +181,6 @@ func isAbsNonRootPath(_ context.Context, fl validator.FieldLevel) bool {
 	return path.IsAbs(value) && path.Base(path.Clean(value)) != "/"
 }
 
-func isBaseImage(_ context.Context, fl validator.FieldLevel) bool {
-	value := fl.Field().String()
-
-	return reference.ReferenceRegexp.MatchString(value)
-}
-
 func isDebianPackage(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
@@ -197,10 +193,10 @@ func isDebianRelease(_ context.Context, fl validator.FieldLevel) bool {
 	return debianReleaseRegexp.MatchString(value)
 }
 
-func isPythonPackageVersion(_ context.Context, fl validator.FieldLevel) bool {
+func isImageRef(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
-	return pythonContraintRegexp.MatchString(value)
+	return reference.ReferenceRegexp.MatchString(value)
 }
 
 func isEnvironmentVariables(_ context.Context, fl validator.FieldLevel) bool {
@@ -217,6 +213,12 @@ func isFalse(_ context.Context, fl validator.FieldLevel) bool {
 	val, ok := fl.Field().Interface().(bool)
 
 	return ok && val == false
+}
+
+func isPythonPackageVersion(_ context.Context, fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	return pythonContraintRegexp.MatchString(value)
 }
 
 func isRelativePathForLocalArtifact(_ context.Context, fl validator.FieldLevel) bool {

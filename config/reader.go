@@ -101,14 +101,13 @@ func buildCopiesDepGraph(config *Config) {
 
 	for variant, vcfg := range config.Variants {
 		graph.EnsureNode(variant)
-		for _, ac := range vcfg.Copies {
+
+		for _, ac := range append(vcfg.Copies, vcfg.Builder.Requirements...) {
 			if ac.From != LocalArtifactKeyword {
-				graph.AddDependency(variant, ac.From)
-			}
-		}
-		for _, bc := range vcfg.Builder.Requirements {
-			if bc.From != LocalArtifactKeyword {
-				graph.AddDependency(variant, bc.From)
+				// Only add dependencies for defined variants, not external image refs
+				if _, exists := config.Variants[ac.From]; exists {
+					graph.AddDependency(variant, ac.From)
+				}
 			}
 		}
 	}

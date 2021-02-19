@@ -17,7 +17,7 @@ import (
 // contains only production dependencies.
 //
 type ArtifactsConfig struct {
-	From        string `json:"from" validate:"required,variantref"`
+	From        string `json:"from" validate:"required,artifactfrom"`
 	Source      string `json:"source" validate:"requiredwith=destination,relativelocal"`
 	Destination string `json:"destination" validate:"relativelocal"`
 }
