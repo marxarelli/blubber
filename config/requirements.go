@@ -85,14 +85,6 @@ func (rc RequirementsConfig) InstructionsForPhase(phase build.Phase) []build.Ins
 	return instructions
 }
 
-// IsUnmarshalTypeError returns true if the provided error is of type
-// json.UnmarshalTypeError.
-//
-func IsUnmarshalTypeError(err error) bool {
-	_, ok := err.(*json.UnmarshalTypeError)
-	return ok
-}
-
 // UnmarshalJSON implements json.Unmarshaler to handle both shorthand and
 // longhand requirements configuration.
 //

@@ -125,6 +125,29 @@ components:
                       type: string
                   example:
                     buster-backports: ["npm"]
+            proxies:
+              type: array
+              description: HTTP/HTTPS proxies to use during package installation
+              items:
+                oneOf:
+                  - type: string
+                    description: Shorthand configuration of a proxy that applies to all sources of its protocol
+                    format: uri
+                    pattern: "^https?://"
+                  - type: object
+                    description: Proxy for either all sources of a given protocol or a specific source
+                    required: [url]
+                    properties:
+                      url:
+                        type: string
+                        description: HTTP/HTTPS proxy URL
+                        format: uri
+                        pattern: "^https?://"
+                      source:
+                        type: string
+                        description: APT source to which this proxy applies
+                        format: uri
+                        pattern: "^https?://"
 
         node:
           type: object

@@ -17,6 +17,10 @@ func TestAptConfigYAML(t *testing.T) {
       packages:
         - libfoo
         - libbar
+      proxies:
+        - url: http://proxy.example:8080
+          source: http://security.debian.org
+        - https://proxy.example:8081
     variants:
       build:
         apt:
@@ -26,21 +30,49 @@ func TestAptConfigYAML(t *testing.T) {
             baz-backports:
               - libbaz-dev`))
 
-	assert.Nil(t, err)
+	if assert.NoError(t, err) {
+		assert.Equal(t,
+			config.AptPackages{"default": {"libfoo", "libbar"}},
+			cfg.Apt.Packages,
+		)
 
-	assert.Equal(t, map[string][]string{"default": {"libfoo", "libbar"}}, cfg.Apt.Packages)
+		assert.Equal(t,
+			[]config.AptProxy{
+				{URL: "http://proxy.example:8080", Source: "http://security.debian.org"},
+				{URL: "https://proxy.example:8081"},
+			},
+			cfg.Apt.Proxies,
+		)
 
-	err = config.ExpandIncludesAndCopies(cfg, "build")
-	assert.Nil(t, err)
+		err = config.ExpandIncludesAndCopies(cfg, "build")
 
-	variant, err := config.GetVariant(cfg, "build")
-	assert.Nil(t, err)
+		if assert.NoError(t, err) {
+			variant, err := config.GetVariant(cfg, "build")
 
-	assert.Equal(t, map[string][]string{"default": {"libfoo", "libbar", "libfoo-dev"}, "baz-backports": {"libbaz-dev"}}, variant.Apt.Packages)
+			if assert.NoError(t, err) {
+				assert.Equal(t,
+					config.AptPackages{
+						"default":       {"libfoo", "libbar", "libfoo-dev"},
+						"baz-backports": {"libbaz-dev"},
+					},
+					variant.Apt.Packages,
+				)
+			}
+		}
+	}
 }
 
 func TestAptConfigInstructions(t *testing.T) {
-	cfg := config.AptConfig{Packages: map[string][]string{"default": {"libfoo", "libbar"}, "baz-backports": {"libbaz"}}}
+	cfg := config.AptConfig{
+		Packages: config.AptPackages{
+			"default":       {"libfoo", "libbar"},
+			"baz-backports": {"libbaz"},
+		},
+		Proxies: []config.AptProxy{{
+			URL:    "http://proxy.example:8080",
+			Source: "http://security.debian.org",
+		}},
+	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
@@ -49,10 +81,15 @@ func TestAptConfigInstructions(t *testing.T) {
 					"DEBIAN_FRONTEND": "noninteractive",
 				}},
 				build.RunAll{[]build.Run{
+					build.Run{
+						"echo %s >> /etc/apt/apt.conf.d/99blubber-proxies",
+						[]string{`Acquire::http::Proxy::security.debian.org "http://proxy.example:8080";`},
+					},
 					build.Run{"apt-get update", []string{}},
 					build.Run{"apt-get install -y -t", []string{"baz-backports", "libbaz"}},
 					build.Run{"apt-get install -y", []string{"libfoo", "libbar"}},
 					build.Run{"rm -rf /var/lib/apt/lists/*", []string{}},
+					build.Run{"rm -f", []string{"/etc/apt/apt.conf.d/99blubber-proxies"}},
 				}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
@@ -112,5 +149,139 @@ func TestAptConfigValidation(t *testing.T) {
 				}, "\n"), msg)
 			}
 		})
+	})
+
+	t.Run("proxies", func(t *testing.T) {
+		t.Run("url", func(t *testing.T) {
+			t.Run("ok - http", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL: "http://proxy.example:8080",
+				})
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("ok - https", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL: "https://proxy.example:8080",
+				})
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("bad - missing", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{})
+
+				if assert.True(t, config.IsValidationError(err)) {
+					assert.Equal(t,
+						`url: is required`,
+						config.HumanizeValidationError(err),
+					)
+				}
+			})
+
+			t.Run("bad - invalid scheme", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL: "bad://proxy.example",
+				})
+
+				if assert.True(t, config.IsValidationError(err)) {
+					assert.Equal(t,
+						`url: "bad://proxy.example" is not a valid HTTP/HTTPS URL`,
+						config.HumanizeValidationError(err),
+					)
+				}
+			})
+		})
+
+		t.Run("source", func(t *testing.T) {
+			t.Run("ok - http", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL:    "http://proxy.example:8080",
+					Source: "http://security.debian.org/",
+				})
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("ok - https", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL:    "http://proxy.example:8080",
+					Source: "https://security.debian.org/",
+				})
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("ok - missing", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL: "http://proxy.example:8080",
+				})
+
+				assert.False(t, config.IsValidationError(err))
+			})
+
+			t.Run("bad - invalid scheme", func(t *testing.T) {
+				err := config.Validate(config.AptProxy{
+					URL:    "http://proxy.example:8080",
+					Source: "bad://security.debian.org/",
+				})
+
+				if assert.True(t, config.IsValidationError(err)) {
+					assert.Equal(t,
+						`source: "bad://security.debian.org/" is not a valid HTTP/HTTPS URL`,
+						config.HumanizeValidationError(err),
+					)
+				}
+			})
+		})
+	})
+}
+
+func TestAptProxyConfiguration(t *testing.T) {
+	t.Run("url only - http", func(t *testing.T) {
+		cfg := config.AptProxy{
+			URL: "http://proxy.example:8080",
+		}
+
+		assert.Equal(t,
+			`Acquire::http::Proxy "http://proxy.example:8080";`,
+			cfg.Configuration(),
+		)
+	})
+
+	t.Run("url only - https", func(t *testing.T) {
+		cfg := config.AptProxy{
+			URL: "https://proxy.example:8080",
+		}
+
+		assert.Equal(t,
+			`Acquire::https::Proxy "https://proxy.example:8080";`,
+			cfg.Configuration(),
+		)
+	})
+
+	t.Run("specific source - http", func(t *testing.T) {
+		cfg := config.AptProxy{
+			URL:    "https://proxy.example:8080",
+			Source: "http://security.debian.org",
+		}
+
+		assert.Equal(t,
+			`Acquire::http::Proxy::security.debian.org "https://proxy.example:8080";`,
+			cfg.Configuration(),
+		)
+	})
+
+	t.Run("specific source - https", func(t *testing.T) {
+		cfg := config.AptProxy{
+			URL:    "http://proxy.example:8080",
+			Source: "https://security.debian.org",
+		}
+
+		assert.Equal(t,
+			`Acquire::https::Proxy::security.debian.org "http://proxy.example:8080";`,
+			cfg.Configuration(),
+		)
 	})
 }

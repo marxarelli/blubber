@@ -125,6 +125,14 @@ func GetVariant(config *Config, name string) (*VariantConfig, error) {
 	return variant, nil
 }
 
+// IsUnmarshalTypeError returns true if the provided error is of type
+// json.UnmarshalTypeError.
+//
+func IsUnmarshalTypeError(err error) bool {
+	_, ok := err.(*json.UnmarshalTypeError)
+	return ok
+}
+
 // ReadYAMLConfig converts YAML bytes to json and returns new Config struct.
 //
 func ReadYAMLConfig(data []byte) (*Config, error) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/url"
 	"path"
 	"reflect"
 	"regexp"
@@ -47,6 +48,7 @@ var (
 		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
 		"debianrelease":  `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
 		"envvars":        `{{.Field}}: contains invalid environment variable names`,
+		"httpurl":        `{{.Field}}: "{{.Value}}" is not a valid HTTP/HTTPS URL`,
 		"imageref":       `{{.Field}}: "{{.Value}}" is not a valid image reference`,
 		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
 		"pypkgver":       `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
@@ -71,6 +73,7 @@ var (
 		"debianpackage": isDebianPackage,
 		"debianrelease": isDebianRelease,
 		"envvars":       isEnvironmentVariables,
+		"httpurl":       isHTTPURL,
 		"imageref":      isImageRef,
 		"isfalse":       isFalse,
 		"istrue":        isTrue,
@@ -191,6 +194,16 @@ func isDebianRelease(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
 	return debianReleaseRegexp.MatchString(value)
+}
+
+func isHTTPURL(_ context.Context, fl validator.FieldLevel) bool {
+	url, err := url.Parse(fl.Field().String())
+
+	if err != nil {
+		return false
+	}
+
+	return url.Scheme == "http" || url.Scheme == "https"
 }
 
 func isImageRef(_ context.Context, fl validator.FieldLevel) bool {
