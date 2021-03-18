@@ -51,6 +51,14 @@ func TestAptConfigYAML(t *testing.T) {
 
 			if assert.NoError(t, err) {
 				assert.Equal(t,
+					[]config.AptProxy{
+						{URL: "http://proxy.example:8080", Source: "http://security.debian.org"},
+						{URL: "https://proxy.example:8081"},
+					},
+					variant.Apt.Proxies,
+				)
+
+				assert.Equal(t,
 					config.AptPackages{
 						"default":       {"libfoo", "libbar", "libfoo-dev"},
 						"baz-backports": {"libbaz-dev"},
@@ -60,6 +68,48 @@ func TestAptConfigYAML(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestAptConfigMerge(t *testing.T) {
+	cfg := config.AptConfig{
+		Packages: config.AptPackages{
+			"default":       {"libfoo", "libbar"},
+			"baz-backports": {"libbaz"},
+		},
+		Proxies: []config.AptProxy{
+			{URL: "http://proxy.example:8080"},
+		},
+	}
+
+	cfg.Merge(
+		config.AptConfig{
+			Packages: config.AptPackages{
+				"baz-backports": {"libqux"},
+			},
+			Proxies: []config.AptProxy{
+				{
+					URL:    "https://proxy.example:8081",
+					Source: "http://security.debian.org",
+				},
+			},
+		},
+	)
+
+	assert.Equal(t, config.AptConfig{
+		Packages: config.AptPackages{
+			"default":       {"libfoo", "libbar"},
+			"baz-backports": {"libbaz", "libqux"},
+		},
+		Proxies: []config.AptProxy{
+			{
+				URL: "http://proxy.example:8080",
+			},
+			{
+				URL:    "https://proxy.example:8081",
+				Source: "http://security.debian.org",
+			},
+		},
+	}, cfg)
 }
 
 func TestAptConfigInstructions(t *testing.T) {

@@ -48,6 +48,9 @@ func (apt *AptConfig) Merge(apt2 AptConfig) {
 		}
 	}
 
+	if apt2.Proxies != nil {
+		apt.Proxies = append(apt.Proxies, apt2.Proxies...)
+	}
 }
 
 // InstructionsForPhase injects build instructions that will install the
