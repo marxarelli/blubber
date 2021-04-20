@@ -48,8 +48,14 @@ func CreateDirectory(path string) Run {
 //
 func CreateUser(name string, uid uint, gid uint) []Run {
 	return []Run{
-		{"groupadd -o -g %s -r", []string{fmt.Sprint(gid), name}},
-		{"useradd -l -o -m -d %s -r -g %s -u %s", []string{homeDir(name), name, fmt.Sprint(uid), name}},
+		{
+			"(getent group %s || groupadd -o -g %s -r %s)",
+			[]string{fmt.Sprint(gid), fmt.Sprint(gid), name},
+		},
+		{
+			"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
+			[]string{fmt.Sprint(uid), homeDir(name), name, fmt.Sprint(uid), name},
+		},
 	}
 }
 

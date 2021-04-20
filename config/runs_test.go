@@ -54,8 +54,8 @@ func TestRunsConfigInstructions(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{build.RunAll{[]build.Run{
-				{"groupadd -o -g %s -r", []string{"777", "someuser"}},
-				{"useradd -l -o -m -d %s -r -g %s -u %s", []string{"/home/someuser", "someuser", "666", "someuser"}},
+				{"(getent group %s || groupadd -o -g %s -r %s)", []string{"777", "777", "someuser"}},
+				{"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)", []string{"666", "/home/someuser", "someuser", "666", "someuser"}},
 			}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
