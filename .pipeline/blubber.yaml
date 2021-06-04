@@ -28,7 +28,7 @@ variants:
           requirements: [.]
           command: [make, clean, blubberoid]
   production:
-    base: docker-registry.wikimedia.org/wikimedia-buster:latest
+    base: docker-registry.wikimedia.org/buster:latest
     copies:
       - from: prep
         source: /srv/app/blubberoid

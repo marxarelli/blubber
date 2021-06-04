@@ -1,6 +1,6 @@
 enforcements:
   - path: base
-    rule: oneof=docker-registry.wikimedia.org/wikimedia-stretch:latest docker-registry.wikimedia.org/wikimedia-jessie:latest
+    rule: oneof=docker-registry.wikimedia.org/stretch:latest docker-registry.wikimedia.org/jessie:latest
   - path: variants.production.runs.insecurely
     rule: isfalse
   - path: variants.test.base
