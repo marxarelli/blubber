@@ -136,6 +136,40 @@ func TestCopiesIncludes(t *testing.T) {
 	}
 }
 
+func TestExpandIncludesAndCopies_TransitiveAndMergedCopies(t *testing.T) {
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: foo
+    variants:
+      build: {}
+      foo:
+        copies:
+          - from: build
+            source: /foo
+      bar:
+        includes: [foo]
+        copies:
+          - from: build
+            source: /bar`))
+
+	if assert.NoError(t, err) {
+
+		err = config.ExpandIncludesAndCopies(cfg, "bar")
+
+		if assert.NoError(t, err) {
+			bar, _ := config.GetVariant(cfg, "bar")
+
+			assert.Len(t, bar.Copies, 2)
+
+			assert.Equal(t, bar.Copies[0].From, "build")
+			assert.Equal(t, bar.Copies[0].Source, "/foo")
+
+			assert.Equal(t, bar.Copies[1].From, "build")
+			assert.Equal(t, bar.Copies[1].Source, "/bar")
+		}
+	}
+}
+
 func TestMultiIncludes(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4

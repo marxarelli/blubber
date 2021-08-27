@@ -117,6 +117,34 @@ variants:
 	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo/bar AS three\n"))
 }
 
+// T289880
+func TestMultiLevelIncludesAndCopies(t *testing.T) {
+	cfg, err := config.ReadYAMLConfig([]byte(`---
+    version: v4
+    base: foo
+    variants:
+      one: {}
+      two:
+        copies: [one]
+      three:
+        includes: [two]`))
+
+	assert.Nil(t, err)
+
+	err = config.ExpandIncludesAndCopies(cfg, "three")
+	assert.Nil(t, err)
+
+	dockerOut, _ := docker.Compile(cfg, "three")
+	dockerfile := dockerOut.String()
+
+	// There should be exactly 3 stages
+	assert.Equal(t, 2, strings.Count(dockerfile, "FROM "))
+
+	// Verify that both stages one and two are built in addition to the requested variant.
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo AS one\n"))
+	assert.Equal(t, 1, strings.Count(dockerfile, "FROM foo AS three\n"))
+}
+
 func TestMetaDataLabels(t *testing.T) {
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4

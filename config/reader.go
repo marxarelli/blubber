@@ -54,7 +54,6 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 //
 func ExpandIncludesAndCopies(config *Config, name string) error {
 	BuildIncludesDepGraph(config)
-	buildCopiesDepGraph(config)
 
 	vcfg, err := ExpandVariant(config, name)
 
@@ -63,6 +62,11 @@ func ExpandIncludesAndCopies(config *Config, name string) error {
 	}
 
 	config.Variants[name] = *vcfg
+
+	// Defer construction of the copies dependencies until after the variant is
+	// expanded. This ensures that copies declared transitively via includes are
+	// also included. (see T289880)
+	buildCopiesDepGraph(config)
 
 	copiesDeps, err := config.CopiesDepGraph.GetDeps(name)
 
@@ -96,6 +100,7 @@ func BuildIncludesDepGraph(config *Config) {
 	config.IncludesDepGraph = graph
 }
 
+// buildCopiesDepGraph constructs the `copies` dependency graph
 func buildCopiesDepGraph(config *Config) {
 	graph := NewDepGraph()
 
