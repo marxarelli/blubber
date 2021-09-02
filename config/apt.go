@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"sort"
+	"strings"
 
 	"gerrit.wikimedia.org/r/blubber/build"
 )
@@ -19,6 +20,9 @@ type AptConfig struct {
 
 	// Proxies provides APT HTTP/HTTPS proxies to use for certain sources
 	Proxies []AptProxy `json:"proxies" validate:"dive,omitempty"`
+
+	// Sources provides APT sources for packages
+	Sources []AptSource `json:"sources" validate:"dive,omitempty"`
 }
 
 const (
@@ -26,6 +30,11 @@ const (
 	// packages to be installed should use the default target release
 	//
 	DefaultTargetKeyword = "default"
+
+	// AptSourceConfigurationPath is the file that source configuration will be
+	// written to for each defined source.
+	//
+	AptSourceConfigurationPath = "/etc/apt/sources.list.d/99blubber.list"
 
 	// AptProxyConfigurationPath is the file that configuration will be written
 	// to for each defined proxy.
@@ -51,6 +60,10 @@ func (apt *AptConfig) Merge(apt2 AptConfig) {
 	if apt2.Proxies != nil {
 		apt.Proxies = append(apt.Proxies, apt2.Proxies...)
 	}
+
+	if apt2.Sources != nil {
+		apt.Sources = append(apt.Sources, apt2.Sources...)
+	}
 }
 
 // InstructionsForPhase injects build instructions that will install the
@@ -75,6 +88,15 @@ func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 				"DEBIAN_FRONTEND": "noninteractive",
 			}})
 
+			// Configure sources
+			for _, source := range apt.Sources {
+				runAll = append(runAll, build.Run{
+					"echo %s >> " + AptSourceConfigurationPath,
+					[]string{source.Configuration()},
+				})
+			}
+
+			// Configure proxies
 			for _, proxy := range apt.Proxies {
 				runAll = append(runAll, build.Run{
 					"echo %s >> " + AptProxyConfigurationPath,
@@ -104,6 +126,10 @@ func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 
 			if len(apt.Proxies) > 0 {
 				runAll = append(runAll, build.Run{"rm -f", []string{AptProxyConfigurationPath}})
+			}
+
+			if len(apt.Sources) > 0 {
+				runAll = append(runAll, build.Run{"rm -f", []string{AptSourceConfigurationPath}})
 			}
 
 			ins = append(ins, build.RunAll{runAll})
@@ -220,4 +246,23 @@ func (ap AptProxy) Configuration() string {
 	cfg += ` "` + ap.URL + `";`
 
 	return cfg
+}
+
+// AptSource represents an APT source to set up prior to package installation.
+//
+type AptSource struct {
+	// URL of the APT source, e.g. "http://apt.wikimedia.org"
+	URL string `json:"url" validate:"required,httpurl"`
+
+	// Distribution is the Debian distribution/release name (e.g. buster)
+	Distribution string `json:"distribution" validate:"required,debianrelease"`
+
+	// Components is a list of the source components to index (e.g. main, contrib)
+	Components []string `json:"components" validate:"dive,omitempty,debiancomponent"`
+}
+
+// Configuration returns the APT list configuration for this source.
+//
+func (as AptSource) Configuration() string {
+	return "deb " + strings.Join(append([]string{as.URL, as.Distribution}, as.Components...), " ")
 }

@@ -121,6 +121,27 @@ components:
                       type: string
                   example:
                     buster-backports: ["npm"]
+            sources:
+              type: array
+              description: Additional APT sources to configure prior to package installation
+              items:
+                type: object
+                description: APT source URL, distribution/release name, and components
+                required: [url]
+                properties:
+                  url:
+                    type: string
+                    description: APT source URL
+                    format: uri
+                    pattern: "^https?://"
+                  distribution:
+                    type: string
+                    description: Debian distribution/release name (e.g. buster)
+                  components:
+                    type: array
+                    description: List of distribution components (e.g. main, contrib)
+                    items:
+                      type: string
             proxies:
               type: array
               description: HTTP/HTTPS proxies to use during package installation

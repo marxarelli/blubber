@@ -21,6 +21,10 @@ func TestAptConfigYAML(t *testing.T) {
         - url: http://proxy.example:8080
           source: http://security.debian.org
         - https://proxy.example:8081
+      sources:
+        - url: http://apt.wikimedia.org
+          distribution: buster-wikimedia
+          components: [component/pygments]
     variants:
       build:
         apt:
@@ -44,12 +48,26 @@ func TestAptConfigYAML(t *testing.T) {
 			cfg.Apt.Proxies,
 		)
 
+		assert.Equal(t,
+			[]config.AptSource{
+				{URL: "http://apt.wikimedia.org", Distribution: "buster-wikimedia", Components: []string{"component/pygments"}},
+			},
+			cfg.Apt.Sources,
+		)
+
 		err = config.ExpandIncludesAndCopies(cfg, "build")
 
 		if assert.NoError(t, err) {
 			variant, err := config.GetVariant(cfg, "build")
 
 			if assert.NoError(t, err) {
+				assert.Equal(t,
+					[]config.AptSource{
+						{URL: "http://apt.wikimedia.org", Distribution: "buster-wikimedia", Components: []string{"component/pygments"}},
+					},
+					variant.Apt.Sources,
+				)
+
 				assert.Equal(t,
 					[]config.AptProxy{
 						{URL: "http://proxy.example:8080", Source: "http://security.debian.org"},
@@ -118,6 +136,11 @@ func TestAptConfigInstructions(t *testing.T) {
 			"default":       {"libfoo", "libbar"},
 			"baz-backports": {"libbaz"},
 		},
+		Sources: []config.AptSource{{
+			URL:          "http://apt.wikimedia.org",
+			Distribution: "buster-wikimedia",
+			Components:   []string{"components/pygments"},
+		}},
 		Proxies: []config.AptProxy{{
 			URL:    "http://proxy.example:8080",
 			Source: "http://security.debian.org",
@@ -132,6 +155,10 @@ func TestAptConfigInstructions(t *testing.T) {
 				}},
 				build.RunAll{[]build.Run{
 					build.Run{
+						"echo %s >> /etc/apt/sources.list.d/99blubber.list",
+						[]string{"deb http://apt.wikimedia.org buster-wikimedia components/pygments"},
+					},
+					build.Run{
 						"echo %s >> /etc/apt/apt.conf.d/99blubber-proxies",
 						[]string{`Acquire::http::Proxy::security.debian.org "http://proxy.example:8080";`},
 					},
@@ -140,6 +167,7 @@ func TestAptConfigInstructions(t *testing.T) {
 					build.Run{"apt-get install -y", []string{"libfoo", "libbar"}},
 					build.Run{"rm -rf /var/lib/apt/lists/*", []string{}},
 					build.Run{"rm -f", []string{"/etc/apt/apt.conf.d/99blubber-proxies"}},
+					build.Run{"rm -f", []string{"/etc/apt/sources.list.d/99blubber.list"}},
 				}}},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)

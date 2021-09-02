@@ -19,12 +19,14 @@ var (
 	// See Debian Policy
 	//  https://www.debian.org/doc/debian-policy/#s-f-source
 	//  https://www.debian.org/doc/debian-policy/#s-f-version
-	debianPackageName   = `[a-z0-9][a-z0-9+.-]+`
+	debianPackageName   = `[a-z0-9][a-z0-9+.\-]+`
 	debianVersionSpec   = `(?:[0-9]+:)?[0-9]+[a-zA-Z0-9\.\+\-~]*`
 	debianReleaseName   = `[a-zA-Z](?:[a-zA-Z0-9\-]*[a-zA-Z0-9]+)?`
+	debianComponent     = `[a-z0-9][a-z0-9+./\-]+`
 	debianReleaseRegexp = regexp.MustCompile(debianReleaseName)
 	debianPackageRegexp = regexp.MustCompile(fmt.Sprintf(
 		`^%s(?:=%s|/%s)?$`, debianPackageName, debianVersionSpec, debianReleaseName))
+	debianComponentRegexp = regexp.MustCompile(debianComponent)
 
 	// See IEEE Std 1003.1-2008 (http://pubs.opengroup.org/onlinepubs/9699919799/)
 	environmentVariableRegexp = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]+$`)
@@ -42,23 +44,24 @@ var (
 		`^%s(?:,%s)*$`, pythonVersionOne, pythonVersionOne))
 
 	humanizedErrors = map[string]string{
-		"abspath":        `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
-		"artifactfrom":   `{{.Field}}: "{{.Value}}" is not a valid image reference or known variant`,
-		"currentversion": `{{.Field}}: config version "{{.Value}}" is unsupported`,
-		"debianpackage":  `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
-		"debianrelease":  `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
-		"envvars":        `{{.Field}}: contains invalid environment variable names`,
-		"httpurl":        `{{.Field}}: "{{.Value}}" is not a valid HTTP/HTTPS URL`,
-		"imageref":       `{{.Field}}: "{{.Value}}" is not a valid image reference`,
-		"nodeenv":        `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
-		"pypkgver":       `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
-		"relativelocal":  `{{.Field}}: path must be relative when "from" is "local"`,
-		"required":       `{{.Field}}: is required`,
-		"requiredwith":   `{{.Field}}: is required if "{{.Param}}" is also set`,
-		"unique":         `{{.Field}}: cannot contain duplicates`,
-		"username":       `{{.Field}}: "{{.Value}}" is not a valid user name`,
-		"variantref":     `{{.Field}}: references an unknown variant "{{.Value}}"`,
-		"variants":       `{{.Field}}: contains a bad variant name`,
+		"abspath":         `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
+		"artifactfrom":    `{{.Field}}: "{{.Value}}" is not a valid image reference or known variant`,
+		"currentversion":  `{{.Field}}: config version "{{.Value}}" is unsupported`,
+		"debiancomponent": `{{.Field}}: "{{.Value}}" is not a valid Debian component name`,
+		"debianpackage":   `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
+		"debianrelease":   `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
+		"envvars":         `{{.Field}}: contains invalid environment variable names`,
+		"httpurl":         `{{.Field}}: "{{.Value}}" is not a valid HTTP/HTTPS URL`,
+		"imageref":        `{{.Field}}: "{{.Value}}" is not a valid image reference`,
+		"nodeenv":         `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
+		"pypkgver":        `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
+		"relativelocal":   `{{.Field}}: path must be relative when "from" is "local"`,
+		"required":        `{{.Field}}: is required`,
+		"requiredwith":    `{{.Field}}: is required if "{{.Param}}" is also set`,
+		"unique":          `{{.Field}}: cannot contain duplicates`,
+		"username":        `{{.Field}}: "{{.Value}}" is not a valid user name`,
+		"variantref":      `{{.Field}}: references an unknown variant "{{.Value}}"`,
+		"variants":        `{{.Field}}: contains a bad variant name`,
 	}
 
 	validatorAliases = map[string]string{
@@ -69,19 +72,20 @@ var (
 	}
 
 	validatorFuncs = map[string]validator.FuncCtx{
-		"abspath":       isAbsNonRootPath,
-		"debianpackage": isDebianPackage,
-		"debianrelease": isDebianRelease,
-		"envvars":       isEnvironmentVariables,
-		"httpurl":       isHTTPURL,
-		"imageref":      isImageRef,
-		"isfalse":       isFalse,
-		"istrue":        isTrue,
-		"pypkgver":      isPythonPackageVersion,
-		"relativelocal": isRelativePathForLocalArtifact,
-		"requiredwith":  isSetIfOtherFieldIsSet,
-		"variantref":    isVariantReference,
-		"variants":      hasVariantNames,
+		"abspath":         isAbsNonRootPath,
+		"debiancomponent": isDebianComponent,
+		"debianpackage":   isDebianPackage,
+		"debianrelease":   isDebianRelease,
+		"envvars":         isEnvironmentVariables,
+		"httpurl":         isHTTPURL,
+		"imageref":        isImageRef,
+		"isfalse":         isFalse,
+		"istrue":          isTrue,
+		"pypkgver":        isPythonPackageVersion,
+		"relativelocal":   isRelativePathForLocalArtifact,
+		"requiredwith":    isSetIfOtherFieldIsSet,
+		"variantref":      isVariantReference,
+		"variants":        hasVariantNames,
 	}
 )
 
@@ -182,6 +186,12 @@ func isAbsNonRootPath(_ context.Context, fl validator.FieldLevel) bool {
 	value := fl.Field().String()
 
 	return path.IsAbs(value) && path.Base(path.Clean(value)) != "/"
+}
+
+func isDebianComponent(_ context.Context, fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+
+	return debianComponentRegexp.MatchString(value)
 }
 
 func isDebianPackage(_ context.Context, fl validator.FieldLevel) bool {
