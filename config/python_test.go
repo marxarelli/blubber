@@ -87,10 +87,6 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 	})
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
-	})
-
-	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
@@ -98,8 +94,12 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
-			cfg.InstructionsForPhase(build.PhasePostInstall),
+			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
 	})
 }
 
@@ -172,6 +172,10 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 						"-r", "docs/requirements.txt",
 					}},
 				}},
+				build.Env{map[string]string{
+					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
+				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
@@ -182,8 +186,6 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 			[]build.Instruction{
 				build.Env{map[string]string{
 					"PIP_NO_INDEX": "1",
-					"PYTHONPATH":   "/opt/lib/python/site-packages",
-					"PATH":         "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -224,6 +226,10 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 						"-r", "requirements-test.txt",
 						"-r", "docs/requirements.txt",
 					}},
+				}},
+				build.Env{map[string]string{
+					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),

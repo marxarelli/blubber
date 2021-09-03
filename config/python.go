@@ -159,22 +159,22 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				}
 			}
 
-		case build.PhasePostInstall:
 			if !pc.usePoetry() {
 				// PythonSitePackages and the wheel cache are not used with
 				// Poetry. Instead Poetry is allowed to  manage a venv
 				// containing the installed packages and their related
 				// scripts.
-				env := build.Env{map[string]string{
+				ins = append(ins, build.Env{map[string]string{
 					"PYTHONPATH": PythonSitePackages,
 					"PATH":       PythonSiteBin + ":${PATH}",
-				}}
+				}})
+			}
 
-				if pc.Requirements != nil {
-					env.Definitions["PIP_NO_INDEX"] = "1"
-				}
-
-				ins = append(ins, env)
+		case build.PhasePostInstall:
+			if !pc.usePoetry() && pc.Requirements != nil {
+				ins = append(ins, build.Env{map[string]string{
+					"PIP_NO_INDEX": "1",
+				}})
 			}
 		}
 	}
