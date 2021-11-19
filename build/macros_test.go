@@ -48,7 +48,7 @@ func TestCreateUser(t *testing.T) {
 
 	if assert.Len(t, i, 2) {
 		assert.Equal(t, []string{`(getent group "124" || groupadd -o -g "124" -r "foo")`}, i[0].Compile())
-		assert.Equal(t, []string{`(getent passwd "123" || useradd -l -o -m -d "/home/foo" -r -g "foo" -u "123" "foo")`}, i[1].Compile())
+		assert.Equal(t, []string{`(getent passwd "123" || useradd -l -o -m -d "/home/foo" -r -g "124" -u "123" "foo")`}, i[1].Compile())
 	}
 }
 

@@ -72,7 +72,7 @@ func TestLivesConfigInstructions(t *testing.T) {
 				},
 				{
 					"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
-					[]string{"123", "/home/foouser", "foouser", "123", "foouser"},
+					[]string{"123", "/home/foouser", "223", "123", "foouser"},
 				},
 				{"mkdir -p", []string{"/some/directory"}},
 				{"chown %s:%s", []string{"123", "223", "/some/directory"}},

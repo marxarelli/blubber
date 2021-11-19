@@ -54,7 +54,7 @@ func CreateUser(name string, uid uint, gid uint) []Run {
 		},
 		{
 			"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
-			[]string{fmt.Sprint(uid), homeDir(name), name, fmt.Sprint(uid), name},
+			[]string{fmt.Sprint(uid), homeDir(name), fmt.Sprint(gid), fmt.Sprint(uid), name},
 		},
 	}
 }
