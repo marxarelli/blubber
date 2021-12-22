@@ -61,7 +61,7 @@ func TestCopy(t *testing.T) {
 
 func TestCopyAs(t *testing.T) {
 	t.Run("with Copy", func(t *testing.T) {
-		i := build.CopyAs{123, 124, build.Copy{[]string{"foo1", "foo2"}, "bar"}}
+		i := build.CopyAs{"123", "124", build.Copy{[]string{"foo1", "foo2"}, "bar"}}
 
 		di, err := docker.NewInstruction(i)
 
@@ -71,7 +71,7 @@ func TestCopyAs(t *testing.T) {
 	})
 
 	t.Run("with CopyFrom", func(t *testing.T) {
-		i := build.CopyAs{123, 124, build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}}
+		i := build.CopyAs{"123", "124", build.CopyFrom{"foo", build.Copy{[]string{"foo1", "foo2"}, "bar"}}}
 
 		di, err := docker.NewInstruction(i)
 
@@ -122,7 +122,7 @@ func TestLabel(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	i := build.User{UID: 1000}
+	i := build.User{UID: "1000"}
 
 	di, err := docker.NewInstruction(i)
 
@@ -138,6 +138,26 @@ func TestWorkingDirectory(t *testing.T) {
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, "WORKDIR \"/foo/dir\"\n", di.Compile())
+	}
+}
+
+func TestStringArg(t *testing.T) {
+	i := build.StringArg{"RUNS_AS", "runuser"}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ARG RUNS_AS=\"runuser\"\n", di.Compile())
+	}
+}
+
+func TestUintArg(t *testing.T) {
+	i := build.UintArg{"RUNS_UID", 900}
+
+	di, err := docker.NewInstruction(i)
+
+	if assert.NoError(t, err) {
+		assert.Equal(t, "ARG RUNS_UID=900\n", di.Compile())
 	}
 }
 

@@ -4,10 +4,22 @@ import (
 	"fmt"
 )
 
+// NewStringArg creates an ARG instruction with a string default value.
+//
+func NewStringArg(varname string, value string) StringArg {
+	return StringArg{varname, value}
+}
+
+// NewUintArg creates an ARG instruction with a uint default value.
+//
+func NewUintArg(varname string, value uint) UintArg {
+	return UintArg{varname, value}
+}
+
 // ApplyUser wraps any build.Copy instructions as build.CopyAs using the given
 // UID/GID.
 //
-func ApplyUser(uid uint, gid uint, instructions []Instruction) []Instruction {
+func ApplyUser(uid string, gid string, instructions []Instruction) []Instruction {
 	applied := make([]Instruction, len(instructions))
 
 	for i, instruction := range instructions {
@@ -25,8 +37,8 @@ func ApplyUser(uid uint, gid uint, instructions []Instruction) []Instruction {
 // Chown returns a build.Run instruction for setting ownership on the given
 // path.
 //
-func Chown(uid uint, gid uint, path string) Run {
-	return Run{"chown %s:%s", []string{fmt.Sprint(uid), fmt.Sprint(gid), path}}
+func Chown(uid string, gid string, path string) Run {
+	return Run{"chown %s:%s", []string{uid, gid, path}}
 }
 
 // CreateDirectories returns a build.Run instruction for creating all the
@@ -46,7 +58,7 @@ func CreateDirectory(path string) Run {
 // CreateUser returns build.Run instructions for creating the given user
 // account and group.
 //
-func CreateUser(name string, uid uint, gid uint) []Run {
+func CreateUser(name string, uid string, gid string) []Run {
 	return []Run{
 		{
 			"(getent group %s || groupadd -o -g %s -r %s)",

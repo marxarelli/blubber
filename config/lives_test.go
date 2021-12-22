@@ -65,20 +65,25 @@ func TestLivesConfigInstructions(t *testing.T) {
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
-			[]build.Instruction{build.RunAll{[]build.Run{
-				{
-					"(getent group %s || groupadd -o -g %s -r %s)",
-					[]string{"223", "223", "foouser"},
-				},
-				{
-					"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
-					[]string{"123", "/home/foouser", "223", "123", "foouser"},
-				},
-				{"mkdir -p", []string{"/some/directory"}},
-				{"chown %s:%s", []string{"123", "223", "/some/directory"}},
-				{"mkdir -p", []string{"/opt/lib"}},
-				{"chown %s:%s", []string{"123", "223", "/opt/lib"}},
-			}}},
+			[]build.Instruction{
+				build.NewStringArg("LIVES_AS", "foouser"),
+				build.NewUintArg("LIVES_UID", 123),
+				build.NewUintArg("LIVES_GID", 223),
+				build.RunAll{[]build.Run{
+					{
+						"(getent group %s || groupadd -o -g %s -r %s)",
+						[]string{"$LIVES_GID", "$LIVES_GID", "$LIVES_AS"},
+					},
+					{
+						"(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
+						[]string{"$LIVES_UID", "/home/$LIVES_AS", "$LIVES_GID", "$LIVES_UID", "$LIVES_AS"},
+					},
+					{"mkdir -p", []string{"/some/directory"}},
+					{"chown %s:%s", []string{"$LIVES_UID", "$LIVES_GID", "/some/directory"}},
+					{"mkdir -p", []string{"/opt/lib"}},
+					{"chown %s:%s", []string{"$LIVES_UID", "$LIVES_GID", "/opt/lib"}},
+				}},
+			},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
 		)
 	})

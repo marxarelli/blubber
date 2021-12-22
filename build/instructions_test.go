@@ -51,8 +51,8 @@ func TestCopy(t *testing.T) {
 func TestCopyAs(t *testing.T) {
 	t.Run("wrapping Copy", func(t *testing.T) {
 		i := build.CopyAs{
-			123,
-			124,
+			"123",
+			"124",
 			build.Copy{[]string{"source1", "source2"}, "dest"},
 		}
 
@@ -61,8 +61,8 @@ func TestCopyAs(t *testing.T) {
 
 	t.Run("wrapping CopyFrom", func(t *testing.T) {
 		i := build.CopyAs{
-			123,
-			124,
+			"123",
+			"124",
 			build.CopyFrom{"foo", build.Copy{[]string{"source1", "source2"}, "dest"}},
 		}
 
@@ -111,13 +111,27 @@ func TestLabel(t *testing.T) {
 }
 
 func TestUser(t *testing.T) {
-	i := build.User{UID: 1000}
+	i := build.User{UID: "1000"}
+	j := build.User{}
 
 	assert.Equal(t, []string{`1000`}, i.Compile())
+	assert.Equal(t, []string{`0`}, j.Compile())
 }
 
 func TestWorkingDirectory(t *testing.T) {
 	i := build.WorkingDirectory{"/foo/path"}
 
 	assert.Equal(t, []string{`"/foo/path"`}, i.Compile())
+}
+
+func TestStringArg(t *testing.T) {
+	i := build.StringArg{"RUNS_AS", "runuser"}
+
+	assert.Equal(t, []string{`RUNS_AS="runuser"`}, i.Compile())
+}
+
+func TestUintArg(t *testing.T) {
+	i := build.UintArg{"RUNS_UID", 900}
+
+	assert.Equal(t, []string{`RUNS_UID=900`}, i.Compile())
 }
