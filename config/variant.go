@@ -84,7 +84,7 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 			)
 		}
 
-		if uid != "" {
+		if uid != 0 {
 			instructions = build.ApplyUser(uid, gid, instructions)
 		}
 	}
@@ -105,27 +105,27 @@ func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	return instructions
 }
 
-func (vc *VariantConfig) userForPhase(phase build.Phase) (switchUser string, uid string, gid string) {
+func (vc *VariantConfig) userForPhase(phase build.Phase) (switchUser string, uid uint, gid uint) {
 	switch phase {
 	case build.PhasePrivileged:
 		switchUser = "root"
 
 	case build.PhasePrivilegeDropped:
 		switchUser = vc.Lives.As
-		uid, gid = "$LIVES_UID", "$LIVES_GID"
+		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 	case build.PhasePreInstall:
-		uid, gid = "$LIVES_UID", "$LIVES_GID"
+		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 	case build.PhaseInstall:
-		uid, gid = "$LIVES_UID", "$LIVES_GID"
+		uid, gid = vc.Lives.UID, vc.Lives.GID
 
 	case build.PhasePostInstall:
 		if vc.Runs.Insecurely.True {
-			uid, gid = "$LIVES_UID", "$LIVES_GID"
+			uid, gid = vc.Lives.UID, vc.Lives.GID
 		} else {
-			switchUser = "$RUNS_AS"
-			uid, gid = "$RUNS_UID", "$RUNS_GID"
+			switchUser = vc.Runs.As
+			uid, gid = vc.Runs.UID, vc.Runs.GID
 		}
 	}
 

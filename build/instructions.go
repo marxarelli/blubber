@@ -119,8 +119,8 @@ func (copy Copy) Compile() []string {
 // with build.Copy and build.CopyFrom to enforce file/directory ownership.
 //
 type CopyAs struct {
-	UID string // owner UID
-	GID string // owner GID
+	UID uint // owner UID
+	GID uint // owner GID
 	Instruction
 }
 
@@ -128,7 +128,7 @@ type CopyAs struct {
 // fields.
 //
 func (ca CopyAs) Compile() []string {
-	return append([]string{fmt.Sprintf("%s:%s", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
+	return append([]string{fmt.Sprintf("%d:%d", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
 }
 
 // CopyFrom is a concrete build instruction for copying source
@@ -190,17 +190,13 @@ func (label Label) Compile() []string {
 // commands.
 //
 type User struct {
-	UID string // user ID
+	UID uint // user ID
 }
 
 // Compile returns the users UID as string
 //
 func (user User) Compile() []string {
-	if user.UID == "" {
-		// Preserve legacy behavior of an uninitialized User being == root
-		user.UID = "0"
-	}
-	return []string{user.UID}
+	return []string{strconv.FormatUint(uint64(user.UID), 10)}
 }
 
 // WorkingDirectory is a build instruction for defining the working directory
@@ -214,34 +210,6 @@ type WorkingDirectory struct {
 //
 func (wd WorkingDirectory) Compile() []string {
 	return []string{quote(wd.Path)}
-}
-
-// StringArg is a build instruction defining a build-time replaceable argument
-// with a string value.
-//
-type StringArg struct {
-	Name    string // argument name
-	Default string // argument default value
-}
-
-// Compile returns the ARG instruction.
-//
-func (arg StringArg) Compile() []string {
-	return []string{fmt.Sprintf("%s=%s", arg.Name, quote(arg.Default))}
-}
-
-// UintArg is a build instruction defining a build-time replaceable argument
-// with an integer value.
-//
-type UintArg struct {
-	Name    string // argument name
-	Default uint   // argument default value
-}
-
-// Compile returns the ARG instruction.
-//
-func (arg UintArg) Compile() []string {
-	return []string{fmt.Sprintf("%s=%d", arg.Name, arg.Default)}
 }
 
 func compileSortedKeyValues(keyValues map[string]string) []string {

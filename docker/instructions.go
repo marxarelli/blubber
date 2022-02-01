@@ -62,9 +62,6 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 
 	case build.WorkingDirectory:
 		i.name = "WORKDIR"
-
-	case build.StringArg, build.UintArg:
-		i.name = "ARG"
 	}
 
 	if i.name == "" {

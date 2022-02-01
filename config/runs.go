@@ -47,14 +47,9 @@ func (run *RunsConfig) Merge(run2 RunsConfig) {
 func (run RunsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	switch phase {
 	case build.PhasePrivileged:
-		return []build.Instruction{
-			build.NewStringArg("RUNS_AS", run.As),
-			build.NewUintArg("RUNS_UID", run.UID),
-			build.NewUintArg("RUNS_GID", run.GID),
-			build.RunAll{
-				build.CreateUser("$RUNS_AS", "$RUNS_UID", "$RUNS_GID"),
-			},
-		}
+		return []build.Instruction{build.RunAll{
+			build.CreateUser(run.As, run.UID, run.GID),
+		}}
 	case build.PhasePrivilegeDropped:
 		if len(run.Environment) > 0 {
 			return []build.Instruction{

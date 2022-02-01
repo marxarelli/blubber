@@ -8,18 +8,6 @@ import (
 	"gerrit.wikimedia.org/r/blubber/build"
 )
 
-func TestNewStringArg(t *testing.T) {
-	i := build.NewStringArg("RUNS_AS", "runuser")
-
-	assert.Equal(t, []string{`RUNS_AS="runuser"`}, i.Compile())
-}
-
-func TestNewUintArg(t *testing.T) {
-	i := build.NewUintArg("RUNS_UID", 900)
-
-	assert.Equal(t, []string{`RUNS_UID=900`}, i.Compile())
-}
-
 func TestApplyUser(t *testing.T) {
 	instructions := []build.Instruction{
 		build.Copy{[]string{"foo"}, "bar"},
@@ -29,16 +17,16 @@ func TestApplyUser(t *testing.T) {
 
 	assert.Equal(t,
 		[]build.Instruction{
-			build.CopyAs{"123", "223", build.Copy{[]string{"foo"}, "bar"}},
-			build.CopyAs{"123", "223", build.Copy{[]string{"baz"}, "qux"}},
-			build.CopyAs{"123", "223", build.CopyFrom{"foo", build.Copy{[]string{"a"}, "b"}}},
+			build.CopyAs{123, 223, build.Copy{[]string{"foo"}, "bar"}},
+			build.CopyAs{123, 223, build.Copy{[]string{"baz"}, "qux"}},
+			build.CopyAs{123, 223, build.CopyFrom{"foo", build.Copy{[]string{"a"}, "b"}}},
 		},
-		build.ApplyUser("123", "223", instructions),
+		build.ApplyUser(123, 223, instructions),
 	)
 }
 
 func TestChown(t *testing.T) {
-	i := build.Chown("123", "124", "/foo")
+	i := build.Chown(123, 124, "/foo")
 
 	assert.Equal(t, []string{`chown "123":"124" "/foo"`}, i.Compile())
 }
@@ -56,7 +44,7 @@ func TestCreateDirectory(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	i := build.CreateUser("foo", "123", "124")
+	i := build.CreateUser("foo", 123, 124)
 
 	if assert.Len(t, i, 2) {
 		assert.Equal(t, []string{`(getent group "124" || groupadd -o -g "124" -r "foo")`}, i[0].Compile())
