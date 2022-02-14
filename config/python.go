@@ -111,7 +111,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				if pc.Requirements != nil {
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), []string{"-m", "easy_install", pc.pipPackage()}},
-						{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools", "wheel", "tox", pc.pipPackage()}},
+						{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0", "wheel", "tox", pc.pipPackage()}},
 					}})
 				}
 
