@@ -31,8 +31,14 @@ clean:
 	go clean $(GO_PACKAGES)
 	rm -f blubber blubberoid
 
+download:
+	go mod download
+
 install: all
 	$(GO_INSTALL) $(GO_PACKAGES)
+
+install-tools: download
+	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
 release:
 	gox -output="$(RELEASE_DIR)/{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' -ldflags '$(GO_LDFLAGS)' $(GO_PACKAGES)

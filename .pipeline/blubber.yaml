@@ -3,14 +3,15 @@ base: docker-registry.wikimedia.org/wikimedia-buster:latest
 
 variants:
   build:
-    base: docker-registry.wikimedia.org/golang:1.13-3
+    base: docker-registry.wikimedia.org/golang1.17:1.17-1
     apt: {packages: [gcc, git, make]}
   test:
     includes: [build]
     copies: [local]
     runs: { insecurely: true }
     builder:
-      command: [go, get, -u, golang.org/x/lint/golint]
+      requirements: [Makefile, go.mod, go.sum, tools.go]
+      command: [make, install-tools]
     entrypoint: [make, test]
   prep:
     includes: [build]

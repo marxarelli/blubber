@@ -30,8 +30,8 @@ func TestBlubberoidSpecification(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	if assert.NotEmpty(t, body) {
-		loader := openapi3.NewSwaggerLoader()
-		spec, err := loader.LoadSwaggerFromData(body)
+		loader := openapi3.NewLoader()
+		spec, err := loader.LoadFromData(body)
 
 		if assert.NoError(t, err) {
 			assert.NoError(t, spec.Validate(context.Background()))
