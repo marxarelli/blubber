@@ -136,9 +136,17 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{
-					"python2.7",
-					[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0", "wheel", "tox", "pip<21"},
+				build.RunAll{
+					[]build.Run{
+						{
+							"python2.7",
+							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
+						},
+						{
+							"python2.7",
+							[]string{"-m", "pip", "install", "-U", "wheel", "tox", "pip<21"},
+						},
+					},
 				},
 			},
 			cfg.InstructionsForPhase(build.PhasePrivileged),
@@ -319,9 +327,17 @@ func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Run{
-					"python3",
-					[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0", "wheel", "tox", "pip"},
+				build.RunAll{
+					[]build.Run{
+						{
+							"python3",
+							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
+						},
+						{
+							"python3",
+							[]string{"-m", "pip", "install", "-U", "wheel", "tox", "pip"},
+						},
+					},
 				},
 				build.Env{map[string]string{
 					"POETRY_VIRTUALENVS_PATH": "/opt/lib/poetry",
