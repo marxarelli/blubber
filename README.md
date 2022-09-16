@@ -127,7 +127,7 @@ To build from Blubber configuration using `buildctl`, do:
       --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0 \
       --local context=. \
       --local dockerfile=. \
-      --opt filename=blubber.yaml
+      --opt filename=blubber.yaml \
       --opt variant=test
 
 If you'd like to build directly with `docker build` (or other toolchains that
@@ -144,3 +144,14 @@ top of your Blubber configuration like so.
 And invoke `docker build --target my-variant -f blubber.yaml .`. Note that
 Docker must have BuildKit enabled as the default builder. You can also use
 `docker buildx` which always uses BuildKit.
+
+Docker's [build-time arguments][build_args] are also supported, including those
+used to provide proxies to build processes.
+
+    buildctl build --frontend gateway.v0 \
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0 \
+      --opt build-arg:http_proxy=http://proxy.example \
+      --opt variant=pulls-in-stuff-from-the-internet
+      ...
+
+[build_args]: https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg

@@ -18,14 +18,15 @@ import (
 // CompileToLLB takes a parsed config.Config and a configured variant name and
 // returns an llb.State graph.
 //
-func CompileToLLB(ctx context.Context, cfg *config.Config, variant string) (*llb.State, *d2llb.Image, error) {
+func CompileToLLB(ctx context.Context, cfg *config.Config, variant string, buildArgs map[string]string) (*llb.State, *d2llb.Image, error) {
 	buffer, err := docker.Compile(cfg, variant)
 
 	if err != nil {
 		return nil, nil, err
 	}
 
-	state, image, err := d2llb.Dockerfile2LLB(ctx, buffer.Bytes(), d2llb.ConvertOpt{})
+	convertOpts := d2llb.ConvertOpt{BuildArgs: buildArgs}
+	state, image, err := d2llb.Dockerfile2LLB(ctx, buffer.Bytes(), convertOpts)
 
 	if err != nil {
 		return nil, nil, err
@@ -41,7 +42,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	ctx := context.Background()
 
-	state, _, err := CompileToLLB(ctx, cfg, variant)
+	state, _, err := CompileToLLB(ctx, cfg, variant, map[string]string{})
 
 	if err != nil {
 		return nil, err

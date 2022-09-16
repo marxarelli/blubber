@@ -3,6 +3,7 @@ package buildkit
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
@@ -19,6 +20,12 @@ const (
 	keyVariant        = "variant"
 	defaultVariant    = "test"
 	defaultConfigPath = ".pipeline/blubber.yaml"
+
+	// Support the dockerfile frontend's build-arg: options which include, but
+	// are not limited to, setting proxies.
+	// e.g. `buildctl ... --opt build-arg:http_proxy=http://foo`
+	// See https://github.com/moby/buildkit/blob/81b6ff2c55565bdcb9f0dbcff52515f7c7bb429c/frontend/dockerfile/docs/reference.md#predefined-args
+	buildArgPrefix = "build-arg:"
 )
 
 // Build handles BuildKit client requests for the Blubber gateway.
@@ -48,7 +55,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, "failed to expand includes and copies")
 	}
 
-	st, image, err := CompileToLLB(ctx, cfg, variant)
+	st, image, err := CompileToLLB(ctx, cfg, variant, filterOpts(opts, buildArgPrefix))
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to compile to LLB state")
@@ -132,4 +139,16 @@ func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, er
 	}
 
 	return cfg, nil
+}
+
+func filterOpts(opts map[string]string, prefix string) map[string]string {
+	filtered := map[string]string{}
+
+	for k, v := range opts {
+		if strings.HasPrefix(k, prefix) {
+			filtered[strings.TrimPrefix(k, prefix)] = v
+		}
+	}
+
+	return filtered
 }
