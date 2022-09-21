@@ -33,6 +33,8 @@ type PythonConfig struct {
 	// Inject the --system flag into the install command (T227919)
 	UseSystemFlag Flag `json:"use-system-flag"`
 
+	UseNoDepsFlag Flag `json:"no-deps"`
+
 	// Use Poetry for package management
 	Poetry PoetryConfig `json:"poetry"`
 }
@@ -50,6 +52,7 @@ type PoetryConfig struct {
 //
 func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 	pc.UseSystemFlag.Merge(pc2.UseSystemFlag)
+	pc.UseNoDepsFlag.Merge(pc2.UseNoDepsFlag)
 	pc.Poetry.Merge(pc2.Poetry)
 	if pc2.Version != "" {
 		pc.Version = pc2.Version
@@ -152,8 +155,16 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 					if pc.UseSystemFlag.True {
 						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
 					}
+					if pc.UseNoDepsFlag.True {
+						installCmd = InsertElement(installCmd, "--no-deps", PosOf(installCmd, "install")+1)
+					}
+					wheelCmd := append([]string{"-m", "pip", "wheel"})
+					if pc.UseNoDepsFlag.True {
+						wheelCmd = InsertElement(wheelCmd, "--no-deps", PosOf(wheelCmd, "wheel")+1)
+					}
+
 					ins = append(ins, build.RunAll{[]build.Run{
-						{pc.version(), append([]string{"-m", "pip", "wheel"}, args...)},
+						{pc.version(), append(wheelCmd, args...)},
 						{pc.version(), append(installCmd, args...)},
 					}})
 				}
@@ -175,6 +186,14 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				ins = append(ins, build.Env{map[string]string{
 					"PIP_NO_INDEX": "1",
 				}})
+				if pc.UseNoDepsFlag.True {
+					// Ensure requirements has all transitive dependencies
+					ins = append(ins, build.Run{
+						pc.version(), []string{
+							"-m", "pip", "check",
+						},
+					})
+				}
 			}
 		}
 	}

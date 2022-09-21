@@ -209,6 +209,12 @@ components:
             use-system-flag:
               type: boolean
               description: Whether to inject the --system flag into the install command
+            no-deps:
+              type: boolean
+              description: Inject --no-deps into the pip install command. All
+                transitive requirements thus must be explicitly listed in the
+                requirements file. pip check will be run to verify all
+                dependencies are fulfilled.
             poetry:
               type: object
               properties:

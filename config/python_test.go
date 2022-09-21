@@ -245,6 +245,56 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 	})
 }
 
+func TestPythonConfigUseNoDepsFlag(t *testing.T) {
+	cfg := config.PythonConfig{
+		Version: "python3.9",
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+		},
+		UseNoDepsFlag: config.Flag{True: true},
+	}
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Copy{[]string{"requirements.txt"}, "./"},
+				build.Env{map[string]string{
+					"PIP_WHEEL_DIR":  "/opt/lib/python",
+					"PIP_FIND_LINKS": "file:///opt/lib/python",
+				}},
+				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
+				build.RunAll{[]build.Run{
+					{"python3.9", []string{"-m", "pip", "wheel", "--no-deps",
+						"-r", "requirements.txt",
+					}},
+					{"python3.9", []string{"-m", "pip", "install", "--no-deps",
+						"--target", "/opt/lib/python/site-packages",
+						"-r", "requirements.txt",
+					}},
+				}},
+				build.Env{map[string]string{
+					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
+				}},
+			},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
+		)
+	})
+
+	t.Run("PhasePostInstall", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Env{map[string]string{
+					"PIP_NO_INDEX": "1",
+				}},
+				build.Run{"python3.9", []string{"-m", "pip", "check"}},
+			},
+			cfg.InstructionsForPhase(build.PhasePostInstall),
+		)
+	})
+
+}
+
 func TestPythonConfigRequirementsArgs(t *testing.T) {
 	cfg := config.PythonConfig{
 		Requirements: config.RequirementsConfig{
