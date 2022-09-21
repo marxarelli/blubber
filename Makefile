@@ -65,6 +65,10 @@ lint:
 unit:
 	go test -cover -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
 
+test-docker:
+	DOCKER_BUILDKIT=1 docker build -f .pipeline/blubber.yaml --target test -t blubber/test .
+	docker run -it --rm blubber/test
+
 test: unit lint
 
 FULLVERSION:

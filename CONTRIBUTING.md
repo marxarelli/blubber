@@ -58,6 +58,11 @@ locally using the `Makefile`:
 
     go test -run TestFuncName ./... # to run a single test function
 
+Alternatively you can run the test inside a Blubber built image
+(`.pipeline/blubber.yaml`) using our Docker build-kit:
+
+    make test-docker
+
 ## Getting your changes reviewed and merged
 
 Push your changes to Gerrit for review. See the
