@@ -1,23 +1,23 @@
 SHELL := /bin/bash
 RELEASE_DIR ?= ./_release
 TARGETS ?= darwin/amd64 linux/amd64 linux/386 linux/arm linux/arm64 linux/ppc64le windows/amd64 plan9/amd64
-VERSION := $(shell cat VERSION)
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
-FULLVERSION := $(VERSION)-$(GIT_COMMIT)
+VERSION = $(shell cat VERSION)
+GIT_COMMIT = $(shell git rev-parse --short HEAD)
+FULLVERSION = $(VERSION)-$(GIT_COMMIT)
 
 PACKAGE := gerrit.wikimedia.org/r/blubber
 
 GO_LIST_GOFILES := '{{range .GoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}{{range .XTestGoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}'
-GO_PACKAGES := $(shell go list ./...)
+GO_PACKAGES = $(shell go list ./...)
 
-GO_LDFLAGS := \
+GO_LDFLAGS = \
   -X $(PACKAGE)/meta.Version=$(VERSION) \
   -X $(PACKAGE)/meta.GitCommit=$(GIT_COMMIT)
 
 # go build/install commands
 #
-GO_BUILD := go build -v -ldflags "$(GO_LDFLAGS)"
-GO_INSTALL := go install -v -ldflags "$(GO_LDFLAGS)"
+GO_BUILD = go build -v -ldflags "$(GO_LDFLAGS)"
+GO_INSTALL = go install -v -ldflags "$(GO_LDFLAGS)"
 
 all: code blubber blubberoid blubber-buildkit
 
