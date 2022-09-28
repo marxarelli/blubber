@@ -73,10 +73,10 @@ unit:
 	go test -cover -ldflags "$(GO_LDFLAGS)" $(GO_PACKAGES)
 
 blubber-buildkit-docker:
-	DOCKER_BUILDKIT=1 docker build --pull=false -f .pipeline/blubber.yaml --target buildkit -t local/blubber-buildkit .
+	DOCKER_BUILDKIT=1 docker build --pull=false -f .pipeline/blubber.yaml --target buildkit -t localhost/blubber-buildkit .
 	@echo Buildkit Docker image built
 	@echo It can be used locally in a .pipeline/blubber.yaml with:
-	@echo '   # syntax = local/blubber-buildkit'
+	@echo '   # syntax = localhost/blubber-buildkit'
 
 test-docker:
 	DOCKER_BUILDKIT=1 docker build -f .pipeline/blubber.yaml --target test -t blubber/test .
