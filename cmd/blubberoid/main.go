@@ -133,6 +133,12 @@ func blubberoid(res http.ResponseWriter, req *http.Request) {
 
 	err = config.ExpandIncludesAndCopies(cfg, variant)
 	if err != nil {
+		if config.IsValidationError(err) {
+			res.WriteHeader(http.StatusUnprocessableEntity)
+			res.Write(responseBody(config.HumanizeValidationError(err)))
+			return
+		}
+
 		res.WriteHeader(http.StatusUnprocessableEntity)
 		res.Write(responseBody(
 			"Failed to process the config for '%v': Error: %s",

@@ -95,6 +95,74 @@ makes use of this with its `copies` configuration property.
 In the example configuration, the `production` variant declares artifacts to
 be copied over from the result of building the `prep` image.
 
+## Builders key
+
+As an alternative to specifying the various builder keys (`node`, `python`, `php` and `builder`),
+it is possible to group builders in a list under the `builders` key. This offers two advantages:
+ * It defines an order of execution for the builders. Associated instructions will be generated in
+the order in which the builders appear in the file
+ * It makes it possible to specify multiple custom builders. In this case, the `builder` key is
+replaced by `custom`
+
+Similarly to other configuration keys, `builders` appearing at the top level of the file will be
+applied to all variant configurations. Builder keys appearing both at the top level and in a variant,
+will be merged; whereas builders present only at the top level will be placed first in the execution
+order.
+
+For a particular variant, `builders` and the standalone builder keys are mutually exclusive, but
+different styles can be used for different variants. However, note that top level definitions are
+applied to all variants, so using one style at the top level precludes the use of the other for all
+variants.
+
+The example configuration rewritten to use `builders` becomes:
+
+```yaml
+version: v4
+base: debian:jessie
+apt:
+  packages: [libjpeg, libyaml]
+lives:
+  in: /srv/service
+runs:
+  environment:
+    FOO: bar
+    BAR: baz
+
+variants:
+  build:
+    apt:
+      packages: [libjpeg-dev, libyaml-dev]
+    builders:
+      - node:
+          requirements: [package.json, package-lock.json]
+    copies: [local]
+
+  development:
+    includes: [build]
+
+  test:
+    includes: [build]
+    apt:
+      packages: [chromium]
+    entrypoint: [npm, test]
+
+  prep:
+    includes: [build]
+    builders:
+      - node:
+          env: production
+
+  production:
+    base: debian:jessie-slim
+    builders:
+      - node:
+          env: production
+    copies: [prep]
+    entrypoint: [node, server.js]
+```
+
+See file `blubber.example.builders.yaml` for a more detailed example with multiple builders.
+
 ## Usage
 
 Running the `blubber` command will be produce `Dockerfile` output for the
