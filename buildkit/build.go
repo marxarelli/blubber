@@ -1,12 +1,16 @@
 package buildkit
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
+	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	"github.com/moby/buildkit/frontend/dockerfile/dockerignore"
 	"github.com/moby/buildkit/frontend/gateway/client"
 	"github.com/pkg/errors"
 
@@ -14,12 +18,14 @@ import (
 )
 
 const (
-	localNameConfig   = "dockerfile"
-	keyConfigPath     = "filename"
-	keyTarget         = "target"
-	keyVariant        = "variant"
-	defaultVariant    = "test"
-	defaultConfigPath = ".pipeline/blubber.yaml"
+	localNameConfig      = "dockerfile"
+	localNameContext     = "context"
+	keyConfigPath        = "filename"
+	keyTarget            = "target"
+	keyVariant           = "variant"
+	defaultVariant       = "test"
+	defaultConfigPath    = ".pipeline/blubber.yaml"
+	dockerignoreFilename = ".dockerignore"
 
 	// Support the dockerfile frontend's build-arg: options which include, but
 	// are not limited to, setting proxies.
@@ -55,7 +61,17 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, "failed to expand includes and copies")
 	}
 
-	st, image, err := CompileToLLB(ctx, cfg, variant, filterOpts(opts, buildArgPrefix))
+	excludes, err := readDockerExcludes(ctx, c)
+
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf(`failed to read "%s"`, dockerignoreFilename))
+	}
+
+	convertOpts := d2llb.ConvertOpt{
+		BuildArgs: filterOpts(opts, buildArgPrefix),
+		Excludes:  excludes,
+	}
+	st, image, err := CompileToLLB(ctx, cfg, variant, convertOpts)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to compile to LLB state")
@@ -88,48 +104,17 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 
 func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, error) {
 	opts := c.BuildOpts().Opts
-
 	configPath := opts[keyConfigPath]
 	if configPath == "" {
 		configPath = defaultConfigPath
 	}
 
-	st := llb.Local(localNameConfig,
-		llb.FollowPaths([]string{configPath}),
-		llb.SessionID(c.BuildOpts().SessionID),
-		llb.SharedKeyHint(configPath),
-	)
-
-	def, err := st.Marshal(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal definition")
-	}
-
-	res, err := c.Solve(ctx, client.SolveRequest{
-		Definition: def.ToPB(),
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to solve to load config")
-	}
-
-	ref, err := res.SingleRef()
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get ")
-	}
-
-	cfgBytes, err := ref.ReadFile(ctx, client.ReadRequest{
-		Filename: configPath,
-	})
-
+	cfgBytes, err := readFileFromLocal(ctx, c, localNameConfig, configPath)
 	if err != nil {
 		return nil, err
 	}
 
 	cfg, err := config.ReadYAMLConfig(cfgBytes)
-
 	if err != nil {
 		if config.IsValidationError(err) {
 			return nil, errors.Wrapf(err, "config is invalid:\n%v", config.HumanizeValidationError(err))
@@ -139,6 +124,20 @@ func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, er
 	}
 
 	return cfg, nil
+}
+
+func readDockerExcludes(ctx context.Context, c client.Client) ([]string, error) {
+	dockerignoreBytes, err := readFileFromLocal(ctx, c, localNameContext, dockerignoreFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	excludes, err := dockerignore.ReadAll(bytes.NewBuffer(dockerignoreBytes))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse dockerignore")
+	}
+
+	return excludes, nil
 }
 
 func filterOpts(opts map[string]string, prefix string) map[string]string {
@@ -151,4 +150,43 @@ func filterOpts(opts map[string]string, prefix string) map[string]string {
 	}
 
 	return filtered
+}
+
+func readFileFromLocal(
+	ctx context.Context,
+	c client.Client,
+	localCtx string,
+	filepath string,
+) ([]byte, error) {
+	st := llb.Local(localCtx,
+		llb.SessionID(c.BuildOpts().SessionID),
+		llb.FollowPaths([]string{filepath}),
+		llb.SharedKeyHint(filepath),
+	)
+
+	def, err := st.Marshal(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.Solve(ctx, client.SolveRequest{
+		Definition: def.ToPB(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ref, err := res.SingleRef()
+	if err != nil {
+		return nil, err
+	}
+
+	fileBytes, err := ref.ReadFile(ctx, client.ReadRequest{
+		Filename: filepath,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return fileBytes, nil
 }
