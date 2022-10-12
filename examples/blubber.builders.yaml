@@ -6,10 +6,6 @@ apt:
 builders:
   - python:
       version: python2.7
-runs:
-  environment:
-    FOO: bar
-    BAR: baz
 
 variants:
   build:

@@ -161,7 +161,7 @@ variants:
     entrypoint: [node, server.js]
 ```
 
-See file `blubber.example.builders.yaml` for a more detailed example with multiple builders.
+See file `examples/blubber.builders.yaml` for a more detailed example with multiple builders.
 
 ## Usage
 
@@ -174,9 +174,11 @@ You can see the result of the example configuration by cloning this repo and
 running (assuming you have go):
 
     make
-    ./blubber blubber.example.yaml development
-    ./blubber blubber.example.yaml test
-    ./blubber blubber.example.yaml production
+    ./blubber examples/blubber.yaml development
+    ./blubber examples/blubber.yaml test
+    ./blubber examples/blubber.yaml production
+
+Other examples with different variants can be found under directory `examples`.
 
 ## Contribution
 
