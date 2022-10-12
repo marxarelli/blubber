@@ -20,6 +20,10 @@ build-frontend:
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
 
+# Publish a new version of the buildkit frontend each time a version tag (e.g.
+# v0.0.0) is pushed. Note that these tags are marked as protected under 
+# https://gitlab.wikimedia.org/repos/releng/blubber/-/settings/repository and
+# can only be pushed by project maintainers.
 build-and-publish-frontend:
   stage: publish
   script:
