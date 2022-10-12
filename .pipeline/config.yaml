@@ -21,6 +21,8 @@ pipelines:
           image: '${candidate.imageName}'
           tag: '${candidate.imageTag}'
           test: true
+      - name: test-buildkit
+        build: buildkit
 
   publish:
     blubberfile: blubber.yaml
@@ -44,17 +46,6 @@ pipelines:
             tags: [stable]
         promote:
           - chart: blubberoid
-      - name: print-versions
-        build: print-versions
-        run:
-          tail: 10
-      - name: publish-buildkit-gateway
-        build: buildkit
-        publish:
-          image:
-            name: blubber-buildkit
-            tag: ''
-            tags: { $each: version, $in: '${print-versions.output}' }
 
   # publish the buildkit gateway upon newly pushed git tags
   publish-buildkit-gateway:
