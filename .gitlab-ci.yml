@@ -1,0 +1,44 @@
+image: docker-registry.wikimedia.org/releng/buildctl:0.10.4-4
+
+stages:
+  - test
+  - publish
+
+build-frontend:
+  stage: test
+  script:
+    - buildctl build
+      --frontend=gateway.v0
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
+      --opt build-arg:http_proxy="$http_proxy"
+      --opt build-arg:https_proxy="$https_proxy"
+      --opt build-arg:no_proxy="$no_proxy"
+      --local context=.
+      --local dockerfile=.
+      --opt filename=.pipeline/blubber.yaml
+      --opt target=buildkit
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+build-and-publish-frontend:
+  stage: publish
+  script:
+    - mkdir ~/.docker
+    - |
+      echo '{ auths: { "docker-registry.discovery.wmnet": { registrytoken: "'"$CI_JOB_JWT"'" } } }' > ~/.docker/config.json
+    - IMAGE_TAG=$(echo "${CI_COMMIT_TAG}" | tr -c 'a-zA-Z0-9_.-' - | cut -c -128)
+    - buildctl build
+      --frontend=gateway.v0
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
+      --opt build-arg:http_proxy="$http_proxy"
+      --opt build-arg:https_proxy="$https_proxy"
+      --opt build-arg:no_proxy="$no_proxy"
+      --local context=.
+      --local dockerfile=.
+      --opt filename=.pipeline/blubber.yaml
+      --opt target=buildkit
+      --output type=image,name="docker-registry.discovery.wmnet/repos/releng/blubber:${IMAGE_TAG}",push=true
+  tags:
+    - protected
+  rules:
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
