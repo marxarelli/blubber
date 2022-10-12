@@ -7,7 +7,7 @@ import "strconv"
 //
 type Flag struct {
 	True bool
-	set  bool
+	Set  bool
 }
 
 // UnmarshalJSON implements json.Unmarshaler to parse the underlying boolean
@@ -20,7 +20,7 @@ func (flag *Flag) UnmarshalJSON(unmarshal []byte) error {
 		return err
 	}
 
-	flag.set = true
+	flag.Set = true
 
 	return nil
 }
@@ -29,8 +29,8 @@ func (flag *Flag) UnmarshalJSON(unmarshal []byte) error {
 // one.
 //
 func (flag *Flag) Merge(flag2 Flag) {
-	if flag2.set {
+	if flag2.Set {
 		flag.True = flag2.True
-		flag.set = true
+		flag.Set = true
 	}
 }

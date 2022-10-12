@@ -8,15 +8,16 @@ import (
 // and each configured variant.
 //
 type CommonConfig struct {
-	Base       string        `json:"base" validate:"omitempty,imageref"` // name/path to base image
-	Apt        AptConfig     `json:"apt"`                                // APT related
-	Node       NodeConfig    `json:"node"`                               // Node related
-	Php        PhpConfig     `json:"php"`                                // Php related
-	Python     PythonConfig  `json:"python"`                             // Python related
-	Builder    BuilderConfig `json:"builder"`                            // Builder related
-	Lives      LivesConfig   `json:"lives"`                              // application owner/dir
-	Runs       RunsConfig    `json:"runs"`                               // runtime environment
-	EntryPoint []string      `json:"entrypoint"`                         // entry-point executable
+	Base       string         `json:"base" validate:"omitempty,imageref"`                                                                // name/path to base image
+	Apt        AptConfig      `json:"apt"`                                                                                               // APT related
+	Builders   BuildersConfig `json:"builders" validate:"uniquetypesexcept=config.BuilderConfig,notallowedwith=Node Php Python Builder"` // Builders related
+	Node       NodeConfig     `json:"node"`                                                                                              // Node related
+	Php        PhpConfig      `json:"php"`                                                                                               // Php related
+	Python     PythonConfig   `json:"python"`                                                                                            // Python related
+	Builder    BuilderConfig  `json:"builder"`                                                                                           // Builder related
+	Lives      LivesConfig    `json:"lives"`                                                                                             // application owner/dir
+	Runs       RunsConfig     `json:"runs"`                                                                                              // runtime environment
+	EntryPoint []string       `json:"entrypoint"`                                                                                        // entry-point executable
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.
@@ -27,6 +28,7 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 	}
 
 	cc.Apt.Merge(cc2.Apt)
+	cc.Builders.Merge(cc2.Builders)
 	cc.Node.Merge(cc2.Node)
 	cc.Php.Merge(cc2.Php)
 	cc.Python.Merge(cc2.Python)
@@ -44,7 +46,9 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 // injected.
 //
 func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
-	return []build.PhaseCompileable{cc.Apt, cc.Node, cc.Php, cc.Python, cc.Builder, cc.Lives, cc.Runs}
+	return []build.PhaseCompileable{
+		cc.Apt, cc.Builders, cc.Node, cc.Php, cc.Python, cc.Builder, cc.Lives, cc.Runs,
+	}
 }
 
 // InstructionsForPhase injects instructions into the given build phase for

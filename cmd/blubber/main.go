@@ -62,8 +62,13 @@ func main() {
 
 	err = config.ExpandIncludesAndCopies(cfg, variant)
 	if err != nil {
-		log.Printf("Error: Failed to process config for '%s': %s\n", variant, err)
-		os.Exit(3)
+		if config.IsValidationError(err) {
+			log.Printf("%s is invalid:\n%v", cfgPath, config.HumanizeValidationError(err))
+			os.Exit(4)
+		} else {
+			log.Printf("Error: Failed to process config for '%s': %s\n", variant, err)
+			os.Exit(3)
+		}
 	}
 
 	if *policyURI != "" {

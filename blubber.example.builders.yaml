@@ -1,0 +1,62 @@
+---
+version: v4
+base: docker-registry.wikimedia.org/wikimedia-buster:latest
+apt:
+  packages: [libjpeg, libyaml]
+builders:
+  - python:
+      version: python2.7
+runs:
+  environment:
+    FOO: bar
+    BAR: baz
+
+variants:
+  build:
+    apt:
+      packages:
+        default: [libjpeg-dev, libyaml-dev]
+        buster-backports: [npm]
+    builders:
+      - node:
+          requirements: [package.json, package-lock.json]
+          use-npm-ci: false
+      - python:
+          requirements: [requirements.txt]
+      - php:
+          requirements: [composer.json]
+      - custom:
+          command: [make, deps]
+          requirements: [Makefile, vendor]
+    copies: [local]
+
+  development:
+    includes: [build]
+
+  test:
+    includes: [build]
+    apt:
+      packages: [chromium]
+    builders:
+      - python:
+          requirements: [requirements.txt, test-requirements.txt, docs/requirements.txt]
+    runs:
+      insecurely: true
+    entrypoint: [npm, test]
+
+  prep:
+    includes: [build]
+    builders:
+      - node:
+          env: production
+          use-npm-ci: true
+      - php:
+          production: true
+
+  production:
+    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    builders:
+      - node:
+          env: production
+    copies: [prep]
+    entrypoint: [node, server.js]

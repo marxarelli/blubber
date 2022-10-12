@@ -44,24 +44,26 @@ var (
 		`^%s(?:,%s)*$`, pythonVersionOne, pythonVersionOne))
 
 	humanizedErrors = map[string]string{
-		"abspath":         `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
-		"artifactfrom":    `{{.Field}}: "{{.Value}}" is not a valid image reference or known variant`,
-		"currentversion":  `{{.Field}}: config version "{{.Value}}" is unsupported`,
-		"debiancomponent": `{{.Field}}: "{{.Value}}" is not a valid Debian component name`,
-		"debianpackage":   `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
-		"debianrelease":   `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
-		"envvars":         `{{.Field}}: contains invalid environment variable names`,
-		"httpurl":         `{{.Field}}: "{{.Value}}" is not a valid HTTP/HTTPS URL`,
-		"imageref":        `{{.Field}}: "{{.Value}}" is not a valid image reference`,
-		"nodeenv":         `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
-		"pypkgver":        `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
-		"relativelocal":   `{{.Field}}: path must be relative when "from" is "local"`,
-		"required":        `{{.Field}}: is required`,
-		"requiredwith":    `{{.Field}}: is required if "{{.Param}}" is also set`,
-		"unique":          `{{.Field}}: cannot contain duplicates`,
-		"username":        `{{.Field}}: "{{.Value}}" is not a valid user name`,
-		"variantref":      `{{.Field}}: references an unknown variant "{{.Value}}"`,
-		"variants":        `{{.Field}}: contains a bad variant name`,
+		"abspath":           `{{.Field}}: "{{.Value}}" is not a valid absolute non-root path`,
+		"artifactfrom":      `{{.Field}}: "{{.Value}}" is not a valid image reference or known variant`,
+		"currentversion":    `{{.Field}}: config version "{{.Value}}" is unsupported`,
+		"debiancomponent":   `{{.Field}}: "{{.Value}}" is not a valid Debian component name`,
+		"debianpackage":     `{{.Field}}: "{{.Value}}" is not a valid Debian package name`,
+		"debianrelease":     `{{.Field}}: "{{.Value}}" is not a valid Debian release name`,
+		"envvars":           `{{.Field}}: contains invalid environment variable names`,
+		"httpurl":           `{{.Field}}: "{{.Value}}" is not a valid HTTP/HTTPS URL`,
+		"imageref":          `{{.Field}}: "{{.Value}}" is not a valid image reference`,
+		"nodeenv":           `{{.Field}}: "{{.Value}}" is not a valid Node environment name`,
+		"pypkgver":          `{{.Field}}: "{{.Value}}" is not a valid Python package version specification`,
+		"relativelocal":     `{{.Field}}: path must be relative when "from" is "local"`,
+		"required":          `{{.Field}}: is required`,
+		"requiredwith":      `{{.Field}}: is required if "{{.Param}}" is also set`,
+		"unique":            `{{.Field}}: cannot contain duplicates`,
+		"username":          `{{.Field}}: "{{.Value}}" is not a valid user name`,
+		"variantref":        `{{.Field}}: references an unknown variant "{{.Value}}"`,
+		"variants":          `{{.Field}}: contains a bad variant name`,
+		"uniquetypesexcept": `{{.Field}}: contains disallowed repetitions of entries`,
+		"notallowedwith":    `{{.Field}}: is not allowed if any of field(s) "{{.Param}}" is declared/included`,
 	}
 
 	validatorAliases = map[string]string{
@@ -86,6 +88,11 @@ var (
 		"requiredwith":    isSetIfOtherFieldIsSet,
 		"variantref":      isVariantReference,
 		"variants":        hasVariantNames,
+		// Can be used with array or slice fields
+		"uniquetypesexcept": uniqueTypesExcept,
+		// Note this validator cannot be used with fields that contain a struct. See function
+		// `notAllowedWith` for more details
+		"notallowedwith": notAllowedWith,
 	}
 )
 
@@ -106,7 +113,7 @@ func newValidator() *validator.Validate {
 	}
 
 	for name, f := range validatorFuncs {
-		validate.RegisterValidationCtx(name, f)
+		validate.RegisterValidationCtx(name, f, true)
 	}
 
 	return validate
@@ -285,6 +292,59 @@ func isVariantReference(ctx context.Context, fl validator.FieldLevel) bool {
 	}
 
 	return false
+}
+
+// Supports array and slice fields
+func uniqueTypesExcept(_ context.Context, fl validator.FieldLevel) bool {
+	field := fl.Field()
+	if field.Kind() != reflect.Array && field.Kind() != reflect.Slice {
+		return true
+	}
+
+	presentTypes := make(map[string]interface{})
+	for i := 0; i < field.Len(); i++ {
+		actualType := reflect.TypeOf(field.Index(i).Interface()).String()
+		if _, isPresent := presentTypes[actualType]; isPresent {
+			exception := fl.Param()
+			if !strings.Contains(actualType, exception) {
+				return false
+			}
+		}
+		presentTypes[actualType] = new(interface{})
+	}
+
+	return true
+}
+
+// Validator field parameters (fl.Param() call in this code) are not available to user-defined
+// validators when registered as a struct or custom validator. That means this validator cannot be
+// registered for structs and doesn't work for fields that contain one (gets ignored)
+func notAllowedWith(_ context.Context, fl validator.FieldLevel) bool {
+	field := fl.Field()
+	if isNullable(field) && field.IsNil() {
+		return true
+	}
+	if (field.Kind() == reflect.Array || field.Kind() == reflect.Slice) && field.Len() == 0 {
+		return true
+	}
+
+	disallowingFields := strings.Fields(fl.Param())
+	for _, disallowingField := range disallowingFields {
+		if !isZeroValue(fl.Parent().FieldByName(disallowingField)) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func isNullable(rv reflect.Value) bool {
+	switch rv.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Slice:
+		return true
+	default:
+		return false
+	}
 }
 
 func isZeroValue(v reflect.Value) bool {
