@@ -1,0 +1,53 @@
+---
+version: v4
+base: docker-registry.wikimedia.org/wikimedia-buster:latest
+apt:
+  packages: [libjpeg, libyaml]
+python:
+  version: python2.7
+
+# Examples of using cross-variant requirements with builder
+variants:
+  build:
+    apt:
+      packages:
+        default: [ libjpeg-dev, libyaml-dev ]
+        buster-backports: [ npm ]
+    node:
+      requirements: [ package.json, package-lock.json ]
+      use-npm-ci: false
+    copies: [ local ]
+
+  prep-node:
+    includes: [build]
+    node:
+      env: production
+      use-npm-ci: true
+    builder:
+      requirements:
+        - vue.config.js
+        - from: local
+          source: vue/
+      command: [npm, run-script, build:vue]
+
+  build-poetry:
+    python:
+      poetry:
+        version: ==1.0.10
+      requirements: [ pyproject.toml, poetry.lock ]
+
+  prep-django:
+    includes: [build-poetry]
+    builder:
+      requirements:
+        - .
+        - from: prep-node
+          source: /srv/app/vue/dist
+          destination: ./vue/dist/
+      command: [poetry, run, python3, manage.py, collectstatic]
+
+  copy-from-base-image:
+    copies:
+      - from: docker-registry.wikimedia.org/wikimedia/mediawiki:wmf-1.36.0-wmf.31
+        source: /srv/mediawiki
+        destination: /srv/mediawiki/php-1.36.0-wmf.31
