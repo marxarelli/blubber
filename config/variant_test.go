@@ -49,11 +49,13 @@ func TestVariantConfigYAML(t *testing.T) {
 
 func TestVariantLoops(t *testing.T) {
 	cfg := config.Config{
+		VersionConfig: config.VersionConfig{Version: "v4"},
 		Variants: map[string]config.VariantConfig{
 			"foo": config.VariantConfig{Includes: []string{"bar"}},
 			"bar": config.VariantConfig{Includes: []string{"foo"}}}}
 
 	cfgTwo := config.Config{
+		VersionConfig: config.VersionConfig{Version: "v4"},
 		Variants: map[string]config.VariantConfig{
 			"foo": config.VariantConfig{},
 			"bar": config.VariantConfig{Includes: []string{"foo"}}}}

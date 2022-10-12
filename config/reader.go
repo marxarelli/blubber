@@ -46,11 +46,12 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	return expanded, nil
 }
 
-// ExpandIncludesAndCopies resolves 'includes' for the
-// specified variant.  It also expands any variants that are referenced
-// directly or indirectly via 'copies' directives.
-// This should be run before policy verfication
-// so that the policy enforcement is applied to the final blubber spec
+// ExpandIncludesAndCopies resolves 'includes' for the specified variant.  It also expands any
+// variants that are referenced directly or indirectly via 'copies' directives. Finally, it also
+// validates the newly generated configuration.
+//
+// This should be run before policy verification  so that the policy enforcement is applied to the
+//final blubber spec
 //
 func ExpandIncludesAndCopies(config *Config, name string) error {
 	BuildIncludesDepGraph(config)
@@ -83,7 +84,7 @@ func ExpandIncludesAndCopies(config *Config, name string) error {
 		config.Variants[stage] = *vcfg
 	}
 
-	return nil
+	return Validate(*config)
 }
 
 // BuildIncludesDepGraph constructs the 'includes' dependency graph
