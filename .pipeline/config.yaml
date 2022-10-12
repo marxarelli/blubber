@@ -48,7 +48,7 @@ pipelines:
           - chart: blubberoid
 
   # publish the buildkit gateway upon newly pushed git tags
-  publish-buildkit-gateway:
+  publish-buildkit:
     blubberfile: blubber.yaml
     stages:
       - name: publish-buildkit-gateway
