@@ -19,6 +19,13 @@ GO_LDFLAGS = \
 GO_BUILD = go build -v -ldflags "$(GO_LDFLAGS)"
 GO_INSTALL = go install -v -ldflags "$(GO_LDFLAGS)"
 
+# Respect TARGET* variables defined by docker
+# see https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
+GOOS = $(TARGETOS)
+GOARCH = $(TARGETARCH)
+export GOOS
+export GOARCH
+
 all: code blubber blubberoid blubber-buildkit
 
 blubber:
