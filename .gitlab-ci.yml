@@ -30,7 +30,7 @@ build-and-publish-frontend:
     - mkdir ~/.docker
     - |
       echo '{ "auths": { "docker-registry.discovery.wmnet": { "registrytoken": "'"$CI_JOB_JWT"'" } } }' > ~/.docker/config.json
-    - IMAGE_TAG=$(echo "${CI_COMMIT_TAG}" | tr -c 'a-zA-Z0-9_.-' - | cut -c -128)
+    - IMAGE_TAG=$(echo -n "${CI_COMMIT_TAG}" | tr -c 'a-zA-Z0-9_.-' - | cut -c -128)
     - buildctl build
       --frontend=gateway.v0
       --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
