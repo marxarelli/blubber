@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/containerd/containerd/platforms"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -22,6 +23,7 @@ const (
 	localNameContext     = "context"
 	keyConfigPath        = "filename"
 	keyTarget            = "target"
+	keyTargetPlatform    = "platform"
 	keyVariant           = "variant"
 	defaultVariant       = "test"
 	defaultConfigPath    = ".pipeline/blubber.yaml"
@@ -71,6 +73,16 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		BuildArgs: filterOpts(opts, buildArgPrefix),
 		Excludes:  excludes,
 	}
+
+	if platform, exists := opts[keyTargetPlatform]; exists && platform != "" {
+		p, err := platforms.Parse(platform)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse target platform %s", platform)
+		}
+		p = platforms.Normalize(p)
+		convertOpts.TargetPlatform = &p
+	}
+
 	st, image, err := CompileToLLB(ctx, cfg, variant, convertOpts)
 
 	if err != nil {
