@@ -121,7 +121,7 @@ func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, er
 		configPath = defaultConfigPath
 	}
 
-	cfgBytes, err := readFileFromLocal(ctx, c, localNameConfig, configPath)
+	cfgBytes, err := readFileFromLocal(ctx, c, localNameConfig, configPath, true)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, er
 }
 
 func readDockerExcludes(ctx context.Context, c client.Client) ([]string, error) {
-	dockerignoreBytes, err := readFileFromLocal(ctx, c, localNameContext, dockerignoreFilename)
+	dockerignoreBytes, err := readFileFromLocal(ctx, c, localNameContext, dockerignoreFilename, false)
 	if err != nil {
 		return nil, err
 	}
@@ -169,6 +169,7 @@ func readFileFromLocal(
 	c client.Client,
 	localCtx string,
 	filepath string,
+	required bool,
 ) ([]byte, error) {
 	st := llb.Local(localCtx,
 		llb.SessionID(c.BuildOpts().SessionID),
@@ -193,9 +194,23 @@ func readFileFromLocal(
 		return nil, err
 	}
 
+	// If the file is not required, try to stat it first, and if it doesn't
+	// exist, simply return an empty byte slice. If the file is required, we'll
+	// save an extra stat call and just try to read it.
+	if !required {
+		_, err := ref.StatFile(ctx, client.StatRequest{
+			Path: filepath,
+		})
+
+		if err != nil {
+			return []byte{}, nil
+		}
+	}
+
 	fileBytes, err := ref.ReadFile(ctx, client.ReadRequest{
 		Filename: filepath,
 	})
+
 	if err != nil {
 		return nil, err
 	}
