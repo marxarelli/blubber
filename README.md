@@ -194,7 +194,7 @@ with both BuildKit's `buildctl` command and with `docker build`.
 To build from Blubber configuration using `buildctl`, do:
 
     buildctl build --frontend gateway.v0 \
-      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0 \
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
       --local context=. \
       --local dockerfile=. \
       --opt filename=blubber.yaml \
@@ -205,7 +205,7 @@ invoke it like `docker-compose`), specify a [syntax
 directive](https://docs.docker.com/engine/reference/builder/#syntax) at the
 top of your Blubber configuration like so.
 
-    # syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0
+    # syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1
     version: v4
     variants:
       my-variant:
@@ -219,9 +219,28 @@ Docker's [build-time arguments][build_args] are also supported, including those
 used to provide proxies to build processes.
 
     buildctl build --frontend gateway.v0 \
-      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:0.9.0 \
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
       --opt build-arg:http_proxy=http://proxy.example \
       --opt variant=pulls-in-stuff-from-the-internet
       ...
 
 [build_args]: https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg
+
+### Additional options for the Buildkit frontend
+
+The following options can be passed via command line (via `--opt`) to configure the build process:
+ * `run-variant`: bool. Instructs Blubber to run the target variant's entrypoint (if any) as part
+of the BuildKit image build process
+ * `entrypoint-args`: JSON array. List of additional arguments for the entrypoint
+
+Example usage:
+
+    buildctl build --frontend gateway.v0 \
+      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
+      --local context=. \
+      --local dockerfile=. \
+      --opt filename=blubber.yaml \
+      --opt variant=test \
+      --opt run-variant=true
+      --opt entrypoint-args='["extraParam1", "extraParam2"]'
+      ...
