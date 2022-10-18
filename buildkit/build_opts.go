@@ -46,7 +46,7 @@ func ParseExtraOptions(ops map[string]string) (*ExtraBuildOptions, error) {
 			var cmd []string
 			err = json.Unmarshal([]byte(v), &cmd)
 			if err != nil {
-				return nil, errors.Wrap(err, "Failed to parse extra args for entrypoint")
+				return nil, errors.Wrapf(err, "Failed to parse extra args for entrypoint: %q", v)
 			}
 			ebo.entrypointArgs = cmd
 		}
