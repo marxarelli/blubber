@@ -51,15 +51,25 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		variant = defaultVariant
 	}
 
+	extraOpts, err := ParseExtraOptions(opts)
+	if err != nil {
+		return nil, err
+	}
 	cfg, err := readBlubberConfig(ctx, c)
 
 	if err != nil {
+		if config.IsValidationError(err) {
+			err = errors.New(config.HumanizeValidationError(err))
+		}
 		return nil, errors.Wrap(err, "failed to read blubber config")
 	}
 
 	err = config.ExpandIncludesAndCopies(cfg, variant)
 
 	if err != nil {
+		if config.IsValidationError(err) {
+			err = errors.New(config.HumanizeValidationError(err))
+		}
 		return nil, errors.Wrap(err, "failed to expand includes and copies")
 	}
 
@@ -83,7 +93,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		convertOpts.TargetPlatform = &p
 	}
 
-	st, image, err := CompileToLLB(ctx, cfg, variant, convertOpts)
+	st, image, err := CompileToLLB(ctx, extraOpts, cfg, variant, convertOpts)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to compile to LLB state")

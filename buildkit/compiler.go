@@ -18,7 +18,13 @@ import (
 // CompileToLLB takes a parsed config.Config and a configured variant name and
 // returns an llb.State graph.
 //
-func CompileToLLB(ctx context.Context, cfg *config.Config, variant string, convertOpts d2llb.ConvertOpt) (*llb.State, *d2llb.Image, error) {
+func CompileToLLB(
+	ctx context.Context,
+	ebo *ExtraBuildOptions,
+	cfg *config.Config,
+	variant string,
+	convertOpts d2llb.ConvertOpt,
+) (*llb.State, *d2llb.Image, error) {
 	buffer, err := docker.Compile(cfg, variant)
 
 	if err != nil {
@@ -31,6 +37,9 @@ func CompileToLLB(ctx context.Context, cfg *config.Config, variant string, conve
 		return nil, nil, err
 	}
 
+	targetVariant := cfg.Variants[variant]
+	state = postProcessLLB(ebo, state, &targetVariant)
+
 	return state, image, nil
 }
 
@@ -41,7 +50,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	ctx := context.Background()
 
-	state, _, err := CompileToLLB(ctx, cfg, variant, d2llb.ConvertOpt{})
+	state, _, err := CompileToLLB(ctx, nil, cfg, variant, d2llb.ConvertOpt{})
 
 	if err != nil {
 		return nil, err
@@ -67,4 +76,19 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	}
 
 	return buffer, nil
+}
+
+func postProcessLLB(
+	ebo *ExtraBuildOptions,
+	state *llb.State,
+	targetVariant *config.VariantConfig,
+) *llb.State {
+	newState := *state
+
+	entryPoint := targetVariant.EntryPoint
+	if entryPoint != nil && ebo != nil && ebo.RunEntrypoint() {
+		newState = state.Run(llb.Args(append(entryPoint, ebo.EntrypointArgs()...))).Root()
+	}
+
+	return &newState
 }
