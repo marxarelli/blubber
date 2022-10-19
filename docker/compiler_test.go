@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gerrit.wikimedia.org/r/blubber/config"
-	"gerrit.wikimedia.org/r/blubber/docker"
-	"gerrit.wikimedia.org/r/blubber/meta"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/docker"
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
 func TestSingleStageHasNoName(t *testing.T) {

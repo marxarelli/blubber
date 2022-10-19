@@ -30,13 +30,13 @@ to both users inside and outside of WMF and our communities.
 Use `go get` to install the source from our Git repo into `src` under your
 `GOPATH`. By default, this will be `~/go/src`.
 
-    go get gerrit.wikimedia.org/r/blubber
+    go get gitlab.wikimedia.org/repos/releng/blubber
 
 Symlink it to a different directory if you'd prefer not to work from your
 `GOPATH`. For example:
 
     cd ~/Projects
-    ln -s ~/go/src/gerrit.wikimedia.org/r/blubber
+    ln -s ~/go/src/gitlab.wikimedia.org/repos/releng/blubber
     cd blubber # yay.
 
 ## Have a read through the documentation
@@ -44,7 +44,7 @@ Symlink it to a different directory if you'd prefer not to work from your
 If you haven't already seen the [README.md](README.md), check it out.
 
 Run `godoc -http :9999` and peruse the HTML generated from inline docs
-at `localhost:9999/pkg/gerrit.wikimedia.org/r/blubber`.
+at `localhost:9999/pkg/gitlab.wikimedia.org/repos/releng/blubber`.
 
 ## Running tests and linters
 

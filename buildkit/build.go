@@ -15,7 +15,7 @@ import (
 	"github.com/moby/buildkit/frontend/gateway/client"
 	"github.com/pkg/errors"
 
-	"gerrit.wikimedia.org/r/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
 
 const (

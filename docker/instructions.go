@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // NewInstruction takes a general internal build.Instruction and returns

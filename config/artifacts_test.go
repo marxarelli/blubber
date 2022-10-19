@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gerrit.wikimedia.org/r/blubber/build"
-	"gerrit.wikimedia.org/r/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
 
 func TestArtifactsConfigYAML(t *testing.T) {

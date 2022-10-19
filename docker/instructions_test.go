@@ -5,8 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gerrit.wikimedia.org/r/blubber/build"
-	"gerrit.wikimedia.org/r/blubber/docker"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/docker"
 )
 
 func TestBase(t *testing.T) {

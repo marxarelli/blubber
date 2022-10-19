@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // CommonConfig holds the configuration fields common to both the root config

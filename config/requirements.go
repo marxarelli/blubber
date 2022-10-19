@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // RequirementsConfig holds configuration for which files to copy into the

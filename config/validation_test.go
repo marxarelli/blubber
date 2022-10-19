@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/go-playground/validator.v9"
 
-	"gerrit.wikimedia.org/r/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
 
 func TestIsValidationError(t *testing.T) {

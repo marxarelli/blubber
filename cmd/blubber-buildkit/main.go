@@ -11,8 +11,8 @@ import (
 	"github.com/moby/buildkit/util/appcontext"
 	"github.com/pborman/getopt/v2"
 
-	"gerrit.wikimedia.org/r/blubber/buildkit"
-	"gerrit.wikimedia.org/r/blubber/meta"
+	"gitlab.wikimedia.org/repos/releng/blubber/buildkit"
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
 var (

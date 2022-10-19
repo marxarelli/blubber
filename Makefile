@@ -5,7 +5,7 @@ VERSION = $(shell cat VERSION)
 GIT_COMMIT = $(shell git rev-parse --short HEAD)
 FULLVERSION = $(VERSION)-$(GIT_COMMIT)
 
-PACKAGE := gerrit.wikimedia.org/r/blubber
+PACKAGE := gitlab.wikimedia.org/repos/releng/blubber
 
 GO_LIST_GOFILES := '{{range .GoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}{{range .XTestGoFiles}}{{printf "%s/%s\n" $$.Dir .}}{{end}}'
 GO_PACKAGES = $(shell go list ./...)

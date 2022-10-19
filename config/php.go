@@ -1,7 +1,7 @@
 package config
 
 import (
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // PhpConfig holds configuration for whether/how to install php packages.

@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"gerrit.wikimedia.org/r/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
 
 func TestVersionConfigYAML(t *testing.T) {

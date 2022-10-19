@@ -10,8 +10,8 @@ import (
 	"github.com/moby/buildkit/client/llb"
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 
-	"gerrit.wikimedia.org/r/blubber/config"
-	"gerrit.wikimedia.org/r/blubber/docker"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/docker"
 )
 
 // CompileToLLB takes a parsed config.Config and a configured variant name and

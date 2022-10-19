@@ -3,7 +3,7 @@ package config
 import (
 	"path"
 
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // ArtifactsConfig declares files and directories to be copied from one place

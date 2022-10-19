@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 
-	"gerrit.wikimedia.org/r/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
 // LocalArtifactKeyword defines a special keyword indicating

@@ -10,10 +10,10 @@ import (
 
 	"github.com/pborman/getopt/v2"
 
-	"gerrit.wikimedia.org/r/blubber/buildkit"
-	"gerrit.wikimedia.org/r/blubber/config"
-	"gerrit.wikimedia.org/r/blubber/docker"
-	"gerrit.wikimedia.org/r/blubber/meta"
+	"gitlab.wikimedia.org/repos/releng/blubber/buildkit"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/docker"
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
 const parameters = "config.yaml variant"

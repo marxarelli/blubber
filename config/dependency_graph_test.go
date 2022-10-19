@@ -3,8 +3,8 @@ package config_test
 import (
 	"testing"
 
-	"gerrit.wikimedia.org/r/blubber/config"
 	"github.com/stretchr/testify/assert"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
 
 func TestDepGraphGood(t *testing.T) {

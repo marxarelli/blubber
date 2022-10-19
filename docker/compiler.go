@@ -6,9 +6,9 @@ package docker
 import (
 	"bytes"
 
-	"gerrit.wikimedia.org/r/blubber/build"
-	"gerrit.wikimedia.org/r/blubber/config"
-	"gerrit.wikimedia.org/r/blubber/meta"
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/config"
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
 // Compile takes a parsed config.Config and a configured variant name and
