@@ -120,7 +120,7 @@ func TestIncludesPolicyVerification(t *testing.T) {
 	variant := "production"
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4
-    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    base: docker-registry.wikimedia.org/stretch:latest
     variants:
       dev:
         base: foo
@@ -149,7 +149,7 @@ func TestCopiesPolicyVerification(t *testing.T) {
 	variant := "production"
 	cfg, err := config.ReadYAMLConfig([]byte(`---
     version: v4
-    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    base: docker-registry.wikimedia.org/stretch:latest
     variants:
       dev:
         base: foo

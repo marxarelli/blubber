@@ -1,6 +1,6 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/wikimedia-buster:latest
+base: docker-registry.wikimedia.org/buster:latest
 python:
   version: python2.7
 
