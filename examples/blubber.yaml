@@ -1,6 +1,6 @@
 ---
 version: v4
-base: docker-registry.wikimedia.org/wikimedia-buster:latest
+base: docker-registry.wikimedia.org/buster:latest
 apt:
   packages: [libjpeg, libyaml]
 python:
@@ -50,7 +50,7 @@ variants:
       production: true
 
   production:
-    base: docker-registry.wikimedia.org/wikimedia-stretch:latest
+    base: docker-registry.wikimedia.org/stretch:latest
     node:
       env: production
     copies: [prep]
