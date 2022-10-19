@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-
 	"github.com/moby/buildkit/client/llb"
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 
@@ -87,8 +86,23 @@ func postProcessLLB(
 
 	entryPoint := targetVariant.EntryPoint
 	if entryPoint != nil && ebo != nil && ebo.RunEntrypoint() {
-		newState = state.Run(llb.Args(append(entryPoint, ebo.EntrypointArgs()...))).Root()
+		newState = state.Run(
+			llb.Args(append(entryPoint, ebo.EntrypointArgs()...)),
+			disableCacheForOp(),
+		).Root()
 	}
 
 	return &newState
+}
+
+type runOptionFunc func(*llb.ExecInfo)
+
+func (fn runOptionFunc) SetRunOption(ei *llb.ExecInfo) {
+	fn(ei)
+}
+
+func disableCacheForOp() llb.RunOption {
+	return runOptionFunc(func(ei *llb.ExecInfo) {
+		ei.Constraints.Metadata.IgnoreCache = true
+	})
 }
