@@ -12,7 +12,7 @@ variants:
       - custom:
           requirements: [go.mod, go.sum]
           command: [go, mod, download]
-  test:
+  make:
     includes: [build]
     runs: { insecurely: true }
     builders:
@@ -20,6 +20,9 @@ variants:
           requirements: [Makefile, tools.go]
           command: [make, install-tools]
     copies: [local]
+    entrypoint: [make, clean]
+  test:
+    includes: [make]
     entrypoint: [make, clean, test]
   prep:
     includes: [build]

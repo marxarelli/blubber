@@ -3,6 +3,7 @@ include:
     file: 'includes/images.yaml'
 
 stages:
+  - lint
   - test
   - publish
 
@@ -12,11 +13,19 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
 
+lint-code:
+  stage: lint
+  extends: .kokkuri:build-and-run-image
+  variables:
+    BUILD_VARIANT: make
+    RUN_ARGUMENTS: '["lint"]'
+
 run-unit-tests:
   stage: test
   extends: .kokkuri:build-and-run-image
   variables:
-    BUILD_VARIANT: test
+    BUILD_VARIANT: make
+    RUN_ARGUMENTS: '["test"]'
 
 build-frontend:
   stage: test
