@@ -2,6 +2,10 @@ include:
   - project: 'repos/releng/kokkuri'
     file: 'includes/images.yaml'
 
+default:
+  tags:
+    - kubernetes
+
 stages:
   - lint
   - test
