@@ -46,6 +46,7 @@ build-and-publish-frontend:
   extends: .kokkuri:build-and-publish-image
   variables:
     BUILD_VARIANT: buildkit
+    IMAGE_NAME: '${CI_PROJECT_PATH}/buildkit'
   tags:
     - protected
   rules:
