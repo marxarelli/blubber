@@ -11,12 +11,12 @@
 #
 set -o errexit -o nounset -o pipefail
 
-INCREMENT_PLACE=2
+INCREMENT_INDEX=1
 
 while getopts p opt; do
   case $opt in
     p)
-      INCREMENT_PLACE=3
+      INCREMENT_INDEX=2
       ;;
     h|?)
       echo "Usage: $0: [-p]"
@@ -34,11 +34,25 @@ assert_clean_checkout() {
   fi
 }
 
+join_version() {
+  local IFS="."
+  echo "$*"
+}
+
 increment_version() {
-  local tmp="$(mktemp)"
-  trap 'rm $tmp' RETURN
-  awk -F '.' '{ $'"$INCREMENT_PLACE"'++; print $1"."$2"."$3 }' VERSION | tee "$tmp"
-  cp "$tmp" VERSION
+  local parts
+
+  IFS="." read -r -a parts < VERSION
+
+  for i in "${!parts[@]}"; do
+    if [ $i -eq $INCREMENT_INDEX ]; then
+      ((parts[$i]++))
+    elif [ $i -gt $INCREMENT_INDEX ]; then
+      parts[$i]=0
+    fi
+  done
+
+  join_version "${parts[@]}" | tee VERSION
 }
 
 assert_clean_checkout
