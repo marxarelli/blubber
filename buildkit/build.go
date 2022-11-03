@@ -112,12 +112,13 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 
 	eg, ctx := errgroup.WithContext(ctx)
 
-	// Solve for target platforms in parallel
+	// Solve for all target platforms in parallel
 	for i, tp := range targetPlatforms {
 		func(i int, platform *ocispecs.Platform) {
 			eg.Go(func() (err error) {
-				st, image, bi, err := CompileToLLB(
+				result, err := buildImage(
 					ctx,
+					c,
 					extraOpts,
 					cfg,
 					variant,
@@ -132,58 +133,12 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 				)
 
 				if err != nil {
-					return errors.Wrap(err, "failed to compile to LLB state")
+					return errors.Wrap(err, "failed to build image")
 				}
 
-				imageConfig, err := json.Marshal(image)
+				result.AddToClientResult(finalResult)
+				exportPlatforms.Platforms[i] = result.ExportPlatform
 
-				if err != nil {
-					return errors.Wrapf(err, "failed to marshal image config")
-				}
-
-				def, err := st.Marshal(ctx)
-
-				if err != nil {
-					return errors.Wrap(err, "failed to marshal definition")
-				}
-
-				result, err := c.Solve(ctx, client.SolveRequest{
-					Definition: def.ToPB(),
-				})
-
-				if err != nil {
-					return errors.Wrap(err, "failed to solve")
-				}
-
-				ref, err := result.SingleRef()
-				if err != nil {
-					return err
-				}
-
-				buildinfo, err := json.Marshal(bi)
-				if err != nil {
-					return errors.Wrapf(err, "failed to marshal build info")
-				}
-
-				if !isMultiPlatform {
-					finalResult.AddMeta(exptypes.ExporterImageConfigKey, imageConfig)
-					finalResult.AddMeta(exptypes.ExporterBuildInfo, buildinfo)
-					finalResult.SetRef(ref)
-				} else {
-					p := platforms.DefaultSpec()
-					if platform != nil {
-						p = *platform
-					}
-
-					k := platforms.Format(p)
-					finalResult.AddMeta(fmt.Sprintf("%s/%s", exptypes.ExporterImageConfigKey, k), imageConfig)
-					finalResult.AddMeta(fmt.Sprintf("%s/%s", exptypes.ExporterBuildInfo, k), buildinfo)
-					finalResult.AddRef(k, ref)
-					exportPlatforms.Platforms[i] = exptypes.Platform{
-						ID:       k,
-						Platform: p,
-					}
-				}
 				return nil
 			})
 		}(i, tp)
@@ -202,6 +157,124 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	}
 
 	return finalResult, nil
+}
+
+// Represents the result of a single image build
+//
+type buildResult struct {
+	// Reference to built image
+	Reference client.Reference
+
+	// Image configuration
+	ImageConfig []byte
+
+	// Extra build info
+	BuildInfo []byte
+
+	// Target platform
+	Platform *ocispecs.Platform
+
+	// Whether this is a result for a multi-platform build
+	MultiPlatform bool
+
+	// Exportable platform information (platform and platform ID)
+	ExportPlatform exptypes.Platform
+}
+
+// Adds the build result to the final client result.
+//
+// For multi-platform builds, _add_ to an aggregate final result. Each
+// platform-specific image reference, image config, and build info will be
+// keyed by platform name. For OCI format outputs, there will be a single
+// multi-platform manifest _index_ which references each platform-specific
+// manifest.
+//
+// For single-platform builds, set the final result's reference,
+// image config, and build info. For OCI format outputs, there will
+// be a single manifest
+//
+func (br *buildResult) AddToClientResult(cr *client.Result) {
+	if br.MultiPlatform {
+		cr.AddMeta(
+			fmt.Sprintf("%s/%s", exptypes.ExporterImageConfigKey, br.ExportPlatform.ID),
+			br.ImageConfig,
+		)
+		cr.AddMeta(
+			fmt.Sprintf("%s/%s", exptypes.ExporterBuildInfo, br.ExportPlatform.ID),
+			br.BuildInfo,
+		)
+		cr.AddRef(br.ExportPlatform.ID, br.Reference)
+	} else {
+		cr.AddMeta(exptypes.ExporterImageConfigKey, br.ImageConfig)
+		cr.AddMeta(exptypes.ExporterBuildInfo, br.BuildInfo)
+		cr.SetRef(br.Reference)
+	}
+}
+
+// Builds a given variant and returns the resulting image reference, image
+// config, and build info.
+//
+func buildImage(
+	ctx context.Context,
+	c client.Client,
+	ebo *ExtraBuildOptions,
+	cfg *config.Config,
+	variant string,
+	convertOpts d2llb.ConvertOpt,
+) (*buildResult, error) {
+
+	result := buildResult{
+		Platform:      convertOpts.TargetPlatform,
+		MultiPlatform: convertOpts.PrefixPlatform,
+	}
+
+	state, image, bi, err := CompileToLLB(ctx, ebo, cfg, variant, convertOpts)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to compile to LLB state")
+	}
+
+	result.ImageConfig, err = json.Marshal(image)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal image config")
+	}
+
+	def, err := state.Marshal(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal definition")
+	}
+
+	res, err := c.Solve(ctx, client.SolveRequest{
+		Definition: def.ToPB(),
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to solve")
+	}
+
+	result.Reference, err = res.SingleRef()
+	if err != nil {
+		return nil, err
+	}
+
+	result.BuildInfo, err = json.Marshal(bi)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal build info")
+	}
+
+	// Add platform-specific export info for the result that can later be used
+	// in multi-platform results
+	result.ExportPlatform = exptypes.Platform{
+		Platform: platforms.DefaultSpec(),
+	}
+
+	if result.Platform != nil {
+		result.ExportPlatform.Platform = *result.Platform
+	}
+
+	result.ExportPlatform.ID = platforms.Format(result.ExportPlatform.Platform)
+
+	return &result, nil
 }
 
 func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, error) {
