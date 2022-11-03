@@ -11,6 +11,13 @@
 #
 set -o errexit -o nounset -o pipefail
 
+usage() {
+  echo "Usage: $0: [-p] [remote] [branch]"
+  echo " -p  Increment patch number (0.0.x) intead of minor number (0.x.0)"
+  echo " [remote] Remote name ('origin' by default)"
+  echo " [branch] Target branch ('main' by default)"
+}
+
 INCREMENT_INDEX=1
 
 while getopts p opt; do
@@ -19,12 +26,15 @@ while getopts p opt; do
       INCREMENT_INDEX=2
       ;;
     h|?)
-      echo "Usage: $0: [-p]"
-      echo " -p  Increment patch number (0.0.x) intead of minor number (0.x.0)"
+      usage()
       exit 2
       ;;
   esac
 done
+
+shift $((OPTIND-1))
+REMOTE="${1:-origin}"
+TARGET_BRANCH="${2:-main}"
 
 assert_clean_checkout() {
   if [ "$(git status --porcelain)" ]; then
@@ -55,13 +65,38 @@ increment_version() {
   join_version "${parts[@]}" | tee VERSION
 }
 
+commit_has_merged() {
+  local commit="$1"
+
+  git fetch $REMOTE
+
+  if ! git merge-base --is-ancestor "$commit" $REMOTE/$TARGET_BRANCH; then
+    return 1
+  fi
+
+  return 0
+}
+
+wait_for_commit() {
+  local commit="$1"
+
+  echo "Waiting for commit $commit to merge..."
+
+  until commit_has_merged; do
+    sleep 5
+    echo "..."
+  done
+
+  echo "Commit $commit has merged"
+}
+
 assert_clean_checkout
 git pull --rebase
 assert_clean_checkout
 
-if [ "$(git rev-list origin/main..)" ]; then
+if [ "$(git rev-list $REMOTE/$TARGET_BRANCH..)" ]; then
     echo "Local commits detected:"
-    git log --oneline origin/main..
+    git log --oneline $REMOTE/$TARGET_BRANCH..
     echo "Aborting"
     exit 1
 fi
@@ -69,6 +104,7 @@ fi
 make install-tools
 
 version="$(increment_version)"
+branch="version/$version"
 tag="v$version"
 echo "New version: $version"
 echo "New tag: $tag"
@@ -84,15 +120,29 @@ if [ "$confirmation" != "Y" ] && [ "$confirmation" != "y" ]; then
   exit 1
 fi
 
-echo "Creating commit"
+echo "Creating temporary local branch $branch"
+git checkout -b "$branch"
+
+echo "Committing VERSION and CHANGELOG.md"
 git add VERSION CHANGELOG.md
 git commit --message="version: $version"
 
 echo "Creating signed version tag $tag"
 git tag --sign --message="version: $version" "$tag" HEAD
 
-echo "Pushing version commit"
-git push origin HEAD:main
+echo "Pushing merge request (will merge when pipeline succeeds)"
+git push \
+  -o merge_request.create \
+  -o merge_request.target=$TARGET_BRANCH \
+  -o merge_request.merge_when_pipeline_succeeds \
+  --set-upstream $REMOTE "$branch"
+
+wait_for_commit "$(git rev-parse HEAD)"
 
 echo "Pushing tag"
 git push --tags origin "$tag"
+
+echo "Checking out main and removing temporary branch"
+git checkout main
+git pull --rebase
+git branch -D "$branch"
