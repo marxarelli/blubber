@@ -11,7 +11,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/docker/distribution/reference"
+	"github.com/distribution/distribution/reference"
 	"gopkg.in/go-playground/validator.v9"
 )
 

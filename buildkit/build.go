@@ -13,7 +13,9 @@ import (
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerignore"
 	"github.com/moby/buildkit/frontend/gateway/client"
+	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 
 	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
@@ -38,8 +40,20 @@ const (
 
 // Build handles BuildKit client requests for the Blubber gateway.
 //
+// When performing a multi-platform build, the final exported manifest will be
+// an OCI image index (aka "fat" manifest) and multiple sub manifests will be
+// created for each platform that contain the actual image layers.
+//
+// See https://github.com/opencontainers/image-spec/blob/main/image-index.md
+//
+// For a single platform build, the export will be a normal single manifest
+// with image layers.
+//
+// See https://github.com/opencontainers/image-spec/blob/main/manifest.md
+//
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
-	opts := c.BuildOpts().Opts
+	buildOpts := c.BuildOpts()
+	opts := buildOpts.Opts
 
 	variant := opts[keyVariant]
 
@@ -79,49 +93,115 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, fmt.Sprintf(`failed to read "%s"`, dockerignoreFilename))
 	}
 
-	convertOpts := d2llb.ConvertOpt{
-		BuildArgs: filterOpts(opts, buildArgPrefix),
-		Excludes:  excludes,
-	}
+	// Defer to dockerfile2llb on the default platform by passing nil
+	targetPlatforms := []*ocispecs.Platform{nil}
 
+	// Parse any given target platform(s)
 	if platform, exists := opts[keyTargetPlatform]; exists && platform != "" {
-		p, err := platforms.Parse(platform)
+		targetPlatforms, err = parsePlatforms(platform)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse target platform %s", platform)
+			return nil, errors.Wrapf(err, "failed to parse target platforms %s", platform)
 		}
-		p = platforms.Normalize(p)
-		convertOpts.TargetPlatform = &p
 	}
 
-	st, image, err := CompileToLLB(ctx, extraOpts, cfg, variant, convertOpts)
+	isMultiPlatform := len(targetPlatforms) > 1
+	exportPlatforms := &exptypes.Platforms{
+		Platforms: make([]exptypes.Platform, len(targetPlatforms)),
+	}
+	finalResult := client.NewResult()
 
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to compile to LLB state")
+	eg, ctx := errgroup.WithContext(ctx)
+
+	// Solve for target platforms in parallel
+	for i, tp := range targetPlatforms {
+		func(i int, platform *ocispecs.Platform) {
+			eg.Go(func() (err error) {
+				st, image, bi, err := CompileToLLB(
+					ctx,
+					extraOpts,
+					cfg,
+					variant,
+					d2llb.ConvertOpt{
+						MetaResolver:   c,
+						SessionID:      buildOpts.SessionID,
+						BuildArgs:      filterOpts(opts, buildArgPrefix),
+						Excludes:       excludes,
+						TargetPlatform: platform,
+						PrefixPlatform: isMultiPlatform,
+					},
+				)
+
+				if err != nil {
+					return errors.Wrap(err, "failed to compile to LLB state")
+				}
+
+				imageConfig, err := json.Marshal(image)
+
+				if err != nil {
+					return errors.Wrapf(err, "failed to marshal image config")
+				}
+
+				def, err := st.Marshal(ctx)
+
+				if err != nil {
+					return errors.Wrap(err, "failed to marshal definition")
+				}
+
+				result, err := c.Solve(ctx, client.SolveRequest{
+					Definition: def.ToPB(),
+				})
+
+				if err != nil {
+					return errors.Wrap(err, "failed to solve")
+				}
+
+				ref, err := result.SingleRef()
+				if err != nil {
+					return err
+				}
+
+				buildinfo, err := json.Marshal(bi)
+				if err != nil {
+					return errors.Wrapf(err, "failed to marshal build info")
+				}
+
+				if !isMultiPlatform {
+					finalResult.AddMeta(exptypes.ExporterImageConfigKey, imageConfig)
+					finalResult.AddMeta(exptypes.ExporterBuildInfo, buildinfo)
+					finalResult.SetRef(ref)
+				} else {
+					p := platforms.DefaultSpec()
+					if platform != nil {
+						p = *platform
+					}
+
+					k := platforms.Format(p)
+					finalResult.AddMeta(fmt.Sprintf("%s/%s", exptypes.ExporterImageConfigKey, k), imageConfig)
+					finalResult.AddMeta(fmt.Sprintf("%s/%s", exptypes.ExporterBuildInfo, k), buildinfo)
+					finalResult.AddRef(k, ref)
+					exportPlatforms.Platforms[i] = exptypes.Platform{
+						ID:       k,
+						Platform: p,
+					}
+				}
+				return nil
+			})
+		}(i, tp)
 	}
 
-	imageConfig, err := json.Marshal(image)
-
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal image config")
+	if err := eg.Wait(); err != nil {
+		return nil, err
 	}
 
-	def, err := st.Marshal(ctx)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal definition")
+	if isMultiPlatform {
+		dt, err := json.Marshal(exportPlatforms)
+		if err != nil {
+			return nil, err
+		}
+		finalResult.AddMeta(exptypes.ExporterPlatformsKey, dt)
 	}
 
-	res, err := c.Solve(ctx, client.SolveRequest{
-		Definition: def.ToPB(),
-	})
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to solve")
-	}
-
-	res.AddMeta(exptypes.ExporterImageConfigKey, imageConfig)
-
-	return res, nil
+	return finalResult, nil
 }
 
 func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, error) {
@@ -172,6 +252,19 @@ func filterOpts(opts map[string]string, prefix string) map[string]string {
 	}
 
 	return filtered
+}
+
+func parsePlatforms(v string) ([]*ocispecs.Platform, error) {
+	var pp []*ocispecs.Platform
+	for _, v := range strings.Split(v, ",") {
+		p, err := platforms.Parse(v)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse target platform %s", v)
+		}
+		p = platforms.Normalize(p)
+		pp = append(pp, &p)
+	}
+	return pp, nil
 }
 
 func readFileFromLocal(

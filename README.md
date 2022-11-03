@@ -173,10 +173,12 @@ given variant.
 You can see the result of the example configuration by cloning this repo and
 running (assuming you have go):
 
-    make
-    ./blubber examples/blubber.yaml development
-    ./blubber examples/blubber.yaml test
-    ./blubber examples/blubber.yaml production
+```console
+$ make
+$ ./blubber examples/blubber.yaml development
+$ ./blubber examples/blubber.yaml test
+$ ./blubber examples/blubber.yaml production
+```
 
 Other examples with different variants can be found under directory `examples`.
 
@@ -193,19 +195,21 @@ with both BuildKit's `buildctl` command and with `docker build`.
 
 To build from Blubber configuration using `buildctl`, do:
 
-    buildctl build --frontend gateway.v0 \
-      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
-      --local context=. \
-      --local dockerfile=. \
-      --opt filename=blubber.yaml \
-      --opt variant=test
+```console
+$ buildctl build --frontend gateway.v0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.12.2 \
+  --local context=. \
+  --local dockerfile=. \
+  --opt filename=blubber.yaml \
+  --opt variant=test
+```
 
 If you'd like to build directly with `docker build` (or other toolchains that
 invoke it like `docker-compose`), specify a [syntax
 directive](https://docs.docker.com/engine/reference/builder/#syntax) at the
 top of your Blubber configuration like so.
 
-    # syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1
+    # syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.12.2
     version: v4
     variants:
       my-variant:
@@ -218,11 +222,13 @@ Docker must have BuildKit enabled as the default builder. You can also use
 Docker's [build-time arguments][build_args] are also supported, including those
 used to provide proxies to build processes.
 
-    buildctl build --frontend gateway.v0 \
-      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
-      --opt build-arg:http_proxy=http://proxy.example \
-      --opt variant=pulls-in-stuff-from-the-internet
-      ...
+```console
+buildctl build --frontend gateway.v0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.12.2 \
+  --opt build-arg:http_proxy=http://proxy.example \
+  --opt variant=pulls-in-stuff-from-the-internet
+  ...
+```
 
 [build_args]: https://docs.docker.com/engine/reference/commandline/build/#set-build-time-variables---build-arg
 
@@ -235,12 +241,67 @@ of the BuildKit image build process
 
 Example usage:
 
-    buildctl build --frontend gateway.v0 \
-      --opt source=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.11.1 \
-      --local context=. \
-      --local dockerfile=. \
-      --opt filename=blubber.yaml \
-      --opt variant=test \
-      --opt run-variant=true
-      --opt entrypoint-args='["extraParam1", "extraParam2"]'
-      ...
+```console
+$ buildctl build --frontend gateway.v0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.12.2 \
+  --local context=. \
+  --local dockerfile=. \
+  --opt filename=blubber.yaml \
+  --opt variant=test \
+  --opt run-variant=true
+  --opt entrypoint-args='["extraParam1", "extraParam2"]'
+  ...
+```
+
+### Building for multiple platforms
+
+Blubber's BuildKit frontend supports building for multiple platforms at once
+and publishing a single manifest index for the given platforms (aka a "fat"
+manifest). See the [OCI Image Index Specification][oci-image-index] for
+details.
+
+Note that your build process must be aware of the [environment
+variables][multi-platform-env-vars] set for multi-platform builds in order to
+perform any cross-compilation needed.
+
+Example usage:
+
+```console
+$ buildctl build --frontend gateway.v0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.12.2 \
+  --local context=. \
+  --local dockerfile=. \
+  --opt filename=blubber.yaml \
+  --opt variant=production \
+  --opt platform=linux/amd64,linux/arm64 \
+  --output type=image,name=my/multi-platform-app:v1.0,push=true
+
+$ docker manifest inspect my/multi-platform-app:v1.0
+{
+   "schemaVersion": 2,
+   "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+   "manifests": [
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": <n>,
+         "digest": "sha256:<digest>",
+         "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": <n>,
+         "digest": "sha256:<digest>",
+         "platform": {
+            "architecture": "arm64",
+            "os": "linux"
+         }
+      }
+   ]
+}
+```
+
+[multi-platform-env-vars]: https://docs.docker.com/build/building/multi-platform/#building-multi-platform-images
+[oci-image-index]: https://github.com/opencontainers/image-spec/blob/main/image-index.md
