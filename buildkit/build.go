@@ -93,6 +93,16 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, fmt.Sprintf(`failed to read "%s"`, dockerignoreFilename))
 	}
 
+	// Default the build platform to the buildkit host's os/arch
+	defaultBuildPlatform := platforms.DefaultSpec()
+
+	// But prefer the first worker's platform
+	if workers := c.BuildOpts().Workers; len(workers) > 0 && len(workers[0].Platforms) > 0 {
+		defaultBuildPlatform = workers[0].Platforms[0]
+	}
+
+	buildPlatforms := []ocispecs.Platform{defaultBuildPlatform}
+
 	// Defer to dockerfile2llb on the default platform by passing nil
 	targetPlatforms := []*ocispecs.Platform{nil}
 
@@ -127,6 +137,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 						SessionID:      buildOpts.SessionID,
 						BuildArgs:      filterOpts(opts, buildArgPrefix),
 						Excludes:       excludes,
+						BuildPlatforms: buildPlatforms,
 						TargetPlatform: platform,
 						PrefixPlatform: isMultiPlatform,
 					},
