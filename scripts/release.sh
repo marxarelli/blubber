@@ -26,7 +26,7 @@ while getopts p opt; do
       INCREMENT_INDEX=2
       ;;
     h|?)
-      usage()
+      usage
       exit 2
       ;;
   esac
