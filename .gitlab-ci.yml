@@ -47,7 +47,7 @@ build-and-publish-frontend:
   extends: .kokkuri:build-and-publish-image
   variables:
     BUILD_VARIANT: buildkit
-    BUILD_TARGET_PLATFORMS: linux/amd64 # omit linux/arm64 until T322453 is sorted
+    BUILD_TARGET_PLATFORMS: linux/amd64,linux/arm64
     PUBLISH_IMAGE_NAME: '${CI_PROJECT_PATH}/buildkit'
   tags:
     - trusted
