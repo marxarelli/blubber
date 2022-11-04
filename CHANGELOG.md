@@ -1,4 +1,14 @@
 
+<a name="v0.13.1"></a>
+## [v0.13.1](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.13.0...v0.13.1)
+
+> 2022-11-04
+
+### BuildKit
+
+* Specify build platforms based on that of the workers
+
+
 <a name="v0.13.0"></a>
 ## [v0.13.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.12.2...v0.13.0)
 
