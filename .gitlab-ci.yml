@@ -36,6 +36,7 @@ build-frontend:
   extends: .kokkuri:build-image
   variables:
     BUILD_VARIANT: buildkit
+    BUILD_TARGET_PLATFORMS: linux/amd64,linux/arm64
 
 # Publish a new version of the buildkit frontend each time a version tag (e.g.
 # v0.0.0) is pushed. Note that these tags are marked as protected under 
@@ -46,6 +47,7 @@ build-and-publish-frontend:
   extends: .kokkuri:build-and-publish-image
   variables:
     BUILD_VARIANT: buildkit
+    BUILD_TARGET_PLATFORMS: linux/amd64,linux/arm64
     IMAGE_NAME: '${CI_PROJECT_PATH}/buildkit'
   tags:
     - protected

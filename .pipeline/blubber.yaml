@@ -1,4 +1,4 @@
-# syntax=docker-registry.wikimedia.org/wikimedia/blubber-buildkit:v0.10.0
+# syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.13.1
 version: v4
 
 variants:
