@@ -1,4 +1,29 @@
 
+<a name="v0.13.0"></a>
+## [v0.13.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.12.2...v0.13.0)
+
+> 2022-11-04
+
+### BuildKit
+
+* Refactor multi-platform build process
+* Support building for multiple target platforms
+
+### Scripts
+
+* Fix unbound variable in scripts/release.sh
+* Fix usage function call in scripts/release.sh
+* Avoid pushing directly to the remote branch when releasing
+* Fix increment_version to zero the subsequent places
+* Provide scripts/release.sh to standardize new releases
+
+
+<a name="v0.12.2"></a>
+## [v0.12.2](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.12.1...v0.12.2)
+
+> 2022-10-28
+
+
 <a name="v0.12.1"></a>
 ## [v0.12.1](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.12.0+gitlab...v0.12.1)
 
