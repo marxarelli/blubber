@@ -101,19 +101,18 @@ func BuildIncludesDepGraph(config *Config) {
 	config.IncludesDepGraph = graph
 }
 
-// buildCopiesDepGraph constructs the `copies` dependency graph
+// buildCopiesDepGraph constructs the variant dependency graph for copy
+// operations
 func buildCopiesDepGraph(config *Config) {
 	graph := NewDepGraph()
 
 	for variant, vcfg := range config.Variants {
 		graph.EnsureNode(variant)
 
-		for _, ac := range append(vcfg.Copies, vcfg.Builder.Requirements...) {
-			if ac.From != LocalArtifactKeyword {
-				// Only add dependencies for defined variants, not external image refs
-				if _, exists := config.Variants[ac.From]; exists {
-					graph.AddDependency(variant, ac.From)
-				}
+		for _, dependency := range vcfg.Dependencies() {
+			// Only add dependencies for defined variants, not external image refs
+			if _, exists := config.Variants[dependency]; exists {
+				graph.AddDependency(variant, dependency)
 			}
 		}
 	}

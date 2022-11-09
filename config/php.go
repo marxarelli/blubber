@@ -14,6 +14,12 @@ type PhpConfig struct {
 	Production Flag `json:"production"`
 }
 
+// Dependencies returns variant dependencies.
+//
+func (pc PhpConfig) Dependencies() []string {
+	return pc.Requirements.Dependencies()
+}
+
 // Merge takes another PhpConfig and merges its fields into this one's,
 // overwriting the requirements files.
 //

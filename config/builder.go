@@ -12,6 +12,12 @@ type BuilderConfig struct {
 	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
 }
 
+// Dependencies returns variant dependencies.
+//
+func (bc BuilderConfig) Dependencies() []string {
+	return bc.Requirements.Dependencies()
+}
+
 // Merge takes another BuilderConfig and merges its fields into this one's,
 // overwriting the builder command and requirements.
 //

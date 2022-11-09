@@ -20,6 +20,25 @@ type CommonConfig struct {
 	EntryPoint []string       `json:"entrypoint"`                                                                                        // entry-point executable
 }
 
+// Dependencies returns variant dependencies.
+//
+func (cc *CommonConfig) Dependencies() []string {
+	dependents := []VariantDependent{
+		cc.Node,
+		cc.Php,
+		cc.Python,
+		cc.Builder,
+		cc.Builders,
+	}
+
+	deps := []string{}
+	for _, dependent := range dependents {
+		deps = append(deps, dependent.Dependencies()...)
+	}
+
+	return deps
+}
+
 // Merge takes another CommonConfig and merges its fields this one's.
 //
 func (cc *CommonConfig) Merge(cc2 CommonConfig) {

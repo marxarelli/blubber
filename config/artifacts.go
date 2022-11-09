@@ -32,6 +32,15 @@ func NewArtifactsConfigFromSource(source string) ArtifactsConfig {
 	}
 }
 
+// Dependencies returns variant dependencies.
+//
+func (ac ArtifactsConfig) Dependencies() []string {
+	if ac.From != "" && ac.From != LocalArtifactKeyword {
+		return []string{ac.From}
+	}
+	return []string{}
+}
+
 // Expand returns the longhand configured artifact and/or the default
 // artifacts for any configured by shorthand notation (i.e. on the `From`
 // field).

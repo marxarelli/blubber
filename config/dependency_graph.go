@@ -6,6 +6,13 @@ import (
 	orderedmap "github.com/wk8/go-ordered-map"
 )
 
+// VariantDependent represents configuration that establishes a dependency on
+// another variant's filesystem.
+//
+type VariantDependent interface {
+	Dependencies() []string
+}
+
 // Node represents a node in a dependency graph
 type Node struct {
 	key string

@@ -47,6 +47,12 @@ type PoetryConfig struct {
 	Devel   Flag   `json:"devel"`
 }
 
+// Dependencies returns variant dependencies.
+//
+func (pc PythonConfig) Dependencies() []string {
+	return pc.Requirements.Dependencies()
+}
+
 // Merge takes another PythonConfig and merges its fields into this one's,
 // overwriting both the dependencies flag and requirements.
 //

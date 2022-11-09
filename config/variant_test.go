@@ -47,6 +47,46 @@ func TestVariantConfigYAML(t *testing.T) {
 	}
 }
 
+func TestVariantDependencies(t *testing.T) {
+	vcfg := config.NewVariantConfig("foo")
+	vcfg.Copies = config.CopiesConfig{
+		{From: "dep0"},
+	}
+	vcfg.Node = config.NodeConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "dep1"},
+		},
+	}
+	vcfg.Php = config.PhpConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "dep2"},
+		},
+	}
+	vcfg.Python = config.PythonConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "dep3"},
+		},
+	}
+	vcfg.Builder = config.BuilderConfig{
+		Requirements: config.RequirementsConfig{
+			{From: "dep4"},
+		},
+	}
+	vcfg.Builders = config.BuildersConfig{
+		config.BuilderConfig{
+			Requirements: config.RequirementsConfig{
+				{From: "dep5"},
+			},
+		},
+	}
+
+	assert.Equal(
+		t,
+		[]string{"dep0", "dep1", "dep2", "dep3", "dep4", "dep5"},
+		vcfg.Dependencies(),
+	)
+}
+
 func TestVariantLoops(t *testing.T) {
 	cfg := config.Config{
 		VersionConfig: config.VersionConfig{Version: "v4"},

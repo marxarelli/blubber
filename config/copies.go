@@ -16,6 +16,16 @@ const LocalArtifactKeyword = "local"
 //
 type CopiesConfig []ArtifactsConfig
 
+// Dependencies returns variant dependencies.
+//
+func (cc CopiesConfig) Dependencies() []string {
+	deps := []string{}
+	for _, ac := range cc {
+		deps = append(deps, ac.Dependencies()...)
+	}
+	return deps
+}
+
 // Expand returns a version of this CopiesConfig with its shorthand
 // configurations expanded.
 //

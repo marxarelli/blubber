@@ -22,6 +22,15 @@ type VariantConfig struct {
 	name string
 }
 
+// Dependencies returns variant dependencies.
+//
+func (vc *VariantConfig) Dependencies() []string {
+	return append(
+		vc.Copies.Dependencies(),
+		vc.CommonConfig.Dependencies()...,
+	)
+}
+
 // Merge takes another VariantConfig and overwrites this struct's fields.
 //
 func (vc *VariantConfig) Merge(vc2 VariantConfig) {

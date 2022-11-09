@@ -12,6 +12,16 @@ import (
 //
 type RequirementsConfig []ArtifactsConfig
 
+// Dependencies returns variant dependencies.
+//
+func (rc RequirementsConfig) Dependencies() []string {
+	deps := []string{}
+	for _, ac := range rc {
+		deps = append(deps, ac.Dependencies()...)
+	}
+	return deps
+}
+
 // InstructionsForPhase injects instructions into the given build phase that
 // copy configured artifacts.
 //

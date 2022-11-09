@@ -86,6 +86,18 @@ func (bc BuildersConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 	return instructions
 }
 
+// Dependencies returns variant dependencies.
+//
+func (bc BuildersConfig) Dependencies() []string {
+	deps := []string{}
+	for _, builder := range bc {
+		if dependant, ok := builder.(VariantDependent); ok {
+			deps = append(deps, dependant.Dependencies()...)
+		}
+	}
+	return deps
+}
+
 // UnmarshalJSON implements json.Unmarshaler to manually handle different builder types
 func (bc *BuildersConfig) UnmarshalJSON(unmarshal []byte) error {
 	builderEntries := []builderEntry{}

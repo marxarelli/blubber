@@ -18,6 +18,12 @@ type NodeConfig struct {
 	UseNpmCi Flag `json:"use-npm-ci"`
 }
 
+// Dependencies returns variant dependencies.
+//
+func (nc NodeConfig) Dependencies() []string {
+	return nc.Requirements.Dependencies()
+}
+
 // Merge takes another NodeConfig and merges its fields into this one's,
 // overwriting useNpmCi, the environment, and the requirements files.
 //
