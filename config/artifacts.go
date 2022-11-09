@@ -19,7 +19,7 @@ import (
 type ArtifactsConfig struct {
 	From        string `json:"from" validate:"required,artifactfrom"`
 	Source      string `json:"source" validate:"requiredwith=destination,relativelocal"`
-	Destination string `json:"destination" validate:"relativelocal"`
+	Destination string `json:"destination"`
 }
 
 // NewArtifactsConfigFromSource creates an local ArtifactsConfig from the

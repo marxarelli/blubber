@@ -254,7 +254,7 @@ func TestArtifactsConfigValidation(t *testing.T) {
 		})
 
 		t.Run("destination", func(t *testing.T) {
-			t.Run("must be a relative path", func(t *testing.T) {
+			t.Run("can be relative", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
           version: v4
           variants:
@@ -262,16 +262,12 @@ func TestArtifactsConfigValidation(t *testing.T) {
               copies:
                 - from: local
                   source: ./foo
-                  destination: /bad/path`))
+                  destination: ./good/path`))
 
-				if assert.True(t, config.IsValidationError(err)) {
-					msg := config.HumanizeValidationError(err)
-
-					assert.Equal(t, `destination: path must be relative when "from" is "local"`, msg)
-				}
+				assert.False(t, config.IsValidationError(err))
 			})
 
-			t.Run("must not use ../", func(t *testing.T) {
+			t.Run("can be absolute", func(t *testing.T) {
 				_, err := config.ReadYAMLConfig([]byte(`---
           version: v4
           variants:
@@ -279,13 +275,9 @@ func TestArtifactsConfigValidation(t *testing.T) {
               copies:
                 - from: local
                   source: ./foo
-                  destination: ./funny/../../business`))
+                  destination: /good/path`))
 
-				if assert.True(t, config.IsValidationError(err)) {
-					msg := config.HumanizeValidationError(err)
-
-					assert.Equal(t, `destination: path must be relative when "from" is "local"`, msg)
-				}
+				assert.False(t, config.IsValidationError(err))
 			})
 		})
 	})
