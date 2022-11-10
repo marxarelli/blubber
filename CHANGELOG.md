@@ -1,4 +1,15 @@
 
+<a name="v0.15.0"></a>
+## [v0.15.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.14.0...v0.15.0)
+
+> 2022-11-10
+
+### Artifacts
+
+* Destination for "local" artifact can be anything
+* Add copy dependencies for all artifacts that reference variants
+
+
 <a name="v0.14.0"></a>
 ## [v0.14.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.13.1...v0.14.0)
 
