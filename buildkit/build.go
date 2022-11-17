@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/containerd/containerd/platforms"
+	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
@@ -23,6 +24,8 @@ import (
 const (
 	localNameConfig      = "dockerfile"
 	localNameContext     = "context"
+	keyCacheFrom         = "cache-from"    // for registry only. deprecated in favor of keyCacheImports
+	keyCacheImports      = "cache-imports" // JSON representation of []CacheOptionsEntry
 	keyConfigPath        = "filename"
 	keyTarget            = "target"
 	keyTargetPlatform    = "platform"
@@ -93,6 +96,13 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, fmt.Sprintf(`failed to read "%s"`, dockerignoreFilename))
 	}
 
+	// Parse cache imports
+	cacheImports, err := parseCacheOptions(opts)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse cache import options")
+	}
+
 	// Default the build platform to the buildkit host's os/arch
 	defaultBuildPlatform := platforms.DefaultSpec()
 
@@ -141,6 +151,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 						TargetPlatform: platform,
 						PrefixPlatform: isMultiPlatform,
 					},
+					cacheImports,
 				)
 
 				if err != nil {
@@ -232,6 +243,7 @@ func buildImage(
 	cfg *config.Config,
 	variant string,
 	convertOpts d2llb.ConvertOpt,
+	cacheImports []client.CacheOptionsEntry,
 ) (*buildResult, error) {
 
 	result := buildResult{
@@ -256,7 +268,8 @@ func buildImage(
 	}
 
 	res, err := c.Solve(ctx, client.SolveRequest{
-		Definition: def.ToPB(),
+		Definition:   def.ToPB(),
+		CacheImports: cacheImports,
 	})
 
 	if err != nil {
@@ -336,6 +349,44 @@ func filterOpts(opts map[string]string, prefix string) map[string]string {
 	}
 
 	return filtered
+}
+
+// parseCacheOptions handles given cache imports. Note that clients may give
+// these options in two different ways, either as `cache-imports` or
+// `cache-from`. The latter is used for registry based cache imports.
+// See https://github.com/moby/buildkit/blob/v0.10/client/solve.go#L477
+//
+// TODO the master branch of buildkit removes the legacy `cache-from` key, so
+// once they cut a new minor version, we can remove support for it.
+//
+func parseCacheOptions(opts map[string]string) ([]client.CacheOptionsEntry, error) {
+	var cacheImports []client.CacheOptionsEntry
+	// new API
+	if cacheImportsStr := opts[keyCacheImports]; cacheImportsStr != "" {
+		var cacheImportsUM []controlapi.CacheOptionsEntry
+		if err := json.Unmarshal([]byte(cacheImportsStr), &cacheImportsUM); err != nil {
+			return nil, errors.Wrapf(err, "failed to unmarshal %s (%q)", keyCacheImports, cacheImportsStr)
+		}
+		for _, um := range cacheImportsUM {
+			cacheImports = append(cacheImports, client.CacheOptionsEntry{Type: um.Type, Attrs: um.Attrs})
+		}
+	}
+	// old API
+	if cacheFromStr := opts[keyCacheFrom]; cacheFromStr != "" {
+		cacheFrom := strings.Split(cacheFromStr, ",")
+		for _, s := range cacheFrom {
+			im := client.CacheOptionsEntry{
+				Type: "registry",
+				Attrs: map[string]string{
+					"ref": s,
+				},
+			}
+			// FIXME(AkihiroSuda): skip append if already exists
+			cacheImports = append(cacheImports, im)
+		}
+	}
+
+	return cacheImports, nil
 }
 
 func parsePlatforms(v string) ([]*ocispecs.Platform, error) {
