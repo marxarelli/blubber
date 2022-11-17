@@ -1,4 +1,14 @@
 
+<a name="v0.16.0"></a>
+## [v0.16.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.15.0...v0.16.0)
+
+> 2022-11-17
+
+### BuildKit
+
+* Handle client cache import options
+
+
 <a name="v0.15.0"></a>
 ## [v0.15.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.14.0...v0.15.0)
 
@@ -106,7 +116,7 @@
 
 
 <a name="v0.10.0"></a>
-## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.0.0...v0.10.0)
+## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.10.0)
 
 > 2022-10-12
 
@@ -115,6 +125,10 @@
 * Support user defined APT sources
 * Implement merging `apt.proxies` config
 * Support configuration of http/https proxies
+
+### Add
+
+* a Blubber file for a Blubberoid service Docker image
 
 ### BuildKit
 
@@ -148,6 +162,14 @@
 * upgrade pip before installing requirements
 * Pin pip package to <21 for Python 2
 
+### Python
+
+* Add support for use-system-flag directive
+
+### PythonConfig
+
+* Change UseSystemFlag to Flag
+
 ### Requirements
 
 * Fix regression in short form handling
@@ -160,28 +182,6 @@
 
 * Revert "feature: build-time arguments for lives & runs user config"
 * feature: build-time arguments for lives & runs user config
-
-
-<a name="v0.0.0"></a>
-## [v0.0.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.0.0)
-
-> 2019-04-16
-
-### Add
-
-* a Blubber file for a Blubberoid service Docker image
-
-### Experimental
-
-* Support buildkit
-
-### Python
-
-* Add support for use-system-flag directive
-
-### PythonConfig
-
-* Change UseSystemFlag to Flag
 
 
 <a name="v0.6.0"></a>
