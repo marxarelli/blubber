@@ -50,6 +50,6 @@ build-and-publish-frontend:
     BUILD_TARGET_PLATFORMS: linux/amd64 # omit linux/arm64 until T322453 is sorted
     IMAGE_NAME: '${CI_PROJECT_PATH}/buildkit'
   tags:
-    - protected
+    - trusted
   rules:
     - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
