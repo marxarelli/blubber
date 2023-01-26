@@ -238,6 +238,7 @@ The following options can be passed via command line (via `--opt`) to configure 
  * `run-variant`: bool. Instructs Blubber to run the target variant's entrypoint (if any) as part
 of the BuildKit image build process
  * `entrypoint-args`: JSON array. List of additional arguments for the entrypoint
+ * `run-variant-env`: JSON object of key/value pairs to set in the environment when `run-variant` is true.
 
 Example usage:
 
@@ -248,8 +249,9 @@ $ buildctl build --frontend gateway.v0 \
   --local dockerfile=. \
   --opt filename=blubber.yaml \
   --opt variant=test \
-  --opt run-variant=true
-  --opt entrypoint-args='["extraParam1", "extraParam2"]'
+  --opt run-variant=true \
+  --opt entrypoint-args='["extraParam1", "extraParam2"]' \
+  --opt run-variant-env='{"SOME_VARIABLE": "somevalue"}'
   ...
 ```
 

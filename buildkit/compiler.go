@@ -87,7 +87,11 @@ func postProcessLLB(
 
 	entryPoint := targetVariant.EntryPoint
 	if entryPoint != nil && ebo != nil && ebo.RunEntrypoint() {
-		newState = state.Run(
+		for k, v := range ebo.RunVariantEnvironment() {
+			newState = newState.AddEnv(k, v)
+		}
+
+		newState = newState.Run(
 			llb.Args(append(entryPoint, ebo.EntrypointArgs()...)),
 			disableCacheForOp(),
 		).Root()
