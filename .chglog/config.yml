@@ -5,17 +5,14 @@ info:
   repository_url: https://gitlab.wikimedia.org/repos/releng/blubber
 options:
   tag_filter_pattern: '^v'
-  commits:
-    #filters:
-    #  Type:
-    #    - buildkit
   commit_groups:
     title_maps:
       apt: APT
       buildkit: BuildKit
-      node.go: Node
+      php: PHP
+      PythonConfig: Python
   header:
-    pattern: "^([\\w\\.]*)\\:\\s(.*)$"
+    pattern: "^(?:(\\w+)(?:\\.\\w+)?)\\:\\s(.*)$"
     pattern_maps:
       - Type
       - Subject
