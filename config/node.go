@@ -16,6 +16,9 @@ type NodeConfig struct {
 
 	// Whether to run npm ci
 	UseNpmCi Flag `json:"use-npm-ci"`
+
+	// Whether to allow `npm dedupe` to fail
+	AllowDedupeFailure Flag `json:"allow-dedupe-failure"`
 }
 
 // Dependencies returns variant dependencies.
@@ -29,6 +32,7 @@ func (nc NodeConfig) Dependencies() []string {
 //
 func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 	nc.UseNpmCi.Merge(nc2.UseNpmCi)
+	nc.AllowDedupeFailure.Merge(nc2.AllowDedupeFailure)
 
 	if nc2.Requirements != nil {
 		nc.Requirements = nc2.Requirements
@@ -47,7 +51,7 @@ func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 // Installs Node package dependencies declared in requirements files into the
 // application directory. Only production related packages are install if
 // NodeConfig.Env is set to "production" in which case `npm dedupe` is also
-// run. Installing dependencies during the build.PhasePreInstall phase allows
+// tried. Installing dependencies during the build.PhasePreInstall phase allows
 // a compiler implementation (e.g. Docker) to produce cache-efficient output
 // so only changes to package.json will invalidate these steps of the image
 // build.
@@ -63,25 +67,35 @@ func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 	switch phase {
 	case build.PhasePreInstall:
 		if len(nc.Requirements) > 0 {
-			var npmInstall build.RunAll
+			var npmInstall build.Run
 			if nc.UseNpmCi.True {
-				npmInstall = build.RunAll{[]build.Run{
-					{"npm ci", []string{}},
-				}}
+				npmInstall = build.Run{"npm ci", []string{}}
 			} else {
-				npmInstall = build.RunAll{[]build.Run{
-					{"npm install", []string{}},
-				}}
+				npmInstall = build.Run{"npm install", []string{}}
 			}
 
 			if nc.Env == "production" {
-				npmInstall.Runs[0].Arguments = []string{"--only=production"}
-				npmInstall.Runs = append(npmInstall.Runs,
-					build.Run{"npm dedupe", []string{}},
-				)
+				npmInstall.Arguments = []string{"--only=production"}
 			}
 
 			ins = append(ins, npmInstall)
+
+			if nc.Env == "production" {
+				var npmDedupe build.Run
+				if nc.AllowDedupeFailure.True {
+					npmDedupe = build.Run{
+						"npm dedupe || echo %s",
+						[]string{
+							"WARNING: npm dedupe failed, " +
+								"continuing anyways",
+						},
+					}
+				} else {
+					npmDedupe = build.Run{"npm dedupe", []string{}}
+				}
+
+				ins = append(ins, npmDedupe)
+			}
 		}
 	case build.PhasePostInstall:
 		if nc.Env != "" || len(nc.Requirements) > 0 {

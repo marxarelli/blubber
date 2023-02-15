@@ -82,9 +82,7 @@ func TestNodeConfigInstructionsUseNpmCi(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Copy{[]string{"package.json"}, "./"},
-				build.RunAll{[]build.Run{
-					{"npm ci", []string{}},
-				}},
+				build.Run{"npm ci", []string{}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
@@ -111,9 +109,7 @@ func TestNodeConfigInstructionsNonProduction(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Copy{[]string{"package.json"}, "./"},
-				build.RunAll{[]build.Run{
-					{"npm install", []string{}},
-				}},
+				build.Run{"npm install", []string{}},
 			},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
@@ -149,16 +145,33 @@ func TestNodeConfigInstructionsProduction(t *testing.T) {
 	})
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Copy{[]string{"package.json", "package-lock.json"}, "./"},
-				build.RunAll{[]build.Run{
-					{"npm install", []string{"--only=production"}},
-					{"npm dedupe", []string{}},
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
+		t.Run("Default", func(t *testing.T) {
+			assert.Equal(t,
+				[]build.Instruction{
+					build.Copy{[]string{"package.json", "package-lock.json"}, "./"},
+					build.Run{"npm install", []string{"--only=production"}},
+					build.Run{"npm dedupe", []string{}},
+				},
+				cfg.InstructionsForPhase(build.PhasePreInstall),
+			)
+		})
+
+		t.Run("AllowDedupeFailure", func(t *testing.T) {
+			var cfg2 = config.NodeConfig{
+				AllowDedupeFailure: config.Flag{True: true},
+			}
+			cfg2.Merge(cfg)
+			assert.Equal(t,
+				[]build.Instruction{
+					build.Copy{[]string{"package.json", "package-lock.json"}, "./"},
+					build.Run{"npm install", []string{"--only=production"}},
+					build.Run{"npm dedupe || echo %s", []string{
+						"WARNING: npm dedupe failed, continuing anyways",
+					}},
+				},
+				cfg2.InstructionsForPhase(build.PhasePreInstall),
+			)
+		})
 	})
 
 	t.Run("PhasePostInstall", func(t *testing.T) {

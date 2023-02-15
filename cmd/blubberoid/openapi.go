@@ -184,6 +184,9 @@ components:
             use-npm-ci:
               type: boolean
               description: Whether to run npm ci instead of npm install
+            allow-dedupe-failure:
+              type: boolean
+              description: Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved
         php:
           type: object
           properties:

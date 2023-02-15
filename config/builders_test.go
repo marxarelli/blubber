@@ -181,6 +181,7 @@ func TestBuildersConfigMerge(t *testing.T) {
               requirements: [requirements.txt]
           - node:
               requirements: [package.json, package-lock.json]
+              allow-dedupe-failure: true
           - custom:
               command: [make, deps]
               requirements: [Makefile, vendor]`))
@@ -209,6 +210,10 @@ func TestBuildersConfigMerge(t *testing.T) {
 				Requirements: config.RequirementsConfig{
 					{From: "local", Source: "package.json"},
 					{From: "local", Source: "package-lock.json"},
+				},
+				AllowDedupeFailure: config.Flag{
+					True: true,
+					Set: true,
 				},
 			},
 			config.BuilderConfig{
