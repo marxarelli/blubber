@@ -213,7 +213,7 @@ func TestBuildersConfigMerge(t *testing.T) {
 				},
 				AllowDedupeFailure: config.Flag{
 					True: true,
-					Set: true,
+					Set:  true,
 				},
 			},
 			config.BuilderConfig{
