@@ -1,4 +1,23 @@
 
+<a name="v0.17.0"></a>
+## [v0.17.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.16.0...v0.17.0)
+
+> 2023-02-15
+
+### Builders
+
+* Fix indentation in test
+
+### Chglog
+
+* Map all *.go commit labels to plain labels
+* Map node.go label to Node
+
+### Node
+
+* Add allow-dedupe-failure flag
+
+
 <a name="v0.16.0"></a>
 ## [v0.16.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.15.0...v0.16.0)
 
@@ -116,7 +135,7 @@
 
 
 <a name="v0.10.0"></a>
-## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.10.0)
+## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.0.0...v0.10.0)
 
 > 2022-10-12
 
@@ -125,10 +144,7 @@
 * Support user defined APT sources
 * Implement merging `apt.proxies` config
 * Support configuration of http/https proxies
-
-### Add
-
-* a Blubber file for a Blubberoid service Docker image
+* Add ability to target releases
 
 ### BuildKit
 
@@ -152,6 +168,10 @@
 
 * Use numeric gid when creating a user
 
+### PHP
+
+* Pass --no-scripts to composer for extra hardening
+
 ### Python
 
 * add no-deps flag for pip installation
@@ -161,14 +181,6 @@
 * Support execution of site package modules in builder
 * upgrade pip before installing requirements
 * Pin pip package to <21 for Python 2
-
-### Python
-
-* Add support for use-system-flag directive
-
-### PythonConfig
-
-* Change UseSystemFlag to Flag
 
 ### Requirements
 
@@ -182,6 +194,40 @@
 
 * Revert "feature: build-time arguments for lives & runs user config"
 * feature: build-time arguments for lives & runs user config
+
+
+<a name="v0.0.0"></a>
+## [v0.0.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.0.0)
+
+> 2019-04-16
+
+### Add
+
+* a Blubber file for a Blubberoid service Docker image
+
+### Blubber
+
+* Bump pipeline version
+
+### Experimental
+
+* Support buildkit
+
+### Node
+
+* Add npm ci to build instructions
+
+### Python
+
+* Add support for Poetry package manager
+
+### Python
+
+* Change UseSystemFlag to Flag
+
+### Python
+
+* Add support for use-system-flag directive
 
 
 <a name="v0.6.0"></a>
