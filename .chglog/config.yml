@@ -13,8 +13,9 @@ options:
     title_maps:
       apt: APT
       buildkit: BuildKit
+      node.go: Node
   header:
-    pattern: "^(\\w*)\\:\\s(.*)$"
+    pattern: "^([\\w\\.]*)\\:\\s(.*)$"
     pattern_maps:
       - Type
       - Subject
