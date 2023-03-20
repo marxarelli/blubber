@@ -1,4 +1,10 @@
 
+<a name="v0.18.0"></a>
+## [v0.18.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.17.0...v0.18.0)
+
+> 2022-11-04
+
+
 <a name="v0.17.0"></a>
 ## [v0.17.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.16.0...v0.17.0)
 
