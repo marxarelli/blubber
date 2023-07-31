@@ -90,7 +90,7 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
 				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
 					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
@@ -181,7 +181,7 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 					}},
 				}},
 				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
 					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
@@ -236,7 +236,7 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 					}},
 				}},
 				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
 					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},
@@ -273,7 +273,7 @@ func TestPythonConfigUseNoDepsFlag(t *testing.T) {
 					}},
 				}},
 				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages",
+					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
 					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
 				}},
 			},

@@ -182,7 +182,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				// containing the installed packages and their related
 				// scripts.
 				ins = append(ins, build.Env{map[string]string{
-					"PYTHONPATH": PythonSitePackages,
+					"PYTHONPATH": PythonSitePackages + ":${PYTHONPATH}",
 					"PATH":       PythonSiteBin + ":${PATH}",
 				}})
 			}
