@@ -1,8 +1,22 @@
 
+<a name="v0.19.0"></a>
+## [v0.19.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.18.0...v0.19.0)
+
+> 2023-07-31
+
+### Feat
+
+* append pythonpath for python
+
+### Reverts
+
+* ci: Build for both linux/amd64 and linux/arm64
+
+
 <a name="v0.18.0"></a>
 ## [v0.18.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.17.0...v0.18.0)
 
-> 2022-11-04
+> 2023-03-20
 
 
 <a name="v0.17.0"></a>
