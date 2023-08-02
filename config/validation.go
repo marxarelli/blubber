@@ -102,7 +102,6 @@ const rootCfgCtx ctxKey = iota
 
 // newValidator returns a validator instance for which our custom aliases and
 // functions are registered.
-//
 func newValidator() *validator.Validate {
 	validate := validator.New()
 
@@ -122,7 +121,6 @@ func newValidator() *validator.Validate {
 // Validate runs all validations defined for config fields against the given
 // Config value. If the returned error is not nil, it will contain a
 // user-friendly message describing all invalid field values.
-//
 func Validate(config interface{}) error {
 	validate := newValidator()
 
@@ -133,7 +131,6 @@ func Validate(config interface{}) error {
 
 // HumanizeValidationError transforms the given validator.ValidationErrors
 // into messages more likely to be understood by human beings.
-//
 func HumanizeValidationError(err error) string {
 	var message bytes.Buffer
 
@@ -166,7 +163,6 @@ func HumanizeValidationError(err error) string {
 
 // IsValidationError tests whether the given error is a
 // validator.ValidationErrors and can be safely iterated over as such.
-//
 func IsValidationError(err error) bool {
 	if err == nil {
 		return false

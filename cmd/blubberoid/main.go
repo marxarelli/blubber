@@ -1,5 +1,4 @@
 // Package main provides the blubberoid server.
-//
 package main
 
 import (

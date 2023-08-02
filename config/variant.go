@@ -5,7 +5,6 @@ import (
 )
 
 // NewVariantConfig constructs a new VariantConfig with the given name.
-//
 func NewVariantConfig(name string) *VariantConfig {
 	vc := new(VariantConfig)
 	vc.name = name
@@ -13,7 +12,6 @@ func NewVariantConfig(name string) *VariantConfig {
 }
 
 // VariantConfig holds configuration fields for each defined build variant.
-//
 type VariantConfig struct {
 	Includes     []string     `json:"includes" validate:"dive,variantref"`
 	Copies       CopiesConfig `json:"copies" validate:"omitempty,unique,dive"`
@@ -23,7 +21,6 @@ type VariantConfig struct {
 }
 
 // Dependencies returns variant dependencies.
-//
 func (vc *VariantConfig) Dependencies() []string {
 	return append(
 		vc.Copies.Dependencies(),
@@ -32,7 +29,6 @@ func (vc *VariantConfig) Dependencies() []string {
 }
 
 // Merge takes another VariantConfig and overwrites this struct's fields.
-//
 func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 	vc.Copies.Merge(vc2.Copies)
 	vc.CommonConfig.Merge(vc2.CommonConfig)
@@ -43,28 +39,27 @@ func (vc *VariantConfig) Merge(vc2 VariantConfig) {
 // and copies configurations. It also enforces the correct UID/GID on all copy
 // instructions returned from deeper config structs.
 //
-// PhasePrivileged
+// # PhasePrivileged
 //
 // Ensure the process and file owner is root.
 //
-// PhasePrivilegeDropped
+// # PhasePrivilegeDropped
 //
 // Ensure the process and file owner is the "lives.as" user.
 //
-// PhasePreInstall
+// # PhasePreInstall
 //
 // Ensure the process and file owner is the "lives.as" user.
 //
-// PhaseInstall
+// # PhaseInstall
 //
 // Ensure the process and file owner is the "lives.as" user.
 //
-// PhasePostInstall
+// # PhasePostInstall
 //
 // Ensure the process and file owner is the "runs.as" user, unless configured
 // to run insecurely as the "lives.as" user. Finally, sets the application
 // entrypoint.
-//
 func (vc *VariantConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := vc.CommonConfig.InstructionsForPhase(phase)
 

@@ -11,7 +11,6 @@ import (
 
 // AptConfig represents configuration pertaining to package installation from
 // existing APT sources.
-//
 type AptConfig struct {
 	// Packages keys are the name of the targeted release, or 'default' to
 	// specify no target and use the base image's target release,
@@ -44,7 +43,6 @@ const (
 
 // Merge takes another AptConfig and combines the packages declared within
 // with the packages of this AptConfig.
-//
 func (apt *AptConfig) Merge(apt2 AptConfig) {
 
 	if apt2.Packages != nil {
@@ -69,10 +67,9 @@ func (apt *AptConfig) Merge(apt2 AptConfig) {
 // InstructionsForPhase injects build instructions that will install the
 // declared packages during the privileged phase.
 //
-// PhasePrivileged
+// # PhasePrivileged
 //
 // Updates the APT cache, installs configured packages, and cleans up.
-//
 func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := []build.Instruction{}
 
@@ -142,7 +139,6 @@ func (apt AptConfig) InstructionsForPhase(phase build.Phase) []build.Instruction
 // AptPackages represents lists of packages to install. Each entry is keyed by
 // the release that should be targetted during installation, i.e. `apt-get
 // install -t release package`.
-//
 type AptPackages map[string][]string
 
 // UnmarshalJSON implements json.Unmarshaler to handle both shorthand and
@@ -150,7 +146,6 @@ type AptPackages map[string][]string
 //
 // Shorthand packages configuration: ["package1", "package2"]
 // Longhand packages configuration: { "release1": ["package1, package2"], "release2": ["package3"]}
-//
 func (ap *AptPackages) UnmarshalJSON(unmarshal []byte) error {
 	(*ap) = make(AptPackages)
 
@@ -177,7 +172,6 @@ func (ap *AptPackages) UnmarshalJSON(unmarshal []byte) error {
 }
 
 // AptProxy represents an APT proxy to use for a specific or all sources.
-//
 type AptProxy struct {
 	// URL of the proxy, e.g. "http://webproxy.example:8080"
 	URL string `json:"url" validate:"required,httpurl"`
@@ -192,12 +186,13 @@ type AptProxy struct {
 //
 // Shorthand: ["http://proxy.example:8080"]
 // Longhand: [
-//   {
-//     "url": "http://proxy.example:8080",
-//     "source": "http://security.debian.org"
-//   }
-// ]
 //
+//	{
+//	  "url": "http://proxy.example:8080",
+//	  "source": "http://security.debian.org"
+//	}
+//
+// ]
 func (ap *AptProxy) UnmarshalJSON(unmarshal []byte) error {
 	err := json.Unmarshal(unmarshal, &(*ap).URL)
 
@@ -225,7 +220,6 @@ func (ap *AptProxy) UnmarshalJSON(unmarshal []byte) error {
 }
 
 // Configuration returns the APT configuration for this proxy.
-//
 func (ap AptProxy) Configuration() string {
 	var schemeURL string
 
@@ -249,7 +243,6 @@ func (ap AptProxy) Configuration() string {
 }
 
 // AptSource represents an APT source to set up prior to package installation.
-//
 type AptSource struct {
 	// URL of the APT source, e.g. "http://apt.wikimedia.org"
 	URL string `json:"url" validate:"required,httpurl"`
@@ -262,7 +255,6 @@ type AptSource struct {
 }
 
 // Configuration returns the APT list configuration for this source.
-//
 func (as AptSource) Configuration() string {
 	return "deb " + strings.Join(append([]string{as.URL, as.Distribution}, as.Components...), " ")
 }

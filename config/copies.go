@@ -8,16 +8,13 @@ import (
 
 // LocalArtifactKeyword defines a special keyword indicating
 // file/directory artifacts to be copied from the local build host context.
-//
 const LocalArtifactKeyword = "local"
 
 // CopiesConfig holds configuration for which files to copy into the variant
 // from local and other variant sources.
-//
 type CopiesConfig []ArtifactsConfig
 
 // Dependencies returns variant dependencies.
-//
 func (cc CopiesConfig) Dependencies() []string {
 	deps := []string{}
 	for _, ac := range cc {
@@ -28,7 +25,6 @@ func (cc CopiesConfig) Dependencies() []string {
 
 // Expand returns a version of this CopiesConfig with its shorthand
 // configurations expanded.
-//
 func (cc *CopiesConfig) Expand(appDirectory string) CopiesConfig {
 	expanded := CopiesConfig{}
 
@@ -41,7 +37,6 @@ func (cc *CopiesConfig) Expand(appDirectory string) CopiesConfig {
 }
 
 // InstructionsForPhase delegates to its member ArtifactsConfig.
-//
 func (cc CopiesConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := []build.Instruction{}
 
@@ -56,7 +51,6 @@ func (cc CopiesConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 //
 // Artifacts are merged additively and duplicates are removed. Uniqueness is
 // ensured by taking the latest definition over the previous.
-//
 func (cc *CopiesConfig) Merge(cc2 CopiesConfig) {
 	// efficient search of the other CopiesConfig using a map
 	newlyDefined := make(map[ArtifactsConfig]bool, len(*cc))
@@ -78,7 +72,6 @@ func (cc *CopiesConfig) Merge(cc2 CopiesConfig) {
 
 // UnmarshalJSON implements json.Unmarshaler to handle both shorthand and
 // longhand copies configuration.
-//
 func (cc *CopiesConfig) UnmarshalJSON(unmarshal []byte) error {
 	shorthand := []string{}
 

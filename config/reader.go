@@ -11,7 +11,6 @@ import (
 
 // DefaultConfig contains YAML that is applied before the user's
 // configuration.
-//
 const DefaultConfig = `{
 "lives": {
   "in": "/srv/app",
@@ -26,7 +25,6 @@ const DefaultConfig = `{
 
 // ExpandVariant merges a named variant with a config. It also attempts to
 // recursively expand any included variants in the expanded variant.
-//
 func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 	expanded := NewVariantConfig(name)
 	expanded.CommonConfig.Merge(config.CommonConfig)
@@ -51,8 +49,7 @@ func ExpandVariant(config *Config, name string) (*VariantConfig, error) {
 // validates the newly generated configuration.
 //
 // This should be run before policy verification  so that the policy enforcement is applied to the
-//final blubber spec
-//
+// final blubber spec
 func ExpandIncludesAndCopies(config *Config, name string) error {
 	BuildIncludesDepGraph(config)
 
@@ -121,7 +118,6 @@ func buildCopiesDepGraph(config *Config) {
 }
 
 // GetVariant retrieves a requested *VariantConfig from the main config
-//
 func GetVariant(config *Config, name string) (*VariantConfig, error) {
 	variant := NewVariantConfig(name)
 
@@ -132,14 +128,12 @@ func GetVariant(config *Config, name string) (*VariantConfig, error) {
 
 // IsUnmarshalTypeError returns true if the provided error is of type
 // json.UnmarshalTypeError.
-//
 func IsUnmarshalTypeError(err error) bool {
 	_, ok := err.(*json.UnmarshalTypeError)
 	return ok
 }
 
 // ReadYAMLConfig converts YAML bytes to json and returns new Config struct.
-//
 func ReadYAMLConfig(data []byte) (*Config, error) {
 	jsonData, err := yaml.YAMLToJSON(data)
 	if err != nil {
@@ -150,7 +144,6 @@ func ReadYAMLConfig(data []byte) (*Config, error) {
 }
 
 // ReadConfig unmarshals the given YAML bytes into a new Config struct.
-//
 func ReadConfig(data []byte) (*Config, error) {
 	var (
 		version VersionConfig
@@ -187,7 +180,6 @@ func ReadConfig(data []byte) (*Config, error) {
 
 // ReadConfigFile unmarshals the given YAML file contents into a Config
 // struct.
-//
 func ReadConfigFile(path string) (*Config, error) {
 	data, err := ioutil.ReadFile(path)
 

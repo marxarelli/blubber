@@ -1,5 +1,4 @@
 // Package main provides the blubber-buildkit-frontend server.
-//
 package main
 
 import (

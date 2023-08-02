@@ -29,7 +29,6 @@ func TestCommonConfigYAML(t *testing.T) {
 }
 
 // Ensure that entrypoints inherit correctly
-//
 func TestEntryPointMerge(t *testing.T) {
 	foo := config.CommonConfig{EntryPoint: []string{"/bin/foo"}}
 	bar := config.CommonConfig{EntryPoint: []string{"/bin/bar"}}

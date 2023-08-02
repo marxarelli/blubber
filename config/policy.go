@@ -13,13 +13,11 @@ import (
 )
 
 // Policy validates a number of rules against a given configuration.
-//
 type Policy struct {
 	Enforcements []Enforcement `json:"enforcements"`
 }
 
 // Validate checks the given config against all policy enforcements.
-//
 func (pol Policy) Validate(config Config) error {
 	validate := newValidator()
 
@@ -51,14 +49,12 @@ func (pol Policy) Validate(config Config) error {
 }
 
 // Enforcement represents a policy rule and config path on which to apply it.
-//
 type Enforcement struct {
 	Path string `json:"path"`
 	Rule string `json:"rule"`
 }
 
 // ReadYAMLPolicy converts YAML input to JSON and returns a new Policy struct.
-//
 func ReadYAMLPolicy(data []byte) (*Policy, error) {
 	jsonData, err := yaml.YAMLToJSON(data)
 	if err != nil {
@@ -69,7 +65,6 @@ func ReadYAMLPolicy(data []byte) (*Policy, error) {
 }
 
 // ReadPolicy unmarshals the given YAML/json bytes into a new Policy struct.
-//
 func ReadPolicy(data []byte) (*Policy, error) {
 	var policy Policy
 	err := json.Unmarshal(data, &policy)
@@ -83,7 +78,6 @@ func ReadPolicy(data []byte) (*Policy, error) {
 
 // ReadPolicyFromURI fetches the policy file from the given URL or file path
 // and loads its contents with ReadPolicy.
-//
 func ReadPolicyFromURI(uri string) (*Policy, error) {
 	io, err := openuri.Open(uri)
 
@@ -104,7 +98,6 @@ func ReadPolicyFromURI(uri string) (*Policy, error) {
 
 // ResolveJSONPath returns the config value found at the given JSON-ish
 // namespace/path (e.g. "variants.production.runs.as").
-//
 func ResolveJSONPath(path string, cfg interface{}) (interface{}, error) {
 	parts := strings.SplitN(path, ".", 2)
 	name := parts[0]

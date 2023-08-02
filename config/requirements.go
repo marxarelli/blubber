@@ -9,11 +9,9 @@ import (
 
 // RequirementsConfig holds configuration for which files to copy into the
 // variant from local and other variant sources.
-//
 type RequirementsConfig []ArtifactsConfig
 
 // Dependencies returns variant dependencies.
-//
 func (rc RequirementsConfig) Dependencies() []string {
 	deps := []string{}
 	for _, ac := range rc {
@@ -25,7 +23,7 @@ func (rc RequirementsConfig) Dependencies() []string {
 // InstructionsForPhase injects instructions into the given build phase that
 // copy configured artifacts.
 //
-// PhasePreInstall
+// # PhasePreInstall
 //
 // In the case of a "local" build context copy, simply return a build.Copy
 // with the configured source and destination. In the case of a variant copy,
@@ -97,7 +95,6 @@ func (rc RequirementsConfig) InstructionsForPhase(phase build.Phase) []build.Ins
 
 // UnmarshalJSON implements json.Unmarshaler to handle both shorthand and
 // longhand requirements configuration.
-//
 func (rc *RequirementsConfig) UnmarshalJSON(unmarshal []byte) error {
 	shorthand := []string{}
 	err := json.Unmarshal(unmarshal, &shorthand)

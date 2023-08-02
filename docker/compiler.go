@@ -1,6 +1,5 @@
 // Package docker implements a compiler for turning Blubber configuration into
 // a valid single- or multi-stage Dockerfile.
-//
 package docker
 
 import (
@@ -15,7 +14,6 @@ import (
 // returns the bytes of a resulting Dockerfile. In the case where artifacts
 // are defined or the shorthand "copies" configured is set, a multi-stage
 // Dockerfile will be returned.
-//
 func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 

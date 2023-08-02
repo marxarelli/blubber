@@ -1,6 +1,5 @@
 // Package buildkit implements a compiler for turning Blubber configuration
 // into a valid llb.State graph.
-//
 package buildkit
 
 import (
@@ -17,7 +16,6 @@ import (
 
 // CompileToLLB takes a parsed config.Config and a configured variant name and
 // returns an llb.State graph.
-//
 func CompileToLLB(
 	ctx context.Context,
 	ebo *ExtraBuildOptions,
@@ -45,7 +43,6 @@ func CompileToLLB(
 
 // Compile takes a parsed config.Config and a configured variant name and
 // returns an llb.State graph as JSON.
-//
 func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	ctx := context.Background()

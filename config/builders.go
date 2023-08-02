@@ -87,7 +87,6 @@ func (bc BuildersConfig) InstructionsForPhase(phase build.Phase) []build.Instruc
 }
 
 // Dependencies returns variant dependencies.
-//
 func (bc BuildersConfig) Dependencies() []string {
 	deps := []string{}
 	for _, builder := range bc {

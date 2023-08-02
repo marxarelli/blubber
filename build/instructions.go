@@ -1,7 +1,6 @@
 // Package build defines types and interfaces that could potentially be
 // compiled to various external build-tool scripts but share a general
 // internal abstraction and rules for escaping.
-//
 package build
 
 import (
@@ -13,33 +12,28 @@ import (
 
 // Instruction defines a common interface that all concrete build types must
 // implement.
-//
 type Instruction interface {
 	Compile() []string
 }
 
 // Base is a concrete build instruction for declaring the base container image
 // to start with.
-//
 type Base struct {
 	Image string // image identifier
 	Stage string // optional internal name used for multi-stage builds
 }
 
 // Compile returns the base image and stage name.
-//
 func (base Base) Compile() []string {
 	return []string{base.Image, base.Stage}
 }
 
 // ScratchBase is a concrete build instruction for declaring no base image.
-//
 type ScratchBase struct {
 	Stage string // optional internal name used for multi-stage builds
 }
 
 // Compile returns the stage name.
-//
 func (sb ScratchBase) Compile() []string {
 	return []string{sb.Stage}
 }
@@ -50,7 +44,6 @@ func (sb ScratchBase) Compile() []string {
 // The command string may contain inner argument placeholders using the "%s"
 // format verb and will be appended with the quoted values of any arguments
 // that remain after interpolation of the command string.
-//
 type Run struct {
 	Command   string   // command string (e.g. "useradd -d %s -u %s")
 	Arguments []string // command arguments both inner and final (e.g. ["/home/user", "123", "user"])
@@ -58,7 +51,6 @@ type Run struct {
 
 // Compile quotes all arguments, interpolates the command string with inner
 // arguments, and appends the final arguments.
-//
 func (run Run) Compile() []string {
 	numInnerArgs := strings.Count(run.Command, `%`) - strings.Count(run.Command, `%%`)
 	command := sprintf(run.Command, run.Arguments[0:numInnerArgs])
@@ -72,14 +64,12 @@ func (run Run) Compile() []string {
 
 // RunAll is a concrete build instruction for declaring multiple Run
 // instructions that will be executed together in a `cmd1 && cmd2` chain.
-//
 type RunAll struct {
 	Runs []Run // multiple Run instructions to be executed together
 }
 
 // Compile concatenates all individually compiled Run instructions into a
 // single command.
-//
 func (runAll RunAll) Compile() []string {
 	commands := make([]string, len(runAll.Runs))
 
@@ -92,14 +82,12 @@ func (runAll RunAll) Compile() []string {
 
 // Copy is a concrete build instruction for copying source files/directories
 // from the build host into the image.
-//
 type Copy struct {
 	Sources     []string // source file/directory paths
 	Destination string   // destination path
 }
 
 // Compile quotes the defined source files/directories and destination.
-//
 func (copy Copy) Compile() []string {
 	dest := copy.Destination
 
@@ -117,7 +105,6 @@ func (copy Copy) Compile() []string {
 //
 // While it can technically wrap any build.Instruction, it is meant to be used
 // with build.Copy and build.CopyFrom to enforce file/directory ownership.
-//
 type CopyAs struct {
 	UID string // owner UID
 	GID string // owner GID
@@ -126,14 +113,12 @@ type CopyAs struct {
 
 // Compile returns the variant name unquoted and all quoted CopyAs instruction
 // fields.
-//
 func (ca CopyAs) Compile() []string {
 	return append([]string{fmt.Sprintf("%s:%s", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
 }
 
 // CopyFrom is a concrete build instruction for copying source
 // files/directories from one variant image to another.
-//
 type CopyFrom struct {
 	From string // source variant name
 	Copy
@@ -141,7 +126,6 @@ type CopyFrom struct {
 
 // Compile returns the variant name unquoted and all quoted Copy instruction
 // fields.
-//
 func (cf CopyFrom) Compile() []string {
 	return append([]string{cf.From}, cf.Copy.Compile()...)
 }
@@ -153,48 +137,41 @@ type EntryPoint struct {
 }
 
 // Compile returns the quoted entrypoint command and arguments.
-//
 func (ep EntryPoint) Compile() []string {
 	return quoteAll(ep.Command)
 }
 
 // Env is a concrete build instruction for declaring a container's runtime
 // environment variables.
-//
 type Env struct {
 	Definitions map[string]string // number of key/value pairs
 }
 
 // Compile returns the key/value pairs as a number of `key="value"` strings
 // where the values are properly quoted and the slice is ordered by the keys.
-//
 func (env Env) Compile() []string {
 	return compileSortedKeyValues(env.Definitions)
 }
 
 // Label is a concrete build instruction for declaring a number of meta-data
 // key/value pairs to be included in the image.
-//
 type Label struct {
 	Definitions map[string]string // number of meta-data key/value pairs
 }
 
 // Compile returns the key/value pairs as a number of `key="value"` strings
 // where the values are properly quoted and the slice is ordered by the keys.
-//
 func (label Label) Compile() []string {
 	return compileSortedKeyValues(label.Definitions)
 }
 
 // User is a build instruction for setting which user will run future
 // commands.
-//
 type User struct {
 	UID string // user ID
 }
 
 // Compile returns the users UID as string
-//
 func (user User) Compile() []string {
 	if user.UID == "" {
 		// Preserve legacy behavior of an uninitialized User being == root
@@ -205,41 +182,35 @@ func (user User) Compile() []string {
 
 // WorkingDirectory is a build instruction for defining the working directory
 // for future command and entrypoint instructions.
-//
 type WorkingDirectory struct {
 	Path string // working directory path
 }
 
 // Compile returns the quoted working directory path.
-//
 func (wd WorkingDirectory) Compile() []string {
 	return []string{quote(wd.Path)}
 }
 
 // StringArg is a build instruction defining a build-time replaceable argument
 // with a string value.
-//
 type StringArg struct {
 	Name    string // argument name
 	Default string // argument default value
 }
 
 // Compile returns the ARG instruction.
-//
 func (arg StringArg) Compile() []string {
 	return []string{fmt.Sprintf("%s=%s", arg.Name, quote(arg.Default))}
 }
 
 // UintArg is a build instruction defining a build-time replaceable argument
 // with an integer value.
-//
 type UintArg struct {
 	Name    string // argument name
 	Default uint   // argument default value
 }
 
 // Compile returns the ARG instruction.
-//
 func (arg UintArg) Compile() []string {
 	return []string{fmt.Sprintf("%s=%d", arg.Name, arg.Default)}
 }

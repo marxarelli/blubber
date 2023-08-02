@@ -5,7 +5,6 @@ import (
 )
 
 // PhpConfig holds configuration for whether/how to install php packages.
-//
 type PhpConfig struct {
 	// Install requirements from given files
 	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
@@ -15,14 +14,12 @@ type PhpConfig struct {
 }
 
 // Dependencies returns variant dependencies.
-//
 func (pc PhpConfig) Dependencies() []string {
 	return pc.Requirements.Dependencies()
 }
 
 // Merge takes another PhpConfig and merges its fields into this one's,
 // overwriting the requirements files.
-//
 func (pc *PhpConfig) Merge(pc2 PhpConfig) {
 	pc.Production.Merge(pc2.Production)
 
@@ -34,14 +31,13 @@ func (pc *PhpConfig) Merge(pc2 PhpConfig) {
 // InstructionsForPhase injects instructions into the build related to PHP
 // dependency installation.
 //
-// PhasePreInstall
+// # PhasePreInstall
 //
 // Installs Php package dependencies declared in composer files into the
 // application directory. Installing dependencies during the build.PhasePreInstall
 // phase allows a compiler implementation (e.g. Docker) to produce cache-efficient
 // output so only changes to composer json will invalidate these steps of the image
 // build.
-//
 func (pc PhpConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := pc.Requirements.InstructionsForPhase(phase)
 

@@ -12,7 +12,6 @@ import (
 // a corresponding compilable Docker specific instruction. The given internal
 // instruction is partially compiled at this point by calling Compile() which
 // applies its own logic for escaping arguments, etc.
-//
 func NewInstruction(bi build.Instruction) (Instruction, error) {
 	i := instruction{arguments: bi.Compile()}
 
@@ -75,7 +74,6 @@ func NewInstruction(bi build.Instruction) (Instruction, error) {
 }
 
 // Instruction defines an interface for instruction compilation.
-//
 type Instruction interface {
 	Compile() string
 }
@@ -93,7 +91,6 @@ type instruction struct {
 // Output is in the format "<name> <flags> <arguments>", e.g.
 // "COPY --chown=123:223 ["foo", "bar"]" and flag values are taken from the
 // beginning of the arguments slice.
-//
 func (ins instruction) Compile() string {
 	format := ins.name + " "
 	numFlags := len(ins.flags)

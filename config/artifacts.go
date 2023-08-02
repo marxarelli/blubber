@@ -15,7 +15,6 @@ import (
 // comprehensive set of development dependencies, and copy the application
 // binaries or production only source files over into a smaller image that
 // contains only production dependencies.
-//
 type ArtifactsConfig struct {
 	From        string `json:"from" validate:"required,artifactfrom"`
 	Source      string `json:"source" validate:"requiredwith=destination,relativelocal"`
@@ -24,7 +23,6 @@ type ArtifactsConfig struct {
 
 // NewArtifactsConfigFromSource creates an local ArtifactsConfig from the
 // given source. This helps to support legacy requirements definitions.
-//
 func NewArtifactsConfigFromSource(source string) ArtifactsConfig {
 	return ArtifactsConfig{
 		From:   LocalArtifactKeyword,
@@ -33,7 +31,6 @@ func NewArtifactsConfigFromSource(source string) ArtifactsConfig {
 }
 
 // Dependencies returns variant dependencies.
-//
 func (ac ArtifactsConfig) Dependencies() []string {
 	if ac.From != "" && ac.From != LocalArtifactKeyword {
 		return []string{ac.From}
@@ -44,7 +41,6 @@ func (ac ArtifactsConfig) Dependencies() []string {
 // Expand returns the longhand configured artifact and/or the default
 // artifacts for any configured by shorthand notation (i.e. on the `From`
 // field).
-//
 func (ac ArtifactsConfig) Expand(appDirectory string) []ArtifactsConfig {
 	// check for shorthand configuration and return its expanded form
 	if ac.From != "" && ac.Source == "" && ac.Destination == "" {
@@ -85,13 +81,12 @@ func (ac ArtifactsConfig) Expand(appDirectory string) []ArtifactsConfig {
 // InstructionsForPhase injects instructions into the given build phase that
 // copy configured artifacts.
 //
-// PhaseInstall
+// # PhaseInstall
 //
 // In the case of a "local" build context copy, simply return a build.Copy
 // with the configured source and destination. In the case of a variant copy,
 // return a build.CopyFrom instruction for the variant name, source and
 // destination paths.
-//
 func (ac ArtifactsConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	switch phase {
 	case build.PhaseInstall:
@@ -118,7 +113,6 @@ func (ac ArtifactsConfig) InstructionsForPhase(phase build.Phase) []build.Instru
 // If the source is a file path (e.g. "foo/bar"), and the destination is a
 // directory (e.g. "foo2/"), the effective destination is the directory + the
 // base name of the source file (e.g. "foo2/bar").
-//
 func (ac ArtifactsConfig) EffectiveDestination() string {
 	dest := ac.NormalizedDestination()
 
@@ -138,7 +132,6 @@ func (ac ArtifactsConfig) EffectiveDestination() string {
 // NormalizedDestination returns the destination defaulted to the source
 // directory and sanitized by path.Clean but with any original trailing '/'
 // retained to indicate a directory path.
-//
 func (ac ArtifactsConfig) NormalizedDestination() string {
 	// Default behavior is to derive Destination from Source
 	if ac.Destination == "" {
@@ -162,7 +155,6 @@ func (ac ArtifactsConfig) NormalizedDestination() string {
 
 // NormalizedSource returns the source sanitized by path.Clean but retaining
 // any terminating "/" to denote a directory.
-//
 func (ac ArtifactsConfig) NormalizedSource() string {
 	cleaned := path.Clean(ac.Source)
 

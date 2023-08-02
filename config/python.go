@@ -5,24 +5,19 @@ import (
 )
 
 // PythonLibPrefix is the path to installed dependency wheels.
-//
 const PythonLibPrefix = LocalLibPrefix + "/python"
 
 // PythonSitePackages is the path to installed Python packages.
-//
 const PythonSitePackages = PythonLibPrefix + "/site-packages"
 
 // PythonSiteBin is the path to installed Python packages bin files.
-//
 const PythonSiteBin = PythonSitePackages + "/bin"
 
 // PythonPoetryVenvs is the path where Poetry will create virtual environments.
-//
 const PythonPoetryVenvs = LocalLibPrefix + "/poetry"
 
 // PythonConfig holds configuration fields related to pre-installation of project
 // dependencies via PIP.
-//
 type PythonConfig struct {
 	// Python binary to use when installing dependencies
 	Version string `json:"version"`
@@ -41,21 +36,18 @@ type PythonConfig struct {
 
 // PoetryConfig holds configuration fields related to installation of project
 // dependencies via Poetry.
-//
 type PoetryConfig struct {
 	Version string `json:"version" validate:"omitempty,pypkgver"`
 	Devel   Flag   `json:"devel"`
 }
 
 // Dependencies returns variant dependencies.
-//
 func (pc PythonConfig) Dependencies() []string {
 	return pc.Requirements.Dependencies()
 }
 
 // Merge takes another PythonConfig and merges its fields into this one's,
 // overwriting both the dependencies flag and requirements.
-//
 func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 	pc.UseSystemFlag.Merge(pc2.UseSystemFlag)
 	pc.UseNoDepsFlag.Merge(pc2.UseNoDepsFlag)
@@ -70,7 +62,6 @@ func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 }
 
 // Merge two PoetryConfig structs.
-//
 func (pc *PoetryConfig) Merge(pc2 PoetryConfig) {
 	if pc2.Version != "" {
 		pc.Version = pc2.Version
@@ -81,12 +72,12 @@ func (pc *PoetryConfig) Merge(pc2 PoetryConfig) {
 // InstructionsForPhase injects instructions into the build related to Python
 // dependency installation.
 //
-// PhasePrivileged
+// # PhasePrivileged
 //
 // Ensures that the newest versions of setuptools, wheel, tox, and pip are
 // installed.
 //
-// PhasePreInstall
+// # PhasePreInstall
 //
 // Sets up Python wheels under the shared library directory (/opt/lib/python)
 // for dependencies found in the declared requirements files. Installing
@@ -99,13 +90,12 @@ func (pc *PoetryConfig) Merge(pc2 PoetryConfig) {
 // will cause future executions of `pip install` (and by extension, `tox`) to
 // consider packages from the shared library directory first.
 //
-// PhasePostInstall
+// # PhasePostInstall
 //
 // Injects a build.Env instruction for PIP_NO_INDEX that will cause future
 // executions of `pip install` and `tox` to consider _only_ packages from the
 // shared library directory, helping to speed up image builds by reducing
 // network requests from said commands.
-//
 func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := []build.Instruction{}
 
@@ -208,7 +198,6 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 }
 
 // RequirementsArgs returns the configured requirements as pip `-r` arguments.
-//
 func (pc PythonConfig) RequirementsArgs() []string {
 	args := make([]string, len(pc.Requirements)*2)
 

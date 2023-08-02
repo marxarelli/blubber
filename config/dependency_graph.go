@@ -8,7 +8,6 @@ import (
 
 // VariantDependent represents configuration that establishes a dependency on
 // another variant's filesystem.
-//
 type VariantDependent interface {
 	Dependencies() []string
 }

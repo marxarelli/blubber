@@ -1,5 +1,4 @@
 // Package main provides the command line interface.
-//
 package main
 
 import (

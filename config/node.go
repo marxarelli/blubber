@@ -6,7 +6,6 @@ import (
 
 // NodeConfig holds configuration fields related to the Node environment and
 // whether/how to install NPM packages.
-//
 type NodeConfig struct {
 	// Install requirements from given files
 	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
@@ -22,14 +21,12 @@ type NodeConfig struct {
 }
 
 // Dependencies returns variant dependencies.
-//
 func (nc NodeConfig) Dependencies() []string {
 	return nc.Requirements.Dependencies()
 }
 
 // Merge takes another NodeConfig and merges its fields into this one's,
 // overwriting useNpmCi, the environment, and the requirements files.
-//
 func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 	nc.UseNpmCi.Merge(nc2.UseNpmCi)
 	nc.AllowDedupeFailure.Merge(nc2.AllowDedupeFailure)
@@ -46,7 +43,7 @@ func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 // InstructionsForPhase injects instructions into the build related to Node
 // dependency installation and setting of the NODE_ENV.
 //
-// PhasePreInstall
+// # PhasePreInstall
 //
 // Installs Node package dependencies declared in requirements files into the
 // application directory. Only production related packages are install if
@@ -56,11 +53,10 @@ func (nc *NodeConfig) Merge(nc2 NodeConfig) {
 // so only changes to package.json will invalidate these steps of the image
 // build.
 //
-// PhasePostInstall
+// # PhasePostInstall
 //
 // Injects build.Env instructions for NODE_ENV, setting the environment
 // according to the configuration.
-//
 func (nc NodeConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := nc.Requirements.InstructionsForPhase(phase)
 

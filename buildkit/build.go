@@ -53,7 +53,6 @@ const (
 // with image layers.
 //
 // See https://github.com/opencontainers/image-spec/blob/main/manifest.md
-//
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 	buildOpts := c.BuildOpts()
 	opts := buildOpts.Opts
@@ -182,7 +181,6 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 }
 
 // Represents the result of a single image build
-//
 type buildResult struct {
 	// Reference to built image
 	Reference client.Reference
@@ -214,7 +212,6 @@ type buildResult struct {
 // For single-platform builds, set the final result's reference,
 // image config, and build info. For OCI format outputs, there will
 // be a single manifest
-//
 func (br *buildResult) AddToClientResult(cr *client.Result) {
 	if br.MultiPlatform {
 		cr.AddMeta(
@@ -235,7 +232,6 @@ func (br *buildResult) AddToClientResult(cr *client.Result) {
 
 // Builds a given variant and returns the resulting image reference, image
 // config, and build info.
-//
 func buildImage(
 	ctx context.Context,
 	c client.Client,
@@ -358,7 +354,6 @@ func filterOpts(opts map[string]string, prefix string) map[string]string {
 //
 // TODO the master branch of buildkit removes the legacy `cache-from` key, so
 // once they cut a new minor version, we can remove support for it.
-//
 func parseCacheOptions(opts map[string]string) ([]client.CacheOptionsEntry, error) {
 	var cacheImports []client.CacheOptionsEntry
 	// new API

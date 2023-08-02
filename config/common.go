@@ -6,7 +6,6 @@ import (
 
 // CommonConfig holds the configuration fields common to both the root config
 // and each configured variant.
-//
 type CommonConfig struct {
 	Base       string         `json:"base" validate:"omitempty,imageref"`                                                                // name/path to base image
 	Apt        AptConfig      `json:"apt"`                                                                                               // APT related
@@ -21,7 +20,6 @@ type CommonConfig struct {
 }
 
 // Dependencies returns variant dependencies.
-//
 func (cc *CommonConfig) Dependencies() []string {
 	dependents := []VariantDependent{
 		cc.Node,
@@ -40,7 +38,6 @@ func (cc *CommonConfig) Dependencies() []string {
 }
 
 // Merge takes another CommonConfig and merges its fields this one's.
-//
 func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 	if cc2.Base != "" {
 		cc.Base = cc2.Base
@@ -63,7 +60,6 @@ func (cc *CommonConfig) Merge(cc2 CommonConfig) {
 // PhaseCompileableConfig returns all fields that implement
 // build.PhaseCompileable in the order that their instructions should be
 // injected.
-//
 func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
 	return []build.PhaseCompileable{
 		cc.Apt, cc.Builders, cc.Node, cc.Php, cc.Python, cc.Builder, cc.Lives, cc.Runs,
@@ -72,7 +68,6 @@ func (cc *CommonConfig) PhaseCompileableConfig() []build.PhaseCompileable {
 
 // InstructionsForPhase injects instructions into the given build phase for
 // each member field that supports it.
-//
 func (cc *CommonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	instructions := []build.Instruction{}
 
@@ -87,7 +82,6 @@ func (cc *CommonConfig) InstructionsForPhase(phase build.Phase) []build.Instruct
 
 // IsScratch returns whether this is configuration for a scratch image (no
 // base image).
-//
 func (cc *CommonConfig) IsScratch() bool {
 	return cc.Base == ""
 }
