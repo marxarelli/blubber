@@ -8,7 +8,6 @@ import (
 	"context"
 	"github.com/moby/buildkit/client/llb"
 	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
-	binfotypes "github.com/moby/buildkit/util/buildinfo/types"
 
 	"gitlab.wikimedia.org/repos/releng/blubber/config"
 	"gitlab.wikimedia.org/repos/releng/blubber/docker"
@@ -22,23 +21,23 @@ func CompileToLLB(
 	cfg *config.Config,
 	variant string,
 	convertOpts d2llb.ConvertOpt,
-) (*llb.State, *d2llb.Image, *binfotypes.BuildInfo, error) {
+) (*llb.State, *d2llb.Image, error) {
 	buffer, err := docker.Compile(cfg, variant)
 
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	state, image, buildinfo, err := d2llb.Dockerfile2LLB(ctx, buffer.Bytes(), convertOpts)
+	state, image, _, err := d2llb.Dockerfile2LLB(ctx, buffer.Bytes(), convertOpts)
 
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	targetVariant := cfg.Variants[variant]
 	state = postProcessLLB(ebo, state, &targetVariant)
 
-	return state, image, buildinfo, nil
+	return state, image, nil
 }
 
 // Compile takes a parsed config.Config and a configured variant name and
@@ -47,7 +46,7 @@ func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	ctx := context.Background()
 
-	state, _, _, err := CompileToLLB(ctx, nil, cfg, variant, d2llb.ConvertOpt{})
+	state, _, err := CompileToLLB(ctx, nil, cfg, variant, d2llb.ConvertOpt{})
 
 	if err != nil {
 		return nil, err

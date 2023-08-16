@@ -84,5 +84,9 @@ test-docker:
 
 test: unit lint
 
+.PHONY: examples
+examples:
+	BLUBBER_RUN_EXAMPLES=1 go test -v -timeout 30m ./examples_test.go
+
 FULLVERSION:
 	@echo $(FULLVERSION) > FULLVERSION

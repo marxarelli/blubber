@@ -9,6 +9,7 @@ default:
 stages:
   - lint
   - test
+  - acceptance
   - publish
 
 workflow:
@@ -31,12 +32,40 @@ run-unit-tests:
     BUILD_VARIANT: make
     RUN_ARGUMENTS: '["test"]'
 
-build-frontend:
+build-frontend-for-testing:
   stage: test
-  extends: .kokkuri:build-image
+  extends: .kokkuri:build-and-publish-image
   variables:
     BUILD_VARIANT: buildkit
-    BUILD_TARGET_PLATFORMS: linux/amd64,linux/arm64
+    BUILD_TARGET_PLATFORMS: linux/amd64
+    PUBLISH_IMAGE_TAG: job-${CI_JOB_ID}
+  rules:
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+      when: never
+    - when: always
+
+build-acceptance-runner:
+  stage: test
+  extends: .kokkuri:build-and-publish-image
+  variables:
+    BUILD_VARIANT: acceptance
+    PUBLISH_IMAGE_TAG: job-${CI_JOB_ID}
+  rules:
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+      when: never
+    - when: always
+
+run-acceptance-tests:
+  stage: acceptance
+  image: '${BUILD_ACCEPTANCE_RUNNER_IMAGE_REF}'
+  variables:
+    BLUBBER_TEST_IMAGE: '${BUILD_FRONTEND_FOR_TESTING_IMAGE_REF}'
+  script:
+    - make examples
+  rules:
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+      when: never
+    - when: always
 
 # Publish a new version of the buildkit frontend each time a version tag (e.g.
 # v0.0.0) is pushed. Note that these tags are marked as protected under 

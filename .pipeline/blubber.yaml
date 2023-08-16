@@ -24,6 +24,9 @@ variants:
   test:
     includes: [make]
     entrypoint: [make, clean, test]
+  acceptance:
+    includes: [make]
+    entrypoint: [make, examples]
   prep:
     includes: [build]
     builders:

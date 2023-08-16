@@ -1,0 +1,7 @@
+{
+	"name": "hello-world-node",
+	"version": "1.0.0",
+	"dependencies": {
+		"ansi-colors": "4.1.3"
+	}
+}

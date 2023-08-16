@@ -247,7 +247,7 @@ func buildImage(
 		MultiPlatform: convertOpts.PrefixPlatform,
 	}
 
-	state, image, bi, err := CompileToLLB(ctx, ebo, cfg, variant, convertOpts)
+	state, image, err := CompileToLLB(ctx, ebo, cfg, variant, convertOpts)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to compile to LLB state")
@@ -275,11 +275,6 @@ func buildImage(
 	result.Reference, err = res.SingleRef()
 	if err != nil {
 		return nil, err
-	}
-
-	result.BuildInfo, err = json.Marshal(bi)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal build info")
 	}
 
 	// Add platform-specific export info for the result that can later be used
