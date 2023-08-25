@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -17,6 +18,7 @@ import (
 	memoryblobcache "github.com/containers/image/v5/pkg/blobinfocache/memory"
 	imagetypes "github.com/containers/image/v5/types"
 	"github.com/cucumber/godog"
+	"github.com/google/shlex"
 	bkclient "github.com/moby/buildkit/client"
 	gateway "github.com/moby/buildkit/frontend/gateway/client"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -405,21 +407,32 @@ func theImageEnvironmentContains(ctx context.Context, envTable *godog.Table) (co
 	}
 
 	return withCtxValue[*ociv1.Image](ctx, imageCfgKey, func(image *ociv1.Image) (context.Context, error) {
-		m := make(map[string]struct{}, len(image.Config.Env))
-
-		for _, env := range image.Config.Env {
-			m[env] = struct{}{}
-		}
+		imageEnvs := parseEnvs(image.Config.Env)
 
 		missing := []string{}
+		mismatched := []string{}
+
 		for _, env := range envs {
-			if _, ok := m[env]; !ok {
+			k, expected := parseEnv(env)
+
+			if actual, ok := imageEnvs[k]; ok {
+				if actual != expected {
+					mismatched = append(
+						mismatched,
+						fmt.Sprintf("%s=%#v (expected) != %s=%#v (actual)", k, expected, k, actual),
+					)
+				}
+			} else {
 				missing = append(missing, env)
 			}
 		}
 
 		if len(missing) > 0 {
 			return ctx, errors.Errorf("the image environment is missing environment variables: %v", missing)
+		}
+
+		if len(mismatched) > 0 {
+			return ctx, errors.Errorf("some image environment variables differ: %s", strings.Join(mismatched, ", "))
 		}
 
 		return ctx, nil
@@ -496,4 +509,33 @@ func (wd *workingDirectory) CopyFrom(srcDir string) error {
 	// Note the use of "<src>/." syntax which should work with both BSD and GNU
 	// cp to copy the _contents_ of the source directory into the destination
 	return exec.Command("cp", "-a", srcDir+".", wd.Path+"/").Run()
+}
+
+// parseEnv takes a env variable declaration (which may or may not use double
+// quotes to qualify the value) and returns the resulting name and value.
+func parseEnv(env string) (string, string) {
+	kv := strings.SplitN(env, "=", 2)
+
+	if len(kv) == 2 {
+		v, err := shlex.Split(kv[1])
+
+		if err == nil && len(v) > 0 {
+			return kv[0], v[0]
+		}
+
+		return kv[0], ""
+	}
+
+	return env, ""
+}
+
+func parseEnvs(env []string) map[string]string {
+	m := make(map[string]string, len(env))
+
+	for _, def := range env {
+		k, v := parseEnv(def)
+		m[k] = v
+	}
+
+	return m
 }
