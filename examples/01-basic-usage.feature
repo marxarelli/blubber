@@ -10,6 +10,7 @@ Feature: Basic usage
   Background:
     Given "examples/hello-world" as a working directory
 
+  @set1
   Scenario: Copy in a script and run it as the container entry point
     Given this "blubber.yaml"
       """
@@ -27,6 +28,7 @@ Feature: Basic usage
     And the image runtime user will be "900"
     And the image entrypoint will be "./hello.sh"
 
+  @set2
   Scenario: Blubber respects .dockerignore files
     Given this "blubber.yaml"
       """
@@ -46,6 +48,7 @@ Feature: Basic usage
     And the image will not have the following files in the default working directory
       | README.md |
 
+  @set3
   Scenario: Variants can include one another
     Given this "blubber.yaml"
       """

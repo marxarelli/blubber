@@ -3,6 +3,7 @@ Feature: Builders
   Many will require a build step: some process that creates additional files
   in the image's local filesystem needed at runtime.
 
+  @set3
   Scenario: Compiling an application from source
     Given "examples/hello-world-c" as a working directory
     And this "blubber.yaml"
@@ -24,6 +25,7 @@ Feature: Builders
     Then the image will have the following files in the default working directory
       | hello |
 
+  @set4
   Scenario: Compiling an application using multiple builders
     Given "examples/hello-world-go" as a working directory
     And this "blubber.yaml"

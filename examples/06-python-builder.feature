@@ -5,6 +5,7 @@ Feature: Python builder
   Background:
     Given "examples/hello-world-python" as a working directory
 
+  @set2
   Scenario: Installing Python application dependencies
     Given this "blubber.yaml"
       """
@@ -22,6 +23,7 @@ Feature: Python builder
     When you build and run the "hello" variant
     Then the entrypoint will have run successfully
 
+  @set3
   Scenario: Installing Python application dependencies via Poetry
     Given this "blubber.yaml"
       """

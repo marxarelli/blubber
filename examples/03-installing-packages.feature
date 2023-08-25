@@ -6,6 +6,7 @@ Feature: Installing packages
   Background:
     Given "examples/hello-world-c" as a working directory
 
+  @set1
   Scenario: Install additional build dependencies
     Given this "blubber.yaml"
       """
@@ -22,6 +23,7 @@ Feature: Installing packages
     Then the image will have the following files in "/usr/bin"
       | gcc |
 
+  @set2
   Scenario: Install from additional APT sources
     Given this "blubber.yaml"
       """

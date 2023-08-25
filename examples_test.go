@@ -56,6 +56,7 @@ func TestExamples(t *testing.T) {
 			Format:   "pretty",
 			Paths:    []string{"examples"},
 			TestingT: t,
+			Tags:     os.Getenv("BLUBBER_ONLY_EXAMPLES"),
 		},
 	}
 

@@ -5,6 +5,7 @@ Feature: Node builder
   Background:
     Given "examples/hello-world-node" as a working directory
 
+  @set4
   Scenario: Installing Node application dependencies
     Given this "blubber.yaml"
       """

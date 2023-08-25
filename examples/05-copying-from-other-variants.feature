@@ -7,6 +7,7 @@ Feature: Copying from other variants
   Background:
     Given "examples/hello-world-go" as a working directory
 
+  @set1
   Scenario: Copying from another variant using "copies.from"
     Given this "blubber.yaml"
       """

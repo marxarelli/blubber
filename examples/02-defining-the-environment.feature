@@ -7,6 +7,7 @@ Feature: Defining the build and runtime environment
   Background:
     Given "examples/hello-world" as a working directory
 
+  @set4
   Scenario: Rely on the default values
     Given this "blubber.yaml"
       """
@@ -29,6 +30,7 @@ Feature: Defining the build and runtime environment
     And the image runtime user will be "900"
     And the image entrypoint will be "./hello.sh"
 
+  @set1
   Scenario: Customize the application location and file owner
     Given this "blubber.yaml"
       """
@@ -52,6 +54,7 @@ Feature: Defining the build and runtime environment
       | 1234 | 1235 | README.md |
       | 1234 | 1235 | hello.sh  |
 
+  @set2
   Scenario: Customize the runtime process owner
     Given this "blubber.yaml"
       """
@@ -71,6 +74,7 @@ Feature: Defining the build and runtime environment
     And the image will have the group "apprunner" with GID 4320
     And the image runtime user will be "4321"
 
+  @set3
   Scenario: Disable the unprivileged runtime process owner
     Given this "blubber.yaml"
       """
@@ -89,6 +93,7 @@ Feature: Defining the build and runtime environment
     When you build the "hello" variant
     Then the image runtime user will be "1234"
 
+  @set4
   Scenario: Defining extra environment variables
     Given this "blubber.yaml"
       """
