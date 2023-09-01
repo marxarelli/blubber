@@ -2,16 +2,17 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 
 	"github.com/pborman/getopt/v2"
 
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 	"gitlab.wikimedia.org/repos/releng/blubber/buildkit"
 	"gitlab.wikimedia.org/repos/releng/blubber/config"
-	"gitlab.wikimedia.org/repos/releng/blubber/docker"
 	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
@@ -19,7 +20,6 @@ const parameters = "config.yaml variant"
 
 var (
 	showHelp    = getopt.BoolLong("help", 'h', "show help/usage")
-	format      = getopt.StringLong("format", 'f', "dockerfile", "output format", "(dockerfile|llb)")
 	policyURI   = getopt.StringLong("policy", 'p', "", "policy file URI", "uri")
 	showVersion = getopt.BoolLong("version", 'v', "show version information")
 )
@@ -86,22 +86,39 @@ func main() {
 		}
 	}
 
-	var output *bytes.Buffer
+	ctx, cancel := context.WithCancel(context.Background())
 
-	switch *format {
-	case "dockerfile":
-		output, err = docker.Compile(cfg, variant)
-	case "llb":
-		output, err = buildkit.Compile(cfg, variant)
-	default:
-		log.Printf("Invalid output format: %s\n", *format)
-		os.Exit(7)
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt)
+	defer func() {
+		signal.Stop(ch)
+		cancel()
+	}()
+
+	go func() {
+		select {
+		case <-ch:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+
+	opts := buildkit.BuildOptions{
+		Options: build.NewOptions(),
 	}
+	opts.Variant = variant
+
+	target, err := buildkit.Compile(ctx, &opts, cfg, opts.TargetPlatforms[0])
 
 	if err != nil {
 		log.Printf("Error compiling config: %v\n", err)
 		os.Exit(3)
 	}
 
-	output.WriteTo(os.Stdout)
+	err = target.WriteTo(ctx, os.Stdout)
+
+	if err != nil {
+		log.Printf("Error marshaling target: %v\n", err)
+		os.Exit(3)
+	}
 }

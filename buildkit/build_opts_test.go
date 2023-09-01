@@ -1,39 +1,50 @@
-package buildkit
+package buildkit_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/moby/buildkit/frontend/gateway/client"
+	"github.com/stretchr/testify/require"
+
+	"gitlab.wikimedia.org/repos/releng/blubber/buildkit"
 )
 
 func TestBuildOptsParsing(t *testing.T) {
-	extraOpts, _ := ParseExtraOptions(map[string]string{
-		"run-variant":     "true",
-		"entrypoint-args": `["param1", "param2"]`,
-		"run-variant-env": `{"KEY": "Value"}`,
-	})
-
-	assert.Equal(t,
-		ExtraBuildOptions{
-			runEntrypoint:         true,
-			entrypointArgs:        []string{"param1", "param2"},
-			runVariantEnvironment: map[string]string{"KEY": "Value"},
+	buildOpts, _ := buildkit.ParseBuildOptions(
+		client.BuildOpts{
+			Opts: map[string]string{
+				"run-variant":     "true",
+				"entrypoint-args": `["param1", "param2"]`,
+				"run-variant-env": `{"KEY": "Value"}`,
+			},
 		},
-		*extraOpts,
 	)
+
+	require.True(t, buildOpts.RunEntrypoint)
+	require.Equal(t, []string{"param1", "param2"}, buildOpts.EntrypointArgs)
+	require.Equal(t, map[string]string{"KEY": "Value"}, buildOpts.RunEnvironment)
 }
 
 func TestWrongEntrypointCmdFormat(t *testing.T) {
-	_, err := ParseExtraOptions(map[string]string{
-		"entrypoint-args": `["param1"}`,
-	})
+	_, err := buildkit.ParseBuildOptions(
+		client.BuildOpts{
+			Opts: map[string]string{
+				"entrypoint-args": `["param1"}`,
+			},
+		},
+	)
 
-	assert.NotNil(t, err)
+	require.Error(t, err)
 }
 
 func TestBadRunVariantEnv(t *testing.T) {
-	_, err := ParseExtraOptions(map[string]string{
-		"run-variant-env": `KEY=VALUE`,
-	})
+	_, err := buildkit.ParseBuildOptions(
+		client.BuildOpts{
+			Opts: map[string]string{
+				"run-variant-env": `KEY=VALUE`,
+			},
+		},
+	)
 
-	assert.NotNil(t, err)
+	require.Error(t, err)
 }

@@ -5,15 +5,16 @@ package build
 
 import (
 	"fmt"
-	"sort"
-	"strconv"
-	"strings"
+
+	"github.com/moby/buildkit/client/llb"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/pkg/errors"
 )
 
 // Instruction defines a common interface that all concrete build types must
 // implement.
 type Instruction interface {
-	Compile() []string
+	Compile(*Target) error
 }
 
 // Base is a concrete build instruction for declaring the base container image
@@ -23,9 +24,10 @@ type Base struct {
 	Stage string // optional internal name used for multi-stage builds
 }
 
-// Compile returns the base image and stage name.
-func (base Base) Compile() []string {
-	return []string{base.Image, base.Stage}
+// Compile to the given [Target]
+func (base Base) Compile(target *Target) error {
+	// noop. Handled in Target.Initialize
+	return nil
 }
 
 // ScratchBase is a concrete build instruction for declaring no base image.
@@ -33,9 +35,10 @@ type ScratchBase struct {
 	Stage string // optional internal name used for multi-stage builds
 }
 
-// Compile returns the stage name.
-func (sb ScratchBase) Compile() []string {
-	return []string{sb.Stage}
+// Compile to the given [Target]
+func (sb ScratchBase) Compile(target *Target) error {
+	// noop. Handled in Target.Initialize
+	return nil
 }
 
 // Run is a concrete build instruction for passing any number of arguments to
@@ -49,17 +52,9 @@ type Run struct {
 	Arguments []string // command arguments both inner and final (e.g. ["/home/user", "123", "user"])
 }
 
-// Compile quotes all arguments, interpolates the command string with inner
-// arguments, and appends the final arguments.
-func (run Run) Compile() []string {
-	numInnerArgs := strings.Count(run.Command, `%`) - strings.Count(run.Command, `%%`)
-	command := sprintf(run.Command, run.Arguments[0:numInnerArgs])
-
-	if len(run.Arguments) > numInnerArgs {
-		command += " " + strings.Join(quoteAll(run.Arguments[numInnerArgs:]), " ")
-	}
-
-	return []string{command}
+// Compile to the given [Target]
+func (run Run) Compile(target *Target) error {
+	return target.Run(run.Command, run.Arguments...)
 }
 
 // RunAll is a concrete build instruction for declaring multiple Run
@@ -68,16 +63,16 @@ type RunAll struct {
 	Runs []Run // multiple Run instructions to be executed together
 }
 
-// Compile concatenates all individually compiled Run instructions into a
-// single command.
-func (runAll RunAll) Compile() []string {
-	commands := make([]string, len(runAll.Runs))
+// Compile to the given [Target]
+func (ra RunAll) Compile(target *Target) error {
+	runs := make([][]string, len(ra.Runs))
 
-	for i, run := range runAll.Runs {
-		commands[i] = run.Compile()[0]
+	for i, run := range ra.Runs {
+		runs[i] = []string{run.Command}
+		runs[i] = append(runs[i], run.Arguments...)
 	}
 
-	return []string{strings.Join(commands, " && ")}
+	return target.RunAll(runs...)
 }
 
 // Copy is a concrete build instruction for copying source files/directories
@@ -87,17 +82,9 @@ type Copy struct {
 	Destination string   // destination path
 }
 
-// Compile quotes the defined source files/directories and destination.
-func (copy Copy) Compile() []string {
-	dest := copy.Destination
-
-	// If there is more than 1 file being copied, the destination must be a
-	// directory ending with "/"
-	if len(copy.Sources) > 1 && !strings.HasSuffix(copy.Destination, "/") {
-		dest = dest + "/"
-	}
-
-	return append(quoteAll(copy.Sources), quote(dest))
+// Compile to the given [Target]
+func (copy Copy) Compile(target *Target) error {
+	return target.CopyFromClient(copy.Sources, copy.Destination)
 }
 
 // CopyAs is a concrete build instruction for copying source
@@ -111,10 +98,35 @@ type CopyAs struct {
 	Instruction
 }
 
-// Compile returns the variant name unquoted and all quoted CopyAs instruction
-// fields.
-func (ca CopyAs) Compile() []string {
-	return append([]string{fmt.Sprintf("%s:%s", ca.UID, ca.GID)}, ca.Instruction.Compile()...)
+// Compile to the given [Target]
+func (ca CopyAs) Compile(target *Target) error {
+	from := ""
+	sources := []string{}
+	destination := ""
+
+	switch ins := ca.Instruction.(type) {
+	case Copy:
+		sources = ins.Sources
+		destination = ins.Destination
+	case CopyFrom:
+		from = ins.From
+		sources = ins.Copy.Sources
+		destination = ins.Copy.Destination
+	default:
+		return errors.New("a CopyAs may only wrap Copy and CopyFrom")
+	}
+
+	opts := []llb.CopyOption{
+		llb.WithUser(
+			target.ExpandEnv(fmt.Sprintf("%s:%s", ca.UID, ca.GID)),
+		),
+	}
+
+	if from == "" {
+		return target.CopyFromClient(sources, destination, opts...)
+	}
+
+	return target.CopyFrom(from, sources, destination, opts...)
 }
 
 // CopyFrom is a concrete build instruction for copying source
@@ -124,10 +136,9 @@ type CopyFrom struct {
 	Copy
 }
 
-// Compile returns the variant name unquoted and all quoted Copy instruction
-// fields.
-func (cf CopyFrom) Compile() []string {
-	return append([]string{cf.From}, cf.Copy.Compile()...)
+// Compile to the given [Target]
+func (cf CopyFrom) Compile(target *Target) error {
+	return target.CopyFrom(cf.From, cf.Copy.Sources, cf.Copy.Destination)
 }
 
 // EntryPoint is a build instruction for declaring a container's default
@@ -136,9 +147,13 @@ type EntryPoint struct {
 	Command []string // command and arguments
 }
 
-// Compile returns the quoted entrypoint command and arguments.
-func (ep EntryPoint) Compile() []string {
-	return quoteAll(ep.Command)
+// Compile to the given [Target]
+func (ep EntryPoint) Compile(target *Target) error {
+	target.ConfigureImage(func(cfg *oci.ImageConfig) {
+		cfg.Entrypoint = ep.Command
+	})
+
+	return nil
 }
 
 // Env is a concrete build instruction for declaring a container's runtime
@@ -147,10 +162,13 @@ type Env struct {
 	Definitions map[string]string // number of key/value pairs
 }
 
-// Compile returns the key/value pairs as a number of `key="value"` strings
-// where the values are properly quoted and the slice is ordered by the keys.
-func (env Env) Compile() []string {
-	return compileSortedKeyValues(env.Definitions)
+// Compile to the given [Target]
+func (env Env) Compile(target *Target) error {
+	target.ConfigureImage(func(cfg *oci.ImageConfig) {
+		cfg.Env = append(cfg.Env, sortedEnvKeyValues(env.Definitions)...)
+	})
+
+	return target.AddEnv(env.Definitions)
 }
 
 // Label is a concrete build instruction for declaring a number of meta-data
@@ -159,10 +177,14 @@ type Label struct {
 	Definitions map[string]string // number of meta-data key/value pairs
 }
 
-// Compile returns the key/value pairs as a number of `key="value"` strings
-// where the values are properly quoted and the slice is ordered by the keys.
-func (label Label) Compile() []string {
-	return compileSortedKeyValues(label.Definitions)
+// Compile to the given [Target]
+func (label Label) Compile(target *Target) error {
+	target.ConfigureImage(func(cfg *oci.ImageConfig) {
+		for k, v := range label.Definitions {
+			cfg.Labels[k] = v
+		}
+	})
+	return nil
 }
 
 // User is a build instruction for setting which user will run future
@@ -171,13 +193,20 @@ type User struct {
 	UID string // user ID
 }
 
-// Compile returns the users UID as string
-func (user User) Compile() []string {
-	if user.UID == "" {
+// Compile to the given [Target]
+func (user User) Compile(target *Target) error {
+	uid := user.UID
+
+	if uid == "" {
 		// Preserve legacy behavior of an uninitialized User being == root
-		user.UID = "0"
+		uid = "0"
 	}
-	return []string{user.UID}
+
+	target.ConfigureImage(func(cfg *oci.ImageConfig) {
+		cfg.User = target.ExpandEnv(uid)
+	})
+
+	return target.User(uid)
 }
 
 // WorkingDirectory is a build instruction for defining the working directory
@@ -186,9 +215,13 @@ type WorkingDirectory struct {
 	Path string // working directory path
 }
 
-// Compile returns the quoted working directory path.
-func (wd WorkingDirectory) Compile() []string {
-	return []string{quote(wd.Path)}
+// Compile to the given [Target]
+func (wd WorkingDirectory) Compile(target *Target) error {
+	target.ConfigureImage(func(cfg *oci.ImageConfig) {
+		cfg.WorkingDir = wd.Path
+	})
+
+	return target.WorkingDirectory(wd.Path)
 }
 
 // StringArg is a build instruction defining a build-time replaceable argument
@@ -198,9 +231,9 @@ type StringArg struct {
 	Default string // argument default value
 }
 
-// Compile returns the ARG instruction.
-func (arg StringArg) Compile() []string {
-	return []string{fmt.Sprintf("%s=%s", arg.Name, quote(arg.Default))}
+// Compile to the given [Target]
+func (arg StringArg) Compile(target *Target) error {
+	return target.ExposeBuildArg(arg.Name, arg.Default)
 }
 
 // UintArg is a build instruction defining a build-time replaceable argument
@@ -210,48 +243,7 @@ type UintArg struct {
 	Default uint   // argument default value
 }
 
-// Compile returns the ARG instruction.
-func (arg UintArg) Compile() []string {
-	return []string{fmt.Sprintf("%s=%d", arg.Name, arg.Default)}
-}
-
-func compileSortedKeyValues(keyValues map[string]string) []string {
-	defs := make([]string, 0, len(keyValues))
-	names := make([]string, 0, len(keyValues))
-
-	for name := range keyValues {
-		names = append(names, name)
-	}
-
-	sort.Strings(names)
-
-	for _, name := range names {
-		defs = append(defs, name+"="+quote(keyValues[name]))
-	}
-
-	return defs
-}
-
-func quote(arg string) string {
-	return strconv.Quote(arg)
-}
-
-func quoteAll(arguments []string) []string {
-	quoted := make([]string, len(arguments))
-
-	for i, arg := range arguments {
-		quoted[i] = quote(arg)
-	}
-
-	return quoted
-}
-
-func sprintf(format string, arguments []string) string {
-	args := make([]interface{}, len(arguments))
-
-	for i, v := range arguments {
-		args[i] = quote(v)
-	}
-
-	return fmt.Sprintf(format, args...)
+// Compile to the given [Target]
+func (arg UintArg) Compile(target *Target) error {
+	return target.ExposeBuildArg(arg.Name, fmt.Sprintf("%d", arg.Default))
 }

@@ -5,16 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/containerd/containerd/platforms"
-	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/exporter/containerimage/exptypes"
-	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerignore"
 	"github.com/moby/buildkit/frontend/gateway/client"
-	ocispecs "github.com/opencontainers/image-spec/specs-go/v1"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
@@ -22,23 +19,7 @@ import (
 )
 
 const (
-	localNameConfig      = "dockerfile"
-	localNameContext     = "context"
-	keyCacheFrom         = "cache-from"    // for registry only. deprecated in favor of keyCacheImports
-	keyCacheImports      = "cache-imports" // JSON representation of []CacheOptionsEntry
-	keyConfigPath        = "filename"
-	keyTarget            = "target"
-	keyTargetPlatform    = "platform"
-	keyVariant           = "variant"
-	defaultVariant       = "test"
-	defaultConfigPath    = ".pipeline/blubber.yaml"
 	dockerignoreFilename = ".dockerignore"
-
-	// Support the dockerfile frontend's build-arg: options which include, but
-	// are not limited to, setting proxies.
-	// e.g. `buildctl ... --opt build-arg:http_proxy=http://foo`
-	// See https://github.com/moby/buildkit/blob/81b6ff2c55565bdcb9f0dbcff52515f7c7bb429c/frontend/dockerfile/docs/reference.md#predefined-args
-	buildArgPrefix = "build-arg:"
 )
 
 // Build handles BuildKit client requests for the Blubber gateway.
@@ -54,24 +35,13 @@ const (
 //
 // See https://github.com/opencontainers/image-spec/blob/main/manifest.md
 func Build(ctx context.Context, c client.Client) (*client.Result, error) {
-	buildOpts := c.BuildOpts()
-	opts := buildOpts.Opts
+	buildOptions, err := ParseBuildOptions(c.BuildOpts())
 
-	variant := opts[keyVariant]
-
-	if variant == "" {
-		variant = opts[keyTarget]
-	}
-
-	if variant == "" {
-		variant = defaultVariant
-	}
-
-	extraOpts, err := ParseExtraOptions(opts)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse build options")
 	}
-	cfg, err := readBlubberConfig(ctx, c)
+
+	cfg, err := readBlubberConfig(ctx, c, buildOptions)
 
 	if err != nil {
 		if config.IsValidationError(err) {
@@ -80,7 +50,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, "failed to read blubber config")
 	}
 
-	err = config.ExpandIncludesAndCopies(cfg, variant)
+	err = config.ExpandIncludesAndCopies(cfg, buildOptions.Variant)
 
 	if err != nil {
 		if config.IsValidationError(err) {
@@ -89,76 +59,31 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, errors.Wrap(err, "failed to expand includes and copies")
 	}
 
-	excludes, err := readDockerExcludes(ctx, c)
+	buildOptions.Excludes, err = readDockerExcludes(ctx, c, buildOptions)
 
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf(`failed to read "%s"`, dockerignoreFilename))
 	}
 
-	// Parse cache imports
-	cacheImports, err := parseCacheOptions(opts)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse cache import options")
-	}
-
-	// Default the build platform to the buildkit host's os/arch
-	defaultBuildPlatform := platforms.DefaultSpec()
-
-	// But prefer the first worker's platform
-	if workers := c.BuildOpts().Workers; len(workers) > 0 && len(workers[0].Platforms) > 0 {
-		defaultBuildPlatform = workers[0].Platforms[0]
-	}
-
-	buildPlatforms := []ocispecs.Platform{defaultBuildPlatform}
-
-	// Defer to dockerfile2llb on the default platform by passing nil
-	targetPlatforms := []*ocispecs.Platform{nil}
-
-	// Parse any given target platform(s)
-	if platform, exists := opts[keyTargetPlatform]; exists && platform != "" {
-		targetPlatforms, err = parsePlatforms(platform)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse target platforms %s", platform)
-		}
-	}
-
-	isMultiPlatform := len(targetPlatforms) > 1
 	exportPlatforms := &exptypes.Platforms{
-		Platforms: make([]exptypes.Platform, len(targetPlatforms)),
+		Platforms: make([]exptypes.Platform, len(buildOptions.TargetPlatforms)),
 	}
 	finalResult := client.NewResult()
 
 	eg, ctx := errgroup.WithContext(ctx)
 
 	// Solve for all target platforms in parallel
-	for i, tp := range targetPlatforms {
-		func(i int, platform *ocispecs.Platform) {
+	for i, tp := range buildOptions.TargetPlatforms {
+		func(i int, platform *oci.Platform) {
 			eg.Go(func() (err error) {
-				result, err := buildImage(
-					ctx,
-					c,
-					extraOpts,
-					cfg,
-					variant,
-					d2llb.ConvertOpt{
-						MetaResolver:   c,
-						SessionID:      buildOpts.SessionID,
-						BuildArgs:      filterOpts(opts, buildArgPrefix),
-						Excludes:       excludes,
-						BuildPlatforms: buildPlatforms,
-						TargetPlatform: platform,
-						PrefixPlatform: isMultiPlatform,
-					},
-					cacheImports,
-				)
+				result, err := buildImage(ctx, c, buildOptions, cfg, platform)
 
 				if err != nil {
 					return errors.Wrap(err, "failed to build image")
 				}
 
 				result.AddToClientResult(finalResult)
-				exportPlatforms.Platforms[i] = result.ExportPlatform
+				exportPlatforms.Platforms[i] = *result.ExportPlatform
 
 				return nil
 			})
@@ -169,7 +94,7 @@ func Build(ctx context.Context, c client.Client) (*client.Result, error) {
 		return nil, err
 	}
 
-	if isMultiPlatform {
+	if buildOptions.MultiPlatform() {
 		dt, err := json.Marshal(exportPlatforms)
 		if err != nil {
 			return nil, err
@@ -185,20 +110,17 @@ type buildResult struct {
 	// Reference to built image
 	Reference client.Reference
 
-	// Image configuration
+	// Image metadata and runtime config
 	ImageConfig []byte
 
-	// Extra build info
-	BuildInfo []byte
-
 	// Target platform
-	Platform *ocispecs.Platform
+	Platform *oci.Platform
 
 	// Whether this is a result for a multi-platform build
 	MultiPlatform bool
 
 	// Exportable platform information (platform and platform ID)
-	ExportPlatform exptypes.Platform
+	ExportPlatform *exptypes.Platform
 }
 
 // Adds the build result to the final client result.
@@ -218,14 +140,9 @@ func (br *buildResult) AddToClientResult(cr *client.Result) {
 			fmt.Sprintf("%s/%s", exptypes.ExporterImageConfigKey, br.ExportPlatform.ID),
 			br.ImageConfig,
 		)
-		cr.AddMeta(
-			fmt.Sprintf("%s/%s", exptypes.ExporterBuildInfo, br.ExportPlatform.ID),
-			br.BuildInfo,
-		)
 		cr.AddRef(br.ExportPlatform.ID, br.Reference)
 	} else {
 		cr.AddMeta(exptypes.ExporterImageConfigKey, br.ImageConfig)
-		cr.AddMeta(exptypes.ExporterBuildInfo, br.BuildInfo)
 		cr.SetRef(br.Reference)
 	}
 }
@@ -235,37 +152,33 @@ func (br *buildResult) AddToClientResult(cr *client.Result) {
 func buildImage(
 	ctx context.Context,
 	c client.Client,
-	ebo *ExtraBuildOptions,
+	buildOpts *BuildOptions,
 	cfg *config.Config,
-	variant string,
-	convertOpts d2llb.ConvertOpt,
-	cacheImports []client.CacheOptionsEntry,
+	targetPlatform *oci.Platform,
 ) (*buildResult, error) {
 
 	result := buildResult{
-		Platform:      convertOpts.TargetPlatform,
-		MultiPlatform: convertOpts.PrefixPlatform,
+		Platform:      targetPlatform,
+		MultiPlatform: buildOpts.MultiPlatform(),
 	}
 
-	state, image, err := CompileToLLB(ctx, ebo, cfg, variant, convertOpts)
+	target, err := Compile(ctx, buildOpts, cfg, targetPlatform)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to compile to LLB state")
+		return nil, errors.Wrap(err, "failed to compile target")
 	}
 
-	result.ImageConfig, err = json.Marshal(image)
+	def, imgConfig, err := target.Marshal(ctx)
+
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to marshal image config")
+		return nil, errors.Wrap(err, "failed to marshal target")
 	}
 
-	def, err := state.Marshal(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to marshal definition")
-	}
+	result.ImageConfig = imgConfig
 
 	res, err := c.Solve(ctx, client.SolveRequest{
 		Definition:   def.ToPB(),
-		CacheImports: cacheImports,
+		CacheImports: buildOpts.CacheOptions,
 	})
 
 	if err != nil {
@@ -279,27 +192,16 @@ func buildImage(
 
 	// Add platform-specific export info for the result that can later be used
 	// in multi-platform results
-	result.ExportPlatform = exptypes.Platform{
-		Platform: platforms.DefaultSpec(),
+	result.ExportPlatform = &exptypes.Platform{
+		Platform: *targetPlatform,
+		ID:       platforms.Format(*targetPlatform),
 	}
-
-	if result.Platform != nil {
-		result.ExportPlatform.Platform = *result.Platform
-	}
-
-	result.ExportPlatform.ID = platforms.Format(result.ExportPlatform.Platform)
 
 	return &result, nil
 }
 
-func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, error) {
-	opts := c.BuildOpts().Opts
-	configPath := opts[keyConfigPath]
-	if configPath == "" {
-		configPath = defaultConfigPath
-	}
-
-	cfgBytes, err := readFileFromLocal(ctx, c, localNameConfig, configPath, true)
+func readBlubberConfig(ctx context.Context, c client.Client, opts *BuildOptions) (*config.Config, error) {
+	cfgBytes, err := readFileFromLocal(ctx, c, opts.ClientConfigContext, opts.ConfigPath, true)
 	if err != nil {
 		return nil, err
 	}
@@ -316,8 +218,8 @@ func readBlubberConfig(ctx context.Context, c client.Client) (*config.Config, er
 	return cfg, nil
 }
 
-func readDockerExcludes(ctx context.Context, c client.Client) ([]string, error) {
-	dockerignoreBytes, err := readFileFromLocal(ctx, c, localNameContext, dockerignoreFilename, false)
+func readDockerExcludes(ctx context.Context, c client.Client, opts *BuildOptions) ([]string, error) {
+	dockerignoreBytes, err := readFileFromLocal(ctx, c, opts.ClientBuildContext, dockerignoreFilename, false)
 	if err != nil {
 		return nil, err
 	}
@@ -330,68 +232,6 @@ func readDockerExcludes(ctx context.Context, c client.Client) ([]string, error) 
 	return excludes, nil
 }
 
-func filterOpts(opts map[string]string, prefix string) map[string]string {
-	filtered := map[string]string{}
-
-	for k, v := range opts {
-		if strings.HasPrefix(k, prefix) {
-			filtered[strings.TrimPrefix(k, prefix)] = v
-		}
-	}
-
-	return filtered
-}
-
-// parseCacheOptions handles given cache imports. Note that clients may give
-// these options in two different ways, either as `cache-imports` or
-// `cache-from`. The latter is used for registry based cache imports.
-// See https://github.com/moby/buildkit/blob/v0.10/client/solve.go#L477
-//
-// TODO the master branch of buildkit removes the legacy `cache-from` key, so
-// once they cut a new minor version, we can remove support for it.
-func parseCacheOptions(opts map[string]string) ([]client.CacheOptionsEntry, error) {
-	var cacheImports []client.CacheOptionsEntry
-	// new API
-	if cacheImportsStr := opts[keyCacheImports]; cacheImportsStr != "" {
-		var cacheImportsUM []controlapi.CacheOptionsEntry
-		if err := json.Unmarshal([]byte(cacheImportsStr), &cacheImportsUM); err != nil {
-			return nil, errors.Wrapf(err, "failed to unmarshal %s (%q)", keyCacheImports, cacheImportsStr)
-		}
-		for _, um := range cacheImportsUM {
-			cacheImports = append(cacheImports, client.CacheOptionsEntry{Type: um.Type, Attrs: um.Attrs})
-		}
-	}
-	// old API
-	if cacheFromStr := opts[keyCacheFrom]; cacheFromStr != "" {
-		cacheFrom := strings.Split(cacheFromStr, ",")
-		for _, s := range cacheFrom {
-			im := client.CacheOptionsEntry{
-				Type: "registry",
-				Attrs: map[string]string{
-					"ref": s,
-				},
-			}
-			// FIXME(AkihiroSuda): skip append if already exists
-			cacheImports = append(cacheImports, im)
-		}
-	}
-
-	return cacheImports, nil
-}
-
-func parsePlatforms(v string) ([]*ocispecs.Platform, error) {
-	var pp []*ocispecs.Platform
-	for _, v := range strings.Split(v, ",") {
-		p, err := platforms.Parse(v)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse target platform %s", v)
-		}
-		p = platforms.Normalize(p)
-		pp = append(pp, &p)
-	}
-	return pp, nil
-}
-
 func readFileFromLocal(
 	ctx context.Context,
 	c client.Client,
@@ -402,7 +242,7 @@ func readFileFromLocal(
 	st := llb.Local(localCtx,
 		llb.SessionID(c.BuildOpts().SessionID),
 		llb.FollowPaths([]string{filepath}),
-		llb.SharedKeyHint(filepath),
+		llb.SharedKeyHint(localCtx+"-"+filepath),
 	)
 
 	def, err := st.Marshal(ctx)

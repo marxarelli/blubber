@@ -3,107 +3,74 @@
 package buildkit
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"github.com/moby/buildkit/client/llb"
-	d2llb "github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
 
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/pkg/errors"
+
+	"gitlab.wikimedia.org/repos/releng/blubber/build"
 	"gitlab.wikimedia.org/repos/releng/blubber/config"
-	"gitlab.wikimedia.org/repos/releng/blubber/docker"
 )
 
-// CompileToLLB takes a parsed config.Config and a configured variant name and
-// returns an llb.State graph.
-func CompileToLLB(
-	ctx context.Context,
-	ebo *ExtraBuildOptions,
-	cfg *config.Config,
-	variant string,
-	convertOpts d2llb.ConvertOpt,
-) (*llb.State, *d2llb.Image, error) {
-	buffer, err := docker.Compile(cfg, variant)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	state, image, _, err := d2llb.Dockerfile2LLB(ctx, buffer.Bytes(), convertOpts)
-
-	if err != nil {
-		return nil, nil, err
-	}
-
-	targetVariant := cfg.Variants[variant]
-	state = postProcessLLB(ebo, state, &targetVariant)
-
-	return state, image, nil
-}
-
 // Compile takes a parsed config.Config and a configured variant name and
-// returns an llb.State graph in binary format.
-func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
-	buffer := new(bytes.Buffer)
-	ctx := context.Background()
+// returns a compiled build.Target
+func Compile(
+	ctx context.Context,
+	bo *BuildOptions,
+	cfg *config.Config,
+	platform *oci.Platform,
+) (*build.Target, error) {
 
-	state, _, err := CompileToLLB(ctx, nil, cfg, variant, d2llb.ConvertOpt{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	def, err := state.Marshal(ctx)
+	variants, err := cfg.CopiesDepGraph.GetDeps(bo.Variant)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get variant dependencies")
 	}
 
-	writer := bufio.NewWriter(buffer)
-	err = llb.WriteTo(def, writer)
+	variants = append(variants, bo.Variant)
 
-	if err != nil {
-		return nil, err
-	}
+	targets := build.TargetGroup{}
+	vcfgs := make(map[string]*config.VariantConfig, len(variants))
 
-	err = writer.Flush()
+	var finalTarget *build.Target
 
-	if err != nil {
-		return nil, err
-	}
+	for _, variant := range variants {
+		vcfg, err := config.GetVariant(cfg, variant)
 
-	return buffer, nil
-}
-
-func postProcessLLB(
-	ebo *ExtraBuildOptions,
-	state *llb.State,
-	targetVariant *config.VariantConfig,
-) *llb.State {
-	newState := *state
-
-	entryPoint := targetVariant.EntryPoint
-	if entryPoint != nil && ebo != nil && ebo.RunEntrypoint() {
-		for k, v := range ebo.RunVariantEnvironment() {
-			newState = newState.AddEnv(k, v)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to get variant %s", variant)
 		}
 
-		newState = newState.Run(
-			llb.Args(append(entryPoint, ebo.EntrypointArgs()...)),
-			disableCacheForOp(),
-		).Root()
+		vcfgs[variant] = vcfg
+
+		finalTarget = targets.NewTarget(variant, vcfg.Base, platform, bo.Options)
 	}
 
-	return &newState
-}
+	err = targets.InitializeAll(ctx)
 
-type runOptionFunc func(*llb.ExecInfo)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch base images for some targets")
+	}
 
-func (fn runOptionFunc) SetRunOption(ei *llb.ExecInfo) {
-	fn(ei)
-}
+	for _, target := range targets {
+		for _, phase := range build.Phases() {
+			for _, instruction := range vcfgs[target.Name].InstructionsForPhase(phase) {
+				err := instruction.Compile(target)
 
-func disableCacheForOp() llb.RunOption {
-	return runOptionFunc(func(ei *llb.ExecInfo) {
-		ei.Constraints.Metadata.IgnoreCache = true
-	})
+				if err != nil {
+					// TODO if the build.Instruction interface were expanded to include a
+					// method that returned the config from which it originated (and even
+					// file/line from the source config), we could provide the user with a
+					// nicer error message here
+					return nil, errors.Wrap(err, "failed to compile instruction")
+				}
+			}
+		}
+	}
+
+	if bo != nil && bo.RunEntrypoint {
+		finalTarget.RunEntrypoint(bo.EntrypointArgs, bo.RunEnvironment)
+	}
+
+	return finalTarget, nil
 }

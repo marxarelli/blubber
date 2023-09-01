@@ -8,18 +8,6 @@ import (
 	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
-func TestNewStringArg(t *testing.T) {
-	i := build.NewStringArg("RUNS_AS", "runuser")
-
-	assert.Equal(t, []string{`RUNS_AS="runuser"`}, i.Compile())
-}
-
-func TestNewUintArg(t *testing.T) {
-	i := build.NewUintArg("RUNS_UID", 900)
-
-	assert.Equal(t, []string{`RUNS_UID=900`}, i.Compile())
-}
-
 func TestApplyUser(t *testing.T) {
 	instructions := []build.Instruction{
 		build.Copy{[]string{"foo"}, "bar"},
@@ -38,30 +26,53 @@ func TestApplyUser(t *testing.T) {
 }
 
 func TestChown(t *testing.T) {
-	i := build.Chown("123", "124", "/foo")
-
-	assert.Equal(t, []string{`chown "123":"124" "/foo"`}, i.Compile())
+	assert.Equal(
+		t,
+		build.Run{
+			Command:   "chown %s:%s",
+			Arguments: []string{"123", "124", "/foo"},
+		},
+		build.Chown("123", "124", "/foo"),
+	)
 }
 
 func TestCreateDirectories(t *testing.T) {
-	i := build.CreateDirectories([]string{"/foo", "/bar"})
-
-	assert.Equal(t, []string{`mkdir -p "/foo" "/bar"`}, i.Compile())
+	assert.Equal(
+		t,
+		build.Run{
+			Command:   "mkdir -p",
+			Arguments: []string{"/foo", "/bar"},
+		},
+		build.CreateDirectories([]string{"/foo", "/bar"}),
+	)
 }
 
 func TestCreateDirectory(t *testing.T) {
-	i := build.CreateDirectory("/foo")
-
-	assert.Equal(t, []string{`mkdir -p "/foo"`}, i.Compile())
+	assert.Equal(
+		t,
+		build.Run{
+			Command:   "mkdir -p",
+			Arguments: []string{"/foo"},
+		},
+		build.CreateDirectory("/foo"),
+	)
 }
 
 func TestCreateUser(t *testing.T) {
-	i := build.CreateUser("foo", "123", "124")
-
-	if assert.Len(t, i, 2) {
-		assert.Equal(t, []string{`(getent group "124" || groupadd -o -g "124" -r "foo")`}, i[0].Compile())
-		assert.Equal(t, []string{`(getent passwd "123" || useradd -l -o -m -d "/home/foo" -r -g "124" -u "123" "foo")`}, i[1].Compile())
-	}
+	assert.Equal(
+		t,
+		[]build.Run{
+			{
+				Command:   "(getent group %s || groupadd -o -g %s -r %s)",
+				Arguments: []string{"124", "124", "foo"},
+			},
+			{
+				Command:   "(getent passwd %s || useradd -l -o -m -d %s -r -g %s -u %s %s)",
+				Arguments: []string{"123", "/home/foo", "124", "123", "foo"},
+			},
+		},
+		build.CreateUser("foo", "123", "124"),
+	)
 }
 
 func TestHome(t *testing.T) {
