@@ -16,10 +16,12 @@ stages:
   - build-publish-docs
 
 workflow:
+  # Run pipelines for:
+  #  1. Merge requests
+  #  2. Protected refs (branches or tags)
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-    - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+    - if: $CI_COMMIT_REF_PROTECTED
 
 lint-code:
   stage: lint
@@ -80,10 +82,8 @@ run-acceptance-tests:
       when: never
     - when: always
 
-# Publish a new version of the buildkit frontend each time a version tag (e.g.
-# v0.0.0) is pushed. Note that these tags are marked as protected under 
-# https://gitlab.wikimedia.org/repos/releng/blubber/-/settings/repository and
-# can only be pushed by project maintainers.
+# Publish a new version of the buildkit frontend each time a tag is pushed or
+# an MR is merged to an experimental branch.
 build-and-publish-frontend:
   stage: publish
   extends: .kokkuri:build-and-publish-image
@@ -95,6 +95,7 @@ build-and-publish-frontend:
     - trusted
   rules:
     - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+    - if: $CI_COMMIT_BRANCH =~ /^experimental/ && $CI_COMMIT_REF_PROTECTED
 
 .docs-common:
   stage: build-publish-docs
