@@ -1,4 +1,27 @@
 
+<a name="v0.20.0"></a>
+## [v0.20.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.19.0...v0.20.0)
+
+> 2023-09-11
+
+### Examples
+
+* Refactor env variable comparison step
+* Run examples in parallel using a matrix job
+
+### Gitlab
+
+* Modify .gitreview for use with gerritlab
+
+### Go
+
+* Require go 1.19 and fix new gofmt errors
+
+### Python
+
+* Set PIP_BREAK_SYSTEM_PACKAGES
+
+
 <a name="v0.19.0"></a>
 ## [v0.19.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.18.0...v0.19.0)
 
@@ -155,7 +178,7 @@
 
 
 <a name="v0.10.0"></a>
-## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.0.0...v0.10.0)
+## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.10.0)
 
 > 2022-10-12
 
@@ -165,6 +188,14 @@
 * Implement merging `apt.proxies` config
 * Support configuration of http/https proxies
 * Add ability to target releases
+
+### Add
+
+* a Blubber file for a Blubberoid service Docker image
+
+### Blubber
+
+* Bump pipeline version
 
 ### BuildKit
 
@@ -188,9 +219,17 @@
 
 * Use numeric gid when creating a user
 
+### Node
+
+* Add npm ci to build instructions
+
 ### PHP
 
 * Pass --no-scripts to composer for extra hardening
+
+### Python
+
+* Change UseSystemFlag to Flag
 
 ### Python
 
@@ -201,6 +240,11 @@
 * Support execution of site package modules in builder
 * upgrade pip before installing requirements
 * Pin pip package to <21 for Python 2
+* Add support for Poetry package manager
+
+### Python
+
+* Add support for use-system-flag directive
 
 ### Requirements
 
@@ -214,40 +258,6 @@
 
 * Revert "feature: build-time arguments for lives & runs user config"
 * feature: build-time arguments for lives & runs user config
-
-
-<a name="v0.0.0"></a>
-## [v0.0.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.0.0)
-
-> 2019-04-16
-
-### Add
-
-* a Blubber file for a Blubberoid service Docker image
-
-### Blubber
-
-* Bump pipeline version
-
-### Experimental
-
-* Support buildkit
-
-### Node
-
-* Add npm ci to build instructions
-
-### Python
-
-* Add support for Poetry package manager
-
-### Python
-
-* Change UseSystemFlag to Flag
-
-### Python
-
-* Add support for use-system-flag directive
 
 
 <a name="v0.6.0"></a>
