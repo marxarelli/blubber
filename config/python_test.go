@@ -136,6 +136,9 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
+				build.Env{map[string]string{
+					"PIP_BREAK_SYSTEM_PACKAGES": "1",
+				}},
 				build.RunAll{
 					[]build.Run{
 						{
@@ -377,6 +380,9 @@ func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 	t.Run("PhasePrivileged", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
+				build.Env{map[string]string{
+					"PIP_BREAK_SYSTEM_PACKAGES": "1",
+				}},
 				build.RunAll{
 					[]build.Run{
 						{

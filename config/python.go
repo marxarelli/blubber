@@ -108,6 +108,9 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 		case build.PhasePrivileged:
 			if pc.Requirements != nil || pc.usePoetry() {
 				if pc.Requirements != nil {
+					ins = append(ins, build.Env{map[string]string{
+						"PIP_BREAK_SYSTEM_PACKAGES": "1",
+					}})
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), append([]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"})},
 						{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", "tox", pc.pipPackage()})},
