@@ -285,19 +285,6 @@ func TestCopyFrom(t *testing.T) {
 	req.Equal("/srv/foo/dest", copy.Dest)
 }
 
-func TestConfigureImage(t *testing.T) {
-	image, req := testtarget.Setup(t,
-		testtarget.NewTargets("foo"),
-		func(foo *build.Target) {
-			foo.ConfigureImage(func(cfg *oci.ImageConfig) {
-				cfg.User = "foo-user"
-			})
-		},
-	)
-
-	req.Equal("foo-user", image.Config.User)
-}
-
 func TestExpandEnv(t *testing.T) {
 	ctx := context.Background()
 	req := require.New(t)
@@ -352,9 +339,7 @@ func TestRunEntrypoint(t *testing.T) {
 	image, req := testtarget.Setup(t,
 		testtarget.NewTargets("foo"),
 		func(foo *build.Target) {
-			foo.ConfigureImage(func(cfg *oci.ImageConfig) {
-				cfg.Entrypoint = []string{"/bin/foo", "bar"}
-			})
+			foo.Image.Entrypoint([]string{"/bin/foo", "bar"})
 			foo.RunEntrypoint([]string{"baz"}, map[string]string{"FOO": "foo"})
 		},
 	)

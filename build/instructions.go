@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	"github.com/moby/buildkit/client/llb"
-	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 )
 
@@ -149,9 +148,7 @@ type EntryPoint struct {
 
 // Compile to the given [Target]
 func (ep EntryPoint) Compile(target *Target) error {
-	target.ConfigureImage(func(cfg *oci.ImageConfig) {
-		cfg.Entrypoint = ep.Command
-	})
+	target.Image.Entrypoint(ep.Command)
 
 	return nil
 }
@@ -164,9 +161,7 @@ type Env struct {
 
 // Compile to the given [Target]
 func (env Env) Compile(target *Target) error {
-	target.ConfigureImage(func(cfg *oci.ImageConfig) {
-		cfg.Env = append(cfg.Env, sortedEnvKeyValues(env.Definitions)...)
-	})
+	target.Image.AddEnv(env.Definitions)
 
 	return target.AddEnv(env.Definitions)
 }
@@ -179,11 +174,8 @@ type Label struct {
 
 // Compile to the given [Target]
 func (label Label) Compile(target *Target) error {
-	target.ConfigureImage(func(cfg *oci.ImageConfig) {
-		for k, v := range label.Definitions {
-			cfg.Labels[k] = v
-		}
-	})
+	target.Image.AddLabels(label.Definitions)
+
 	return nil
 }
 
@@ -202,9 +194,7 @@ func (user User) Compile(target *Target) error {
 		uid = "0"
 	}
 
-	target.ConfigureImage(func(cfg *oci.ImageConfig) {
-		cfg.User = target.ExpandEnv(uid)
-	})
+	target.Image.User(uid)
 
 	return target.User(uid)
 }
@@ -217,9 +207,7 @@ type WorkingDirectory struct {
 
 // Compile to the given [Target]
 func (wd WorkingDirectory) Compile(target *Target) error {
-	target.ConfigureImage(func(cfg *oci.ImageConfig) {
-		cfg.WorkingDir = wd.Path
-	})
+	target.Image.WorkingDirectory(wd.Path)
 
 	return target.WorkingDirectory(wd.Path)
 }

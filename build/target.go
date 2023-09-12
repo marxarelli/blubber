@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 	"strings"
 	"unicode/utf8"
 
@@ -31,9 +30,10 @@ const (
 type Target struct {
 	Name         string
 	Base         string
+	Image        *TargetImage
+	Options      *Options
 	state        llb.State
 	image        *oci.Image
-	Options      *Options
 	platform     *oci.Platform
 	dependencies *TargetGroup
 }
@@ -50,7 +50,7 @@ func NewTarget(name string, base string, platform *oci.Platform, options *Option
 		Options:  options,
 	}
 	target.image = newImage(target.Platform())
-
+	target.Image = &TargetImage{target: target}
 	target.dependencies = &TargetGroup{target}
 
 	return target
@@ -174,9 +174,9 @@ func (target *Target) ExposeBuildArg(name string, defaultValue string) error {
 //
 // Note these variables will only be defined for build time processes. To add
 // environment variables to the resulting image config (for runtime processes
-// when a container is later run), use ConfigureImage.
+// when a container is later run), use [Image.AddEnv].
 func (target *Target) AddEnv(definitions map[string]string) error {
-	for _, k := range envKeys(definitions) {
+	for _, k := range sortedKeys(definitions) {
 		v, ok := definitions[k]
 		if ok {
 			target.state = target.state.AddEnv(k, target.ExpandEnv(v))
@@ -343,11 +343,6 @@ func (target *Target) RunShell(command string) error {
 	return nil
 }
 
-// ConfigureImage calls the given function to mutate the ImageConfig
-func (target *Target) ConfigureImage(configure func(*oci.ImageConfig)) {
-	configure(&target.image.Config)
-}
-
 // ExpandEnv substitutes environment variable references in the given string
 // for the current values taken from the current target state
 func (target *Target) ExpandEnv(subject string) string {
@@ -448,7 +443,7 @@ func (target *Target) NameLength() int {
 //
 // Note the given user will only affect build time processes. To configure the
 // user of the resulting image config (for runtime processes when a container
-// is run), use ConfigureImage.
+// is run), use [Image.User].
 func (target *Target) User(user string) error {
 	target.state = target.state.User(target.ExpandEnv(user))
 	return nil
@@ -458,7 +453,7 @@ func (target *Target) User(user string) error {
 //
 // Note this will only affect build time processes. To configure the working
 // directory of the resulting image config (for runtime processes when a
-// container is run), use ConfigureImage.
+// container is run), use [Image.WorkingDirectory].
 func (target *Target) WorkingDirectory(dir string) error {
 	target.state = target.state.Dir(dir)
 	return nil
@@ -473,7 +468,7 @@ func (target *Target) RunEntrypoint(args []string, env map[string]string) error 
 		disableCacheForOp(),
 	}
 
-	for _, k := range envKeys(env) {
+	for _, k := range sortedKeys(env) {
 		v, ok := env[k]
 		if ok {
 			runOpts = append(runOpts, llb.AddEnv(k, v))
@@ -560,20 +555,6 @@ func parseKeyValue(env string) (string, string) {
 	}
 
 	return parts[0], v
-}
-
-func envKeys(env map[string]string) []string {
-	keys := make([]string, len(env))
-
-	i := 0
-	for k := range env {
-		keys[i] = k
-		i++
-	}
-
-	sort.Strings(keys)
-
-	return keys
 }
 
 type runOptionFunc func(*llb.ExecInfo)

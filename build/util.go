@@ -6,21 +6,18 @@ import (
 	"strconv"
 )
 
-func sortedEnvKeyValues(keyValues map[string]string) []string {
-	defs := make([]string, 0, len(keyValues))
-	names := make([]string, 0, len(keyValues))
+func sortedKeys(keyValues map[string]string) []string {
+	keys := make([]string, len(keyValues))
 
-	for name := range keyValues {
-		names = append(names, name)
+	i := 0
+	for k := range keyValues {
+		keys[i] = k
+		i++
 	}
 
-	sort.Strings(names)
+	sort.Strings(keys)
 
-	for _, name := range names {
-		defs = append(defs, name+"="+quote(keyValues[name]))
-	}
-
-	return defs
+	return keys
 }
 
 func quote(arg string) string {
