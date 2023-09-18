@@ -62,6 +62,10 @@ func (pc *PythonConfig) Merge(pc2 PythonConfig) {
 	if pc2.Requirements != nil {
 		pc.Requirements = pc2.Requirements
 	}
+
+	if pc2.ToxVersion != "" {
+		pc.ToxVersion = pc2.ToxVersion
+	}
 }
 
 // Merge two PoetryConfig structs.

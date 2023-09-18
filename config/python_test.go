@@ -17,11 +17,13 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
     python:
       version: python2.7
       requirements: [requirements.txt]
+      tox-version: 4.11.1
     variants:
       test:
         python:
           version: python3
           requirements: [other-requirements.txt, requirements-test.txt]
+          tox-version: 4.11.2
           use-system-flag: true`))
 
 	if assert.NoError(t, err) {
@@ -42,6 +44,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 			}, variant.Python.Requirements)
 			assert.Equal(t, "python3", variant.Python.Version)
 			assert.Equal(t, true, variant.Python.UseSystemFlag.True)
+			assert.Equal(t, "4.11.2", variant.Python.ToxVersion)
 		}
 	}
 }
