@@ -1,4 +1,14 @@
 
+<a name="v0.21.1"></a>
+## [v0.21.1](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.21.0...v0.21.1)
+
+> 2023-09-18
+
+### Python
+
+* Fix merging of `tox-version`
+
+
 <a name="v0.21.0"></a>
 ## [v0.21.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.20.0...v0.21.0)
 
