@@ -1,4 +1,14 @@
 
+<a name="v0.21.0"></a>
+## [v0.21.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.20.0...v0.21.0)
+
+> 2023-09-18
+
+### Python
+
+* Allow tox version to be specified
+
+
 <a name="v0.20.0"></a>
 ## [v0.20.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.19.0...v0.20.0)
 
