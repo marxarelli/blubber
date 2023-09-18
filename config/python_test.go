@@ -367,6 +367,39 @@ func TestPosFinding(t *testing.T) {
 
 }
 
+func TestPythonConfigToxVersion(t *testing.T) {
+	cfg := config.PythonConfig{
+		Version: "python3",
+		Requirements: config.RequirementsConfig{
+			{From: "local", Source: "requirements.txt"},
+		},
+		ToxVersion: "1.23.4",
+	}
+
+	t.Run("tox version honored", func(t *testing.T) {
+		assert.Equal(t,
+			[]build.Instruction{
+				build.Env{map[string]string{
+					"PIP_BREAK_SYSTEM_PACKAGES": "1",
+				}},
+				build.RunAll{
+					[]build.Run{
+						{
+							"python3",
+							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
+						},
+						{
+							"python3",
+							[]string{"-m", "pip", "install", "-U", "wheel", "tox==1.23.4", "pip"},
+						},
+					},
+				},
+			},
+			cfg.InstructionsForPhase(build.PhasePrivileged),
+		)
+	})
+}
+
 func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 	cfg := config.PythonConfig{
 		Version: "python3",

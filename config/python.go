@@ -32,6 +32,9 @@ type PythonConfig struct {
 
 	// Use Poetry for package management
 	Poetry PoetryConfig `json:"poetry"`
+
+	// Specify a specific version of tox to install (T346226)
+	ToxVersion string `json:"tox-version"`
 }
 
 // PoetryConfig holds configuration fields related to installation of project
@@ -113,7 +116,7 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 					}})
 					ins = append(ins, build.RunAll{[]build.Run{
 						{pc.version(), append([]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"})},
-						{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", "tox", pc.pipPackage()})},
+						{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", pc.toxPackage(), pc.pipPackage()})},
 					}})
 				}
 
@@ -230,6 +233,14 @@ func (pc PythonConfig) version() string {
 
 func (pc PythonConfig) usePoetry() bool {
 	return pc.Poetry.Version != ""
+}
+
+func (pc PythonConfig) toxPackage() string {
+	if pc.ToxVersion == "" {
+		return "tox"
+	}
+
+	return "tox==" + pc.ToxVersion
 }
 
 // InsertElement - insert el into slice at pos
