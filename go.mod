@@ -1,6 +1,7 @@
 module gitlab.wikimedia.org/repos/releng/blubber
 
 require (
+	github.com/atsushinee/go-markdown-generator v0.0.0-20231027094725-92d26ffbe778
 	github.com/containerd/containerd v1.6.20
 	github.com/containers/image/v5 v5.25.0
 	github.com/cucumber/godog v0.12.6
@@ -11,8 +12,11 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/moby/buildkit v0.11.6
 	github.com/opencontainers/image-spec v1.1.0-rc2.0.20221005185240-3a7f492d3f1b
+	github.com/pborman/getopt v1.1.0
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
+	github.com/santhosh-tekuri/jsonschema v1.2.4
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/stretchr/testify v1.8.2
 	github.com/utahta/go-openuri v0.1.0
 	github.com/wk8/go-ordered-map v0.1.0

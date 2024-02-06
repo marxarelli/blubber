@@ -25,6 +25,13 @@ lint-code:
     BUILD_VARIANT: make
     RUN_ARGUMENTS: '["lint"]'
 
+ensure-docs-were-generated:
+  stage: lint
+  extends: .kokkuri:build-and-run-image
+  variables:
+    BUILD_VARIANT: make
+    RUN_ARGUMENTS: '["ensure-docs"]'
+
 run-unit-tests:
   stage: test
   extends: .kokkuri:build-and-run-image

@@ -7,7 +7,11 @@ import (
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
+	"github.com/santhosh-tekuri/jsonschema/v5"
+	"gitlab.wikimedia.org/repos/releng/blubber/api"
 )
+
+var schema = jsonschema.MustCompileString("config.schema.json", api.ConfigSchema)
 
 // DefaultConfig contains YAML that is applied before the user's
 // configuration.
@@ -148,10 +152,23 @@ func ReadConfig(data []byte) (*Config, error) {
 	var (
 		version VersionConfig
 		config  Config
+		raw     interface{}
 	)
 
-	// Unmarshal config version first for pre-validation
-	err := json.Unmarshal(data, &version)
+	// First unmarshal into an interface and perform JSON Schema validation
+	err := json.Unmarshal(data, &raw)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = schema.Validate(raw)
+	if err != nil {
+		return nil, err
+	}
+
+	// Next, unmarshal config version and validate it
+	err = json.Unmarshal(data, &version)
 
 	if err != nil {
 		return nil, err

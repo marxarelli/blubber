@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	newBlobFSs map[string]newBlobFS = map[string]newBlobFS{}
+	newBlobFSs = map[string]newBlobFS{}
 )
 
 type newBlobFS func(context.Context, types.ImageSource, types.BlobInfo, types.BlobInfoCache) (FS, error)

@@ -44,6 +44,14 @@ clean:
 	go clean $(GO_PACKAGES) || true
 	rm -f blubber blubberoid || true
 
+.PHONY: docs
+docs:
+	go run ./util/markdownschema ./api/config.schema.json > ./docs/configuration.md
+
+.PHONY: ensure-docs
+ensure-docs:
+	diff -q <(go run ./util/markdownschema ./api/config.schema.json) ./docs/configuration.md
+
 download:
 	go mod download
 

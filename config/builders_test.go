@@ -2,8 +2,9 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"gitlab.wikimedia.org/repos/releng/blubber/config"
 )
