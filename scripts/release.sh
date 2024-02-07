@@ -123,8 +123,12 @@ fi
 echo "Creating temporary local branch $branch"
 git checkout -b "$branch"
 
+echo "Updating version references in README.md"
+sed -i'.sbak' 's!/blubber/buildkit:v[0-9]*\.[0-9]*\.[0-9]*!/blubber/buildkit:'"$tag"'!g' README.md
+rm README.md.sbak
+
 echo "Committing VERSION and CHANGELOG.md"
-git add VERSION CHANGELOG.md
+git add VERSION CHANGELOG.md README.md
 git commit --message="version: $version"
 
 echo "Creating signed version tag $tag"
