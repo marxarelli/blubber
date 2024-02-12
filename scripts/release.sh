@@ -127,7 +127,7 @@ echo "Updating version references in README.md"
 sed -i'.sbak' 's!/blubber/buildkit:v[0-9]*\.[0-9]*\.[0-9]*!/blubber/buildkit:'"$tag"'!g' README.md
 rm README.md.sbak
 
-echo "Committing VERSION and CHANGELOG.md"
+echo "Committing VERSION, CHANGELOG.md, and README.md"
 git add VERSION CHANGELOG.md README.md
 git commit --message="version: $version"
 
