@@ -1,4 +1,14 @@
 
+<a name="v0.22.0"></a>
+## [v0.22.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.21.1...v0.22.0)
+
+> 2024-02-12
+
+### Scripts
+
+* Update version references in README.md during release
+
+
 <a name="v0.21.1"></a>
 ## [v0.21.1](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.21.0...v0.21.1)
 
@@ -198,7 +208,7 @@
 
 
 <a name="v0.10.0"></a>
-## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.10.0)
+## [v0.10.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.0.0...v0.10.0)
 
 > 2022-10-12
 
@@ -208,14 +218,6 @@
 * Implement merging `apt.proxies` config
 * Support configuration of http/https proxies
 * Add ability to target releases
-
-### Add
-
-* a Blubber file for a Blubberoid service Docker image
-
-### Blubber
-
-* Bump pipeline version
 
 ### BuildKit
 
@@ -239,17 +241,9 @@
 
 * Use numeric gid when creating a user
 
-### Node
-
-* Add npm ci to build instructions
-
 ### PHP
 
 * Pass --no-scripts to composer for extra hardening
-
-### Python
-
-* Change UseSystemFlag to Flag
 
 ### Python
 
@@ -260,11 +254,6 @@
 * Support execution of site package modules in builder
 * upgrade pip before installing requirements
 * Pin pip package to <21 for Python 2
-* Add support for Poetry package manager
-
-### Python
-
-* Add support for use-system-flag directive
 
 ### Requirements
 
@@ -278,6 +267,40 @@
 
 * Revert "feature: build-time arguments for lives & runs user config"
 * feature: build-time arguments for lives & runs user config
+
+
+<a name="v0.0.0"></a>
+## [v0.0.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.6.0...v0.0.0)
+
+> 2019-04-16
+
+### Add
+
+* a Blubber file for a Blubberoid service Docker image
+
+### Blubber
+
+* Bump pipeline version
+
+### Experimental
+
+* Support buildkit
+
+### Node
+
+* Add npm ci to build instructions
+
+### Python
+
+* Add support for Poetry package manager
+
+### Python
+
+* Change UseSystemFlag to Flag
+
+### Python
+
+* Add support for use-system-flag directive
 
 
 <a name="v0.6.0"></a>
