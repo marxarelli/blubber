@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "Blubber",
   description: "Blubber Documentation",
+  base: '/releng/blubber/',
   rewrites: {
     'README.md': 'index.md',
   },
