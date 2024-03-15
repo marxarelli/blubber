@@ -1,834 +1,1542 @@
-# Blubber configuration (version v4)
+# Blubber configuration (v4)
 
-## `.version` _string_ (required)
+## version
+`.version` _string_ (required)
 
-Blubber configuration version.
+Blubber configuration version. Currently `v4`.
 
-## `.apt` _object_
+## apt
+`.apt` _object_
 
 
-### `.apt.packages` _array<string>_
+### packages
+`.apt.packages` _array&lt;string&gt;_
 
 Packages to install from APT sources of base image.
 
-#### `.apt.packages[]` _string_
+For example:
 
-### `.apt.packages` _object_
+```yaml
+apt:
+  sources:
+    - url: http://apt.wikimedia.org/wikimedia
+      distribution: buster-wikimedia
+      components: [thirdparty/confluent]
+  packages: [ ca-certificates, confluent-kafka-2.11, curl ]
+```
+
+#### packages[]
+`.apt.packages[]` _string_
+
+### apt object
+`.apt.packages` _object_
 
 Key-Value pairs of target release and packages to install from APT sources.
 
-#### `.apt.packages.*` _array<string>_
+#### apt array
+`.apt.packages.*` _array&lt;string&gt;_
 
 The packages to install using the target release.
 
-#### `.apt.packages.*[]` _string_
+#### *[]
+`.apt.packages.*[]` _string_
 
-### `.apt.proxies` _array<object|string>_
+### proxies
+`.apt.proxies` _array&lt;object|string&gt;_
 
 HTTP/HTTPS proxies to use during package installation.
 
 
-#### `.apt.proxies[]` _string_
+#### proxies[]
+`.apt.proxies[]` _string_
 
 Shorthand configuration of a proxy that applies to all sources of its protocol.
 
-#### `.apt.proxies[]` _object_
+#### proxies[]
+`.apt.proxies[]` _object_
 
 Proxy for either all sources of a given protocol or a specific source.
 
-#### `.apt.proxies[].source` _string_
+#### source
+`.apt.proxies[].source` _string_
 
 APT source to which this proxy applies.
 
-#### `.apt.proxies[].url` _string_ (required)
+#### url
+`.apt.proxies[].url` _string_ (required)
 
 HTTP/HTTPS proxy URL.
 
-### `.apt.sources` _array<object>_
+### sources
+`.apt.sources` _array&lt;object&gt;_
 
 Additional APT sources to configure prior to package installation.
 
-#### `.apt.sources[]` _object_
+#### APT sources object
+`.apt.sources[]` _object_
 
 APT source URL, distribution/release name, and components.
 
-#### `.apt.sources[].components` _array<string>_
+#### components
+`.apt.sources[].components` _array&lt;string&gt;_
 
-List of distribution components (e.g. main, contrib).
+List of distribution components (e.g. main, contrib). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields.
 
-#### `.apt.sources[].components[]` _string_
+#### components[]
+`.apt.sources[].components[]` _string_
 
-#### `.apt.sources[].distribution` _string_
+#### distribution
+`.apt.sources[].distribution` _string_
 
-Debian distribution/release name (e.g. buster).
+Debian distribution/release name (e.g. buster). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields.
 
-#### `.apt.sources[].url` _string_ (required)
+#### url
+`.apt.sources[].url` _string_ (required)
 
 APT source URL.
 
-## `.base` _null|string_
+## base
+`.base` _null|string_
 
-Base image reference.
+Base image on which the new image will be built; a list of available images can be found by querying the [Wikimedia Docker Registry](https://docker-registry.wikimedia.org/).
 
-## `.builder` _object_
+## builder
+`.builder` _object_
 
-### `.builder.command` _array<string>_
+Run an arbitrary build command.
 
-Command and arguments of an arbitrary build command.
+### command
+`.builder.command` _array&lt;string&gt;_
 
-#### `.builder.command[]` _string_
+Command and arguments of an arbitrary build command, for example `[make, build]`.
 
-### `.builder.requirements` _array<object|string>_
+#### command[]
+`.builder.command[]` _string_
 
+### requirements
+`.builder.requirements` _array&lt;object|string&gt;_
 
-#### `.builder.requirements[]` _string_
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
 
-Path of files/directories to copy from the local build context.
+Example (shorthand)
 
-#### `.builder.requirements[]` _object_
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
 
-#### `.builder.requirements[].destination` _string_
+Example (longhand/advanced)
 
-Destination path. Defaults to source path.
-
-#### `.builder.requirements[].from` _null|string_
-
-Variant from which to copy files.
-
-#### `.builder.requirements[].source` _string_
-
-Path of files/directories to copy.
-
-## `.builders` _array<object>_
-
-Multiple builders to be executed in an explicit order.
-
-
-### `.builders[]` _object_
-
-#### `.builders[].custom` _object_
-
-#### `.builders[].custom.command` _array<string>_
-
-Command and arguments of an arbitrary build command.
-
-#### `.builders[].custom.command[]` _string_
-
-#### `.builders[].custom.requirements` _array<object|string>_
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.builders[].custom.requirements[]` _string_
+#### requirements[]
+`.builder.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.builder.requirements[]` _object_
 
-#### `.builders[].custom.requirements[]` _object_
-
-#### `.builders[].custom.requirements[].destination` _string_
+#### destination
+`.builder.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.builders[].custom.requirements[].from` _null|string_
+#### from
+`.builder.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.builders[].custom.requirements[].source` _string_
+#### source
+`.builder.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-### `.builders[]` _object_
+## builders
+`.builders` _array&lt;object&gt;_
 
-#### `.builders[].node` _object_
-
-#### `.builders[].node.allow-dedupe-failure` _boolean_
-
-Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved.
-
-#### `.builders[].node.env` _string_
-
-Node environment (e.g. production, etc.).
-
-#### `.builders[].node.requirements` _array<object|string>_
+Multiple builders to be executed in an explicit order. You can specify any of the predefined standalone builder keys (node, python and php), but each can only appear once. Additionally, any number of custom keys can appear; their definition and subkeys are the same as the standalone builder key.
 
 
-#### `.builders[].node.requirements[]` _string_
+### builders[]
+`.builders[]` _object_
 
-Path of files/directories to copy from the local build context.
+#### custom
+`.builders[].custom` _object_
 
-#### `.builders[].node.requirements[]` _object_
+Run an arbitrary build command.
 
-#### `.builders[].node.requirements[].destination` _string_
+#### command
+`.builders[].custom.command` _array&lt;string&gt;_
+
+Command and arguments of an arbitrary build command, for example `[make, build]`.
+
+#### command[]
+`.builders[].custom.command[]` _string_
+
+#### requirements
+`.builders[].custom.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
+
+
+#### requirements[]
+`.builders[].custom.requirements[]` _string_
+
+#### requirements[]
+`.builders[].custom.requirements[]` _object_
+
+#### destination
+`.builders[].custom.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.builders[].node.requirements[].from` _null|string_
+#### from
+`.builders[].custom.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.builders[].node.requirements[].source` _string_
+#### source
+`.builders[].custom.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.builders[].node.use-npm-ci` _boolean_
+### builders[]
+`.builders[]` _object_
 
-Whether to run npm ci instead of npm install.
+#### node
+`.builders[].node` _object_
 
-### `.builders[]` _object_
+Configuration related to the NodeJS/NPM environment
 
-#### `.builders[].php` _object_
+#### allow-dedupe-failure
+`.builders[].node.allow-dedupe-failure` _boolean_
 
-#### `.builders[].php.production` _boolean_
+Whether to allow `npm dedupe` to fail; can be used to temporarily unblock CI while conflicts are resolved.
+
+#### env
+`.builders[].node.env` _string_
+
+Node environment (e.g. production, etc.). Sets the environment variable `NODE_ENV`. Will pass `npm install --production` and run `npm dedupe` if set to production.
+
+#### requirements
+`.builders[].node.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
+
+
+#### requirements[]
+`.builders[].node.requirements[]` _string_
+
+#### requirements[]
+`.builders[].node.requirements[]` _object_
+
+#### destination
+`.builders[].node.requirements[].destination` _string_
+
+Destination path. Defaults to source path.
+
+#### from
+`.builders[].node.requirements[].from` _null|string_
+
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
+
+#### source
+`.builders[].node.requirements[].source` _string_
+
+Path of files/directories to copy.
+
+#### use-npm-ci
+`.builders[].node.use-npm-ci` _boolean_
+
+Whether to run `npm ci` instead of `npm install`.
+
+### builders[]
+`.builders[]` _object_
+
+#### php
+`.builders[].php` _object_
+
+#### production
+`.builders[].php.production` _boolean_
 
 Whether to inject the --no-dev flag into the install command.
 
-#### `.builders[].php.requirements` _array<object|string>_
+#### requirements
+`.builders[].php.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.builders[].php.requirements[]` _string_
+#### requirements[]
+`.builders[].php.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.builders[].php.requirements[]` _object_
 
-#### `.builders[].php.requirements[]` _object_
-
-#### `.builders[].php.requirements[].destination` _string_
+#### destination
+`.builders[].php.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.builders[].php.requirements[].from` _null|string_
+#### from
+`.builders[].php.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.builders[].php.requirements[].source` _string_
+#### source
+`.builders[].php.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-### `.builders[]` _object_
+### builders[]
+`.builders[]` _object_
 
-#### `.builders[].python` _object_
+#### python
+`.builders[].python` _object_
 
-#### `.builders[].python.no-deps` _boolean_
+Predefined configurations for Python build tools
 
-Inject --no-deps into the pip install command. All transitive requirements thus must be explicitly listed in the requirements file. pip check will be run to verify all dependencies are fulfilled.
+#### no-deps
+`.builders[].python.no-deps` _boolean_
 
-#### `.builders[].python.poetry` _object_
+Inject `--no-deps` into the `pip install` command. All transitive requirements thus must be explicitly listed in the requirements file. `pip check` will be run to verify all dependencies are fulfilled.
 
-#### `.builders[].python.poetry.devel` _boolean_
+#### poetry
+`.builders[].python.poetry` _object_
+
+Configuration related to installation of pip dependencies using [Poetry](https://python-poetry.org/).
+
+#### devel
+`.builders[].python.poetry.devel` _boolean_
 
 Whether to install development dependencies or not when using Poetry.
 
-#### `.builders[].python.poetry.version` _string_
+#### version
+`.builders[].python.poetry.version` _string_
 
 Version constraint for installing Poetry package.
 
-#### `.builders[].python.requirements` _array<object|string>_
+#### requirements
+`.builders[].python.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.builders[].python.requirements[]` _string_
+#### requirements[]
+`.builders[].python.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.builders[].python.requirements[]` _object_
 
-#### `.builders[].python.requirements[]` _object_
-
-#### `.builders[].python.requirements[].destination` _string_
+#### destination
+`.builders[].python.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.builders[].python.requirements[].from` _null|string_
+#### from
+`.builders[].python.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.builders[].python.requirements[].source` _string_
+#### source
+`.builders[].python.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.builders[].python.use-system-flag` _boolean_
+#### use-system-flag
+`.builders[].python.use-system-flag` _boolean_
 
 Whether to inject the --system flag into the install command.
 
-#### `.builders[].python.version` _string_
+#### version
+`.builders[].python.version` _string_
 
 Python binary present in the system (e.g. python3).
 
-## `.entrypoint` _array<string>_
+## entrypoint
+`.entrypoint` _array&lt;string&gt;_
 
 Runtime entry point command and arguments.
 
-### `.entrypoint[]` _string_
+### entrypoint[]
+`.entrypoint[]` _string_
 
-## `.lives` _object_
+## lives
+`.lives` _object_
 
-### `.lives.as` _string_
+### as
+`.lives.as` _string_
 
 Owner (name) of application files within the container.
 
-### `.lives.gid` _integer_
+### gid
+`.lives.gid` _integer_
 
 Group owner (GID) of application files within the container.
 
-### `.lives.in` _string_
+### in
+`.lives.in` _string_
 
 Application working directory within the container.
 
-### `.lives.uid` _integer_
+### uid
+`.lives.uid` _integer_
 
 Owner (UID) of application files within the container.
 
-## `.node` _object_
+## node
+`.node` _object_
 
-### `.node.allow-dedupe-failure` _boolean_
+Configuration related to the NodeJS/NPM environment
 
-Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved.
+### allow-dedupe-failure
+`.node.allow-dedupe-failure` _boolean_
 
-### `.node.env` _string_
+Whether to allow `npm dedupe` to fail; can be used to temporarily unblock CI while conflicts are resolved.
 
-Node environment (e.g. production, etc.).
+### env
+`.node.env` _string_
 
-### `.node.requirements` _array<object|string>_
+Node environment (e.g. production, etc.). Sets the environment variable `NODE_ENV`. Will pass `npm install --production` and run `npm dedupe` if set to production.
+
+### requirements
+`.node.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.node.requirements[]` _string_
+#### requirements[]
+`.node.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.node.requirements[]` _object_
 
-#### `.node.requirements[]` _object_
-
-#### `.node.requirements[].destination` _string_
+#### destination
+`.node.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.node.requirements[].from` _null|string_
+#### from
+`.node.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.node.requirements[].source` _string_
+#### source
+`.node.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-### `.node.use-npm-ci` _boolean_
+### use-npm-ci
+`.node.use-npm-ci` _boolean_
 
-Whether to run npm ci instead of npm install.
+Whether to run `npm ci` instead of `npm install`.
 
-## `.php` _object_
+## php
+`.php` _object_
 
-### `.php.production` _boolean_
+### production
+`.php.production` _boolean_
 
 Whether to inject the --no-dev flag into the install command.
 
-### `.php.requirements` _array<object|string>_
+### requirements
+`.php.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.php.requirements[]` _string_
+#### requirements[]
+`.php.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.php.requirements[]` _object_
 
-#### `.php.requirements[]` _object_
-
-#### `.php.requirements[].destination` _string_
+#### destination
+`.php.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.php.requirements[].from` _null|string_
+#### from
+`.php.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.php.requirements[].source` _string_
+#### source
+`.php.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-## `.python` _object_
+## python
+`.python` _object_
 
-### `.python.no-deps` _boolean_
+Predefined configurations for Python build tools
 
-Inject --no-deps into the pip install command. All transitive requirements thus must be explicitly listed in the requirements file. pip check will be run to verify all dependencies are fulfilled.
+### no-deps
+`.python.no-deps` _boolean_
 
-### `.python.poetry` _object_
+Inject `--no-deps` into the `pip install` command. All transitive requirements thus must be explicitly listed in the requirements file. `pip check` will be run to verify all dependencies are fulfilled.
 
-#### `.python.poetry.devel` _boolean_
+### poetry
+`.python.poetry` _object_
+
+Configuration related to installation of pip dependencies using [Poetry](https://python-poetry.org/).
+
+#### devel
+`.python.poetry.devel` _boolean_
 
 Whether to install development dependencies or not when using Poetry.
 
-#### `.python.poetry.version` _string_
+#### version
+`.python.poetry.version` _string_
 
 Version constraint for installing Poetry package.
 
-### `.python.requirements` _array<object|string>_
+### requirements
+`.python.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.python.requirements[]` _string_
+#### requirements[]
+`.python.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.python.requirements[]` _object_
 
-#### `.python.requirements[]` _object_
-
-#### `.python.requirements[].destination` _string_
+#### destination
+`.python.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.python.requirements[].from` _null|string_
+#### from
+`.python.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.python.requirements[].source` _string_
+#### source
+`.python.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-### `.python.use-system-flag` _boolean_
+### use-system-flag
+`.python.use-system-flag` _boolean_
 
 Whether to inject the --system flag into the install command.
 
-### `.python.version` _string_
+### version
+`.python.version` _string_
 
 Python binary present in the system (e.g. python3).
 
-## `.runs` _object_
+## runs
+`.runs` _object_
 
-### `.runs.as` _string_
+Settings for things run in the container.
+
+### as
+`.runs.as` _string_
 
 Runtime process owner (name) of application entrypoint.
 
-### `.runs.environment` _object_
+### environment
+`.runs.environment` _object_
 
 Environment variables and values to be set before entrypoint execution.
 
-### `.runs.gid` _integer_
+### gid
+`.runs.gid` _integer_
 
 Runtime process group (GID) of application entrypoint.
 
-### `.runs.insecurely` _boolean_
+### insecurely
+`.runs.insecurely` _boolean_
 
-Skip dropping of priviledge to the runtime process owner before entrypoint execution.
+Skip dropping of privileges to the runtime process owner before entrypoint execution. Production variants should have this set to `false`, but other variants may set it to `true` in some circumstances, for example when enabling [caching for ESLint](https://eslint.org/docs/user-guide/command-line-interface#caching).
 
-### `.runs.uid` _integer_
+### uid
+`.runs.uid` _integer_
 
 Runtime process owner (UID) of application entrypoint.
 
-## `.variants` _object_
+## variants
+`.variants` _object_
 
 Configuration variants (e.g. development, test, production).
 
-### `.variants.*` _object_
+Blubber can build several variants of an image from the same specification file. The variants are named and described under the `variants` top level item. Typically, there are variants for development versus production: the development variant might have more debugging tools, while the production variant should have no extra software installed to minimize the risk of security issues and other problems.
 
-#### `.variants.*.apt` _object_
+A variant is built using the top level items, combined with the items for the variant. So if the top level `apt` installed some packages, and the variant's `apt` some other packages, both sets of packages get installed in that variant.
 
 
-#### `.variants.*.apt.packages` _array<string>_
+### variant
+`.variants.*` _object_
+
+#### apt
+`.variants.*.apt` _object_
+
+
+#### packages
+`.variants.*.apt.packages` _array&lt;string&gt;_
 
 Packages to install from APT sources of base image.
 
-#### `.variants.*.apt.packages[]` _string_
+For example:
 
-#### `.variants.*.apt.packages` _object_
+```yaml
+apt:
+  sources:
+    - url: http://apt.wikimedia.org/wikimedia
+      distribution: buster-wikimedia
+      components: [thirdparty/confluent]
+  packages: [ ca-certificates, confluent-kafka-2.11, curl ]
+```
+
+#### packages[]
+`.variants.*.apt.packages[]` _string_
+
+#### apt object
+`.variants.*.apt.packages` _object_
 
 Key-Value pairs of target release and packages to install from APT sources.
 
-#### `.variants.*.apt.packages.*` _array<string>_
+#### apt array
+`.variants.*.apt.packages.*` _array&lt;string&gt;_
 
 The packages to install using the target release.
 
-#### `.variants.*.apt.packages.*[]` _string_
+#### *[]
+`.variants.*.apt.packages.*[]` _string_
 
-#### `.variants.*.apt.proxies` _array<object|string>_
+#### proxies
+`.variants.*.apt.proxies` _array&lt;object|string&gt;_
 
 HTTP/HTTPS proxies to use during package installation.
 
 
-#### `.variants.*.apt.proxies[]` _string_
+#### proxies[]
+`.variants.*.apt.proxies[]` _string_
 
 Shorthand configuration of a proxy that applies to all sources of its protocol.
 
-#### `.variants.*.apt.proxies[]` _object_
+#### proxies[]
+`.variants.*.apt.proxies[]` _object_
 
 Proxy for either all sources of a given protocol or a specific source.
 
-#### `.variants.*.apt.proxies[].source` _string_
+#### source
+`.variants.*.apt.proxies[].source` _string_
 
 APT source to which this proxy applies.
 
-#### `.variants.*.apt.proxies[].url` _string_ (required)
+#### url
+`.variants.*.apt.proxies[].url` _string_ (required)
 
 HTTP/HTTPS proxy URL.
 
-#### `.variants.*.apt.sources` _array<object>_
+#### sources
+`.variants.*.apt.sources` _array&lt;object&gt;_
 
 Additional APT sources to configure prior to package installation.
 
-#### `.variants.*.apt.sources[]` _object_
+#### APT sources object
+`.variants.*.apt.sources[]` _object_
 
 APT source URL, distribution/release name, and components.
 
-#### `.variants.*.apt.sources[].components` _array<string>_
+#### components
+`.variants.*.apt.sources[].components` _array&lt;string&gt;_
 
-List of distribution components (e.g. main, contrib).
+List of distribution components (e.g. main, contrib). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields.
 
-#### `.variants.*.apt.sources[].components[]` _string_
+#### components[]
+`.variants.*.apt.sources[].components[]` _string_
 
-#### `.variants.*.apt.sources[].distribution` _string_
+#### distribution
+`.variants.*.apt.sources[].distribution` _string_
 
-Debian distribution/release name (e.g. buster).
+Debian distribution/release name (e.g. buster). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields.
 
-#### `.variants.*.apt.sources[].url` _string_ (required)
+#### url
+`.variants.*.apt.sources[].url` _string_ (required)
 
 APT source URL.
 
-#### `.variants.*.base` _null|string_
+#### base
+`.variants.*.base` _null|string_
 
-Base image reference.
+Base image on which the new image will be built; a list of available images can be found by querying the [Wikimedia Docker Registry](https://docker-registry.wikimedia.org/).
 
-#### `.variants.*.builder` _object_
+#### builder
+`.variants.*.builder` _object_
 
-#### `.variants.*.builder.command` _array<string>_
+Run an arbitrary build command.
 
-Command and arguments of an arbitrary build command.
+#### command
+`.variants.*.builder.command` _array&lt;string&gt;_
 
-#### `.variants.*.builder.command[]` _string_
+Command and arguments of an arbitrary build command, for example `[make, build]`.
 
-#### `.variants.*.builder.requirements` _array<object|string>_
+#### command[]
+`.variants.*.builder.command[]` _string_
 
+#### requirements
+`.variants.*.builder.requirements` _array&lt;object|string&gt;_
 
-#### `.variants.*.builder.requirements[]` _string_
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
 
-Path of files/directories to copy from the local build context.
+Example (shorthand)
 
-#### `.variants.*.builder.requirements[]` _object_
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
 
-#### `.variants.*.builder.requirements[].destination` _string_
+Example (longhand/advanced)
 
-Destination path. Defaults to source path.
-
-#### `.variants.*.builder.requirements[].from` _null|string_
-
-Variant from which to copy files.
-
-#### `.variants.*.builder.requirements[].source` _string_
-
-Path of files/directories to copy.
-
-#### `.variants.*.builders` _array<object>_
-
-Multiple builders to be executed in an explicit order.
-
-
-#### `.variants.*.builders[]` _object_
-
-#### `.variants.*.builders[].custom` _object_
-
-#### `.variants.*.builders[].custom.command` _array<string>_
-
-Command and arguments of an arbitrary build command.
-
-#### `.variants.*.builders[].custom.command[]` _string_
-
-#### `.variants.*.builders[].custom.requirements` _array<object|string>_
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.builders[].custom.requirements[]` _string_
+#### requirements[]
+`.variants.*.builder.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.builder.requirements[]` _object_
 
-#### `.variants.*.builders[].custom.requirements[]` _object_
-
-#### `.variants.*.builders[].custom.requirements[].destination` _string_
+#### destination
+`.variants.*.builder.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.builders[].custom.requirements[].from` _null|string_
+#### from
+`.variants.*.builder.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.builders[].custom.requirements[].source` _string_
+#### source
+`.variants.*.builder.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.builders[]` _object_
+#### builders
+`.variants.*.builders` _array&lt;object&gt;_
 
-#### `.variants.*.builders[].node` _object_
-
-#### `.variants.*.builders[].node.allow-dedupe-failure` _boolean_
-
-Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved.
-
-#### `.variants.*.builders[].node.env` _string_
-
-Node environment (e.g. production, etc.).
-
-#### `.variants.*.builders[].node.requirements` _array<object|string>_
+Multiple builders to be executed in an explicit order. You can specify any of the predefined standalone builder keys (node, python and php), but each can only appear once. Additionally, any number of custom keys can appear; their definition and subkeys are the same as the standalone builder key.
 
 
-#### `.variants.*.builders[].node.requirements[]` _string_
+#### builders[]
+`.variants.*.builders[]` _object_
 
-Path of files/directories to copy from the local build context.
+#### custom
+`.variants.*.builders[].custom` _object_
 
-#### `.variants.*.builders[].node.requirements[]` _object_
+Run an arbitrary build command.
 
-#### `.variants.*.builders[].node.requirements[].destination` _string_
+#### command
+`.variants.*.builders[].custom.command` _array&lt;string&gt;_
+
+Command and arguments of an arbitrary build command, for example `[make, build]`.
+
+#### command[]
+`.variants.*.builders[].custom.command[]` _string_
+
+#### requirements
+`.variants.*.builders[].custom.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
+
+
+#### requirements[]
+`.variants.*.builders[].custom.requirements[]` _string_
+
+#### requirements[]
+`.variants.*.builders[].custom.requirements[]` _object_
+
+#### destination
+`.variants.*.builders[].custom.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.builders[].node.requirements[].from` _null|string_
+#### from
+`.variants.*.builders[].custom.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.builders[].node.requirements[].source` _string_
+#### source
+`.variants.*.builders[].custom.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.builders[].node.use-npm-ci` _boolean_
+#### builders[]
+`.variants.*.builders[]` _object_
 
-Whether to run npm ci instead of npm install.
+#### node
+`.variants.*.builders[].node` _object_
 
-#### `.variants.*.builders[]` _object_
+Configuration related to the NodeJS/NPM environment
 
-#### `.variants.*.builders[].php` _object_
+#### allow-dedupe-failure
+`.variants.*.builders[].node.allow-dedupe-failure` _boolean_
 
-#### `.variants.*.builders[].php.production` _boolean_
+Whether to allow `npm dedupe` to fail; can be used to temporarily unblock CI while conflicts are resolved.
+
+#### env
+`.variants.*.builders[].node.env` _string_
+
+Node environment (e.g. production, etc.). Sets the environment variable `NODE_ENV`. Will pass `npm install --production` and run `npm dedupe` if set to production.
+
+#### requirements
+`.variants.*.builders[].node.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
+
+
+#### requirements[]
+`.variants.*.builders[].node.requirements[]` _string_
+
+#### requirements[]
+`.variants.*.builders[].node.requirements[]` _object_
+
+#### destination
+`.variants.*.builders[].node.requirements[].destination` _string_
+
+Destination path. Defaults to source path.
+
+#### from
+`.variants.*.builders[].node.requirements[].from` _null|string_
+
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
+
+#### source
+`.variants.*.builders[].node.requirements[].source` _string_
+
+Path of files/directories to copy.
+
+#### use-npm-ci
+`.variants.*.builders[].node.use-npm-ci` _boolean_
+
+Whether to run `npm ci` instead of `npm install`.
+
+#### builders[]
+`.variants.*.builders[]` _object_
+
+#### php
+`.variants.*.builders[].php` _object_
+
+#### production
+`.variants.*.builders[].php.production` _boolean_
 
 Whether to inject the --no-dev flag into the install command.
 
-#### `.variants.*.builders[].php.requirements` _array<object|string>_
+#### requirements
+`.variants.*.builders[].php.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.builders[].php.requirements[]` _string_
+#### requirements[]
+`.variants.*.builders[].php.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.builders[].php.requirements[]` _object_
 
-#### `.variants.*.builders[].php.requirements[]` _object_
-
-#### `.variants.*.builders[].php.requirements[].destination` _string_
+#### destination
+`.variants.*.builders[].php.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.builders[].php.requirements[].from` _null|string_
+#### from
+`.variants.*.builders[].php.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.builders[].php.requirements[].source` _string_
+#### source
+`.variants.*.builders[].php.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.builders[]` _object_
+#### builders[]
+`.variants.*.builders[]` _object_
 
-#### `.variants.*.builders[].python` _object_
+#### python
+`.variants.*.builders[].python` _object_
 
-#### `.variants.*.builders[].python.no-deps` _boolean_
+Predefined configurations for Python build tools
 
-Inject --no-deps into the pip install command. All transitive requirements thus must be explicitly listed in the requirements file. pip check will be run to verify all dependencies are fulfilled.
+#### no-deps
+`.variants.*.builders[].python.no-deps` _boolean_
 
-#### `.variants.*.builders[].python.poetry` _object_
+Inject `--no-deps` into the `pip install` command. All transitive requirements thus must be explicitly listed in the requirements file. `pip check` will be run to verify all dependencies are fulfilled.
 
-#### `.variants.*.builders[].python.poetry.devel` _boolean_
+#### poetry
+`.variants.*.builders[].python.poetry` _object_
+
+Configuration related to installation of pip dependencies using [Poetry](https://python-poetry.org/).
+
+#### devel
+`.variants.*.builders[].python.poetry.devel` _boolean_
 
 Whether to install development dependencies or not when using Poetry.
 
-#### `.variants.*.builders[].python.poetry.version` _string_
+#### version
+`.variants.*.builders[].python.poetry.version` _string_
 
 Version constraint for installing Poetry package.
 
-#### `.variants.*.builders[].python.requirements` _array<object|string>_
+#### requirements
+`.variants.*.builders[].python.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.builders[].python.requirements[]` _string_
+#### requirements[]
+`.variants.*.builders[].python.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.builders[].python.requirements[]` _object_
 
-#### `.variants.*.builders[].python.requirements[]` _object_
-
-#### `.variants.*.builders[].python.requirements[].destination` _string_
+#### destination
+`.variants.*.builders[].python.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.builders[].python.requirements[].from` _null|string_
+#### from
+`.variants.*.builders[].python.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.builders[].python.requirements[].source` _string_
+#### source
+`.variants.*.builders[].python.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.builders[].python.use-system-flag` _boolean_
+#### use-system-flag
+`.variants.*.builders[].python.use-system-flag` _boolean_
 
 Whether to inject the --system flag into the install command.
 
-#### `.variants.*.builders[].python.version` _string_
+#### version
+`.variants.*.builders[].python.version` _string_
 
 Python binary present in the system (e.g. python3).
 
-#### `.variants.*.copies` _array<object|string>_
+#### copies
+`.variants.*.copies` _array&lt;object|string&gt;_
 
 
-#### `.variants.*.copies[]` _string_
+#### copies[]
+`.variants.*.copies[]` _string_
 
-Variant from which to copy application and library files.
+Variant from which to copy application and library files. Note that prior to v4, copying of local build-context files was implied by the omission of `copies`. With v4, the configuration must always be explicit. Omitting the field will result in no `COPY` instructions whatsoever, which may be helpful in building very minimal utility images.
 
-#### `.variants.*.copies[]` _object_
+#### copies[]
+`.variants.*.copies[]` _object_
 
-#### `.variants.*.copies[].destination` _string_
+#### destination
+`.variants.*.copies[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.copies[].from` _null|string_
+#### from
+`.variants.*.copies[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.copies[].source` _string_
+#### source
+`.variants.*.copies[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.entrypoint` _array<string>_
+#### entrypoint
+`.variants.*.entrypoint` _array&lt;string&gt;_
 
 Runtime entry point command and arguments.
 
-#### `.variants.*.entrypoint[]` _string_
+#### entrypoint[]
+`.variants.*.entrypoint[]` _string_
 
-#### `.variants.*.includes` _array<string>_
+#### includes
+`.variants.*.includes` _array&lt;string&gt;_
 
-Names of other variants to inherit configuration from.
+Names of other variants to inherit configuration from. Inherited configuration will be combined with this variant's configuration according to key merge rules.
 
-#### `.variants.*.includes[]` _string_
+When a Variant configuration overrides the Common configuration the configurations are merged. The way in which configuration is merged depends on whether the type of the configuration is a compound type; e.g., a map or sequence, or a scalar type; e.g., a string or integer.
+
+In general, configuration that is a compound type is appended, whereas configuration that is of a scalar type is overridden.
+
+For example in this Blubberfile:
+```yaml
+version: v4
+base: scratch
+apt: { packages: [cowsay] }
+variants:
+  test:
+    base: nodejs
+    apt: { packages: [libcaca] }
+```
+
+The `base` scalar will be overwritten, whereas the `apt[packages]` sequence will be appended so that both `cowsay` and `libcaca` are installed in the image produced from the `test` Blubberfile variant.
+
+
+#### includes[]
+`.variants.*.includes[]` _string_
 
 Variant name.
 
-#### `.variants.*.lives` _object_
+#### lives
+`.variants.*.lives` _object_
 
-#### `.variants.*.lives.as` _string_
+#### as
+`.variants.*.lives.as` _string_
 
 Owner (name) of application files within the container.
 
-#### `.variants.*.lives.gid` _integer_
+#### gid
+`.variants.*.lives.gid` _integer_
 
 Group owner (GID) of application files within the container.
 
-#### `.variants.*.lives.in` _string_
+#### in
+`.variants.*.lives.in` _string_
 
 Application working directory within the container.
 
-#### `.variants.*.lives.uid` _integer_
+#### uid
+`.variants.*.lives.uid` _integer_
 
 Owner (UID) of application files within the container.
 
-#### `.variants.*.node` _object_
+#### node
+`.variants.*.node` _object_
 
-#### `.variants.*.node.allow-dedupe-failure` _boolean_
+Configuration related to the NodeJS/NPM environment
 
-Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved.
+#### allow-dedupe-failure
+`.variants.*.node.allow-dedupe-failure` _boolean_
 
-#### `.variants.*.node.env` _string_
+Whether to allow `npm dedupe` to fail; can be used to temporarily unblock CI while conflicts are resolved.
 
-Node environment (e.g. production, etc.).
+#### env
+`.variants.*.node.env` _string_
 
-#### `.variants.*.node.requirements` _array<object|string>_
+Node environment (e.g. production, etc.). Sets the environment variable `NODE_ENV`. Will pass `npm install --production` and run `npm dedupe` if set to production.
+
+#### requirements
+`.variants.*.node.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.node.requirements[]` _string_
+#### requirements[]
+`.variants.*.node.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.node.requirements[]` _object_
 
-#### `.variants.*.node.requirements[]` _object_
-
-#### `.variants.*.node.requirements[].destination` _string_
+#### destination
+`.variants.*.node.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.node.requirements[].from` _null|string_
+#### from
+`.variants.*.node.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.node.requirements[].source` _string_
+#### source
+`.variants.*.node.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.node.use-npm-ci` _boolean_
+#### use-npm-ci
+`.variants.*.node.use-npm-ci` _boolean_
 
-Whether to run npm ci instead of npm install.
+Whether to run `npm ci` instead of `npm install`.
 
-#### `.variants.*.php` _object_
+#### php
+`.variants.*.php` _object_
 
-#### `.variants.*.php.production` _boolean_
+#### production
+`.variants.*.php.production` _boolean_
 
 Whether to inject the --no-dev flag into the install command.
 
-#### `.variants.*.php.requirements` _array<object|string>_
+#### requirements
+`.variants.*.php.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.php.requirements[]` _string_
+#### requirements[]
+`.variants.*.php.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.php.requirements[]` _object_
 
-#### `.variants.*.php.requirements[]` _object_
-
-#### `.variants.*.php.requirements[].destination` _string_
+#### destination
+`.variants.*.php.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.php.requirements[].from` _null|string_
+#### from
+`.variants.*.php.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.php.requirements[].source` _string_
+#### source
+`.variants.*.php.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.python` _object_
+#### python
+`.variants.*.python` _object_
 
-#### `.variants.*.python.no-deps` _boolean_
+Predefined configurations for Python build tools
 
-Inject --no-deps into the pip install command. All transitive requirements thus must be explicitly listed in the requirements file. pip check will be run to verify all dependencies are fulfilled.
+#### no-deps
+`.variants.*.python.no-deps` _boolean_
 
-#### `.variants.*.python.poetry` _object_
+Inject `--no-deps` into the `pip install` command. All transitive requirements thus must be explicitly listed in the requirements file. `pip check` will be run to verify all dependencies are fulfilled.
 
-#### `.variants.*.python.poetry.devel` _boolean_
+#### poetry
+`.variants.*.python.poetry` _object_
+
+Configuration related to installation of pip dependencies using [Poetry](https://python-poetry.org/).
+
+#### devel
+`.variants.*.python.poetry.devel` _boolean_
 
 Whether to install development dependencies or not when using Poetry.
 
-#### `.variants.*.python.poetry.version` _string_
+#### version
+`.variants.*.python.poetry.version` _string_
 
 Version constraint for installing Poetry package.
 
-#### `.variants.*.python.requirements` _array<object|string>_
+#### requirements
+`.variants.*.python.requirements` _array&lt;object|string&gt;_
+
+Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.
+
+Example (shorthand)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image
+```
+
+Example (longhand/advanced)
+
+```yaml
+builder:
+  command: ["some", "build", "command"]
+  requirements:
+    - from: local
+      source: config.production.json
+      destination: config.json
+    - Makefile # note that longhand/shorthand can be mixed
+    - src/
+    - from: other-variant
+      source: /srv/some/previous/build/product
+      destination: dist/product
+```
 
 
-#### `.variants.*.python.requirements[]` _string_
+#### requirements[]
+`.variants.*.python.requirements[]` _string_
 
-Path of files/directories to copy from the local build context.
+#### requirements[]
+`.variants.*.python.requirements[]` _object_
 
-#### `.variants.*.python.requirements[]` _object_
-
-#### `.variants.*.python.requirements[].destination` _string_
+#### destination
+`.variants.*.python.requirements[].destination` _string_
 
 Destination path. Defaults to source path.
 
-#### `.variants.*.python.requirements[].from` _null|string_
+#### from
+`.variants.*.python.requirements[].from` _null|string_
 
-Variant from which to copy files.
+Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem.
 
-#### `.variants.*.python.requirements[].source` _string_
+#### source
+`.variants.*.python.requirements[].source` _string_
 
 Path of files/directories to copy.
 
-#### `.variants.*.python.use-system-flag` _boolean_
+#### use-system-flag
+`.variants.*.python.use-system-flag` _boolean_
 
 Whether to inject the --system flag into the install command.
 
-#### `.variants.*.python.version` _string_
+#### version
+`.variants.*.python.version` _string_
 
 Python binary present in the system (e.g. python3).
 
-#### `.variants.*.runs` _object_
+#### runs
+`.variants.*.runs` _object_
 
-#### `.variants.*.runs.as` _string_
+Settings for things run in the container.
+
+#### as
+`.variants.*.runs.as` _string_
 
 Runtime process owner (name) of application entrypoint.
 
-#### `.variants.*.runs.environment` _object_
+#### environment
+`.variants.*.runs.environment` _object_
 
 Environment variables and values to be set before entrypoint execution.
 
-#### `.variants.*.runs.gid` _integer_
+#### gid
+`.variants.*.runs.gid` _integer_
 
 Runtime process group (GID) of application entrypoint.
 
-#### `.variants.*.runs.insecurely` _boolean_
+#### insecurely
+`.variants.*.runs.insecurely` _boolean_
 
-Skip dropping of priviledge to the runtime process owner before entrypoint execution.
+Skip dropping of privileges to the runtime process owner before entrypoint execution. Production variants should have this set to `false`, but other variants may set it to `true` in some circumstances, for example when enabling [caching for ESLint](https://eslint.org/docs/user-guide/command-line-interface#caching).
 
-#### `.variants.*.runs.uid` _integer_
+#### uid
+`.variants.*.runs.uid` _integer_
 
 Runtime process owner (UID) of application entrypoint.

@@ -1,400 +1,380 @@
 {
-	"$id": "https://gitlab.wikimedia.org/repos/releng/blubber/-/tree/main/api/config.schema.json",
-	"$ref": "#/$defs/v4.Config",
-	"$defs": {
-		"v4.Config": {
-			"title": "Blubber configuration (version v4)",
-			"allOf": [
-				{
-					"$ref": "#/$defs/v4.Common"
-				},
-				{
-					"type": "object",
-					"required": [
-						"version"
-					],
-					"properties": {
-						"version": {
-							"type": "string",
-							"description": "Blubber configuration version.",
-							"x-docIndex": -1
-						},
-						"variants": {
-							"type": "object",
-							"description": "Configuration variants (e.g. development, test, production).",
-							"additionalProperties": {
-								"$ref": "#/$defs/v4.Variant"
-							}
-						}
-					}
-				}
-			]
-		},
-		"v4.Common": {
-			"type": "object",
-			"properties": {
-				"base": {
-					"type": ["string", "null"],
-					"description": "Base image reference."
-				},
-				"apt": {
-					"type": "object",
-					"properties": {
-						"packages": {
-							"oneOf": [
-								{
-									"type": "array",
-									"description": "Packages to install from APT sources of base image.",
-									"items": {
-										"type": "string"
-									},
-									"example": [
-										"librsvg2-dev",
-										"git",
-										"pkg-config",
-										"build-essential"
-									]
-								},
-								{
-									"type": "object",
-									"description": "Key-Value pairs of target release and packages to install from APT sources.",
-									"additionalProperties": {
-										"type": "array",
-										"description": "The packages to install using the target release.",
-										"items": {
-											"type": "string"
-										}
-									},
-									"example": {
-										"buster-backports": [
-											"npm"
-										]
-									}
-								}
-							]
-						},
-						"sources": {
-							"type": "array",
-							"description": "Additional APT sources to configure prior to package installation.",
-							"items": {
-								"type": "object",
-								"description": "APT source URL, distribution/release name, and components.",
-								"required": [
-									"url"
-								],
-								"properties": {
-									"url": {
-										"type": "string",
-										"description": "APT source URL.",
-										"format": "uri",
-										"pattern": "^https?://"
-									},
-									"distribution": {
-										"type": "string",
-										"description": "Debian distribution/release name (e.g. buster)."
-									},
-									"components": {
-										"type": "array",
-										"description": "List of distribution components (e.g. main, contrib).",
-										"items": {
-											"type": "string"
-										}
-									}
-								}
-							}
-						},
-						"proxies": {
-							"type": "array",
-							"description": "HTTP/HTTPS proxies to use during package installation.",
-							"items": {
-								"oneOf": [
-									{
-										"type": "string",
-										"description": "Shorthand configuration of a proxy that applies to all sources of its protocol.",
-										"format": "uri",
-										"pattern": "^https?://"
-									},
-									{
-										"type": "object",
-										"description": "Proxy for either all sources of a given protocol or a specific source.",
-										"required": [
-											"url"
-										],
-										"properties": {
-											"url": {
-												"type": "string",
-												"description": "HTTP/HTTPS proxy URL.",
-												"format": "uri",
-												"pattern": "^https?://"
-											},
-											"source": {
-												"type": "string",
-												"description": "APT source to which this proxy applies.",
-												"format": "uri",
-												"pattern": "^https?://"
-											}
-										}
-									}
-								]
-							}
-						}
-					}
-				},
-				"builder": {
-					"$ref": "#/$defs/v4.CustomBuilder"
-				},
-				"node": {
-					"$ref": "#/$defs/v4.NodeBuilder"
-				},
-				"php": {
-					"$ref": "#/$defs/v4.PhpBuilder"
-				},
-				"python": {
-					"$ref": "#/$defs/v4.PythonBuilder"
-				},
-				"builders": {
-					"type": "array",
-					"description": "Multiple builders to be executed in an explicit order.",
-					"items": {
-						"anyOf": [
-							{
-								"type": "object",
-								"properties": {
-									"custom": {
-										"$ref": "#/$defs/v4.CustomBuilder"
-									}
-								}
-							},
-							{
-								"type": "object",
-								"properties": {
-									"node": {
-										"$ref": "#/$defs/v4.NodeBuilder"
-									}
-								}
-							},
-							{
-								"type": "object",
-								"properties": {
-									"php": {
-										"$ref": "#/$defs/v4.PhpBuilder"
-									}
-								}
-							},
-							{
-								"type": "object",
-								"properties": {
-									"python": {
-										"$ref": "#/$defs/v4.PythonBuilder"
-									}
-								}
-							}
-						]
-					}
-				},
-				"lives": {
-					"type": "object",
-					"properties": {
-						"as": {
-							"type": "string",
-							"description": "Owner (name) of application files within the container."
-						},
-						"uid": {
-							"type": "integer",
-							"description": "Owner (UID) of application files within the container."
-						},
-						"gid": {
-							"type": "integer",
-							"description": "Group owner (GID) of application files within the container."
-						},
-						"in": {
-							"type": "string",
-							"description": "Application working directory within the container."
-						}
-					}
-				},
-				"runs": {
-					"type": "object",
-					"properties": {
-						"as": {
-							"type": "string",
-							"description": "Runtime process owner (name) of application entrypoint."
-						},
-						"uid": {
-							"type": "integer",
-							"description": "Runtime process owner (UID) of application entrypoint."
-						},
-						"gid": {
-							"type": "integer",
-							"description": "Runtime process group (GID) of application entrypoint."
-						},
-						"environment": {
-							"type": "object",
-							"description": "Environment variables and values to be set before entrypoint execution.",
-							"additionalProperties": true
-						},
-						"insecurely": {
-							"type": "boolean",
-							"description": "Skip dropping of priviledge to the runtime process owner before entrypoint execution."
-						}
-					}
-				},
-				"entrypoint": {
-					"type": "array",
-					"description": "Runtime entry point command and arguments.",
-					"items": {
-						"type": "string"
-					}
-				}
-			}
-		},
-		"v4.Variant": {
-			"allOf": [
-				{
-					"$ref": "#/$defs/v4.Common"
-				},
-				{
-					"type": "object",
-					"properties": {
-						"includes": {
-							"type": "array",
-							"description": "Names of other variants to inherit configuration from.",
-							"items": {
-								"description": "Variant name.",
-								"type": "string"
-							}
-						},
-						"copies": {
-							"$ref": "#/$defs/v4.Copies"
-						}
-					}
-				}
-			]
-		},
-		"v4.Artifacts": {
-			"type": "object",
-			"properties": {
-				"from": {
-					"type": ["string", "null"],
-					"description": "Variant from which to copy files."
-				},
-				"source": {
-					"type": "string",
-					"description": "Path of files/directories to copy."
-				},
-				"destination": {
-					"type": "string",
-					"description": "Destination path. Defaults to source path."
-				}
-			}
-		},
-		"v4.Copies": {
-			"type": "array",
-			"items": {
-				"oneOf": [
-					{
-						"type": "string",
-						"description": "Variant from which to copy application and library files."
-					},
-					{
-						"$ref": "#/$defs/v4.Artifacts"
-					}
-				]
-			}
-		},
-		"v4.Requirements": {
-			"type": "array",
-			"items": {
-				"oneOf": [
-					{
-						"type": "string",
-						"description": "Path of files/directories to copy from the local build context."
-					},
-					{
-						"$ref": "#/$defs/v4.Artifacts"
-					}
-				]
-			}
-		},
-		"v4.CustomBuilder": {
-			"type": "object",
-			"properties": {
-				"command": {
-					"type": "array",
-					"description": "Command and arguments of an arbitrary build command.",
-					"items": {
-						"type": "string"
-					}
-				},
-				"requirements": {
-					"$ref": "#/$defs/v4.Requirements"
-				}
-			}
-		},
-		"v4.NodeBuilder": {
-			"type": "object",
-			"properties": {
-				"env": {
-					"type": "string",
-					"description": "Node environment (e.g. production, etc.)."
-				},
-				"requirements": {
-					"$ref": "#/$defs/v4.Requirements"
-				},
-				"use-npm-ci": {
-					"type": "boolean",
-					"description": "Whether to run npm ci instead of npm install."
-				},
-				"allow-dedupe-failure": {
-					"type": "boolean",
-					"description": "Whether to allow npm dedupe to fail; can be used to temporarily unblock CI while conflicts are resolved."
-				}
-			}
-		},
-		"v4.PhpBuilder": {
-			"type": "object",
-			"properties": {
-				"requirements": {
-					"$ref": "#/$defs/v4.Requirements"
-				},
-				"production": {
-					"type": "boolean",
-					"description": "Whether to inject the --no-dev flag into the install command."
-				}
-			}
-		},
-		"v4.PythonBuilder": {
-			"type": "object",
-			"properties": {
-				"version": {
-					"type": "string",
-					"description": "Python binary present in the system (e.g. python3)."
-				},
-				"requirements": {
-					"$ref": "#/$defs/v4.Requirements"
-				},
-				"use-system-flag": {
-					"type": "boolean",
-					"description": "Whether to inject the --system flag into the install command."
-				},
-				"no-deps": {
-					"type": "boolean",
-					"description": "Inject --no-deps into the pip install command. All transitive requirements thus must be explicitly listed in the requirements file. pip check will be run to verify all dependencies are fulfilled."
-				},
-				"poetry": {
-					"type": "object",
-					"properties": {
-						"version": {
-							"type": "string",
-							"description": "Version constraint for installing Poetry package."
-						},
-						"devel": {
-							"type": "boolean",
-							"description": "Whether to install development dependencies or not when using Poetry."
-						}
-					}
-				}
-			}
-		}
-	}
+  "$id" : "https://gitlab.wikimedia.org/repos/releng/blubber/-/tree/main/api/config.schema.json",
+  "$ref" : "#/$defs/v4.Config",
+  "title" : "Blubber",
+  "$defs" : {
+    "v4.Variant" : {
+      "allOf" : [ {
+        "$ref" : "#/$defs/v4.Common"
+      }, {
+        "type" : "object",
+        "title" : "variant",
+        "description" : "Variant configuration keys are typically only seen under a particular variant rather than at the top level of a Blubberfile. Some of these are general, and some are build configurations.",
+        "properties" : {
+          "includes" : {
+            "type" : "array",
+            "description" : "Names of other variants to inherit configuration from. Inherited configuration will be combined with this variant's configuration according to key merge rules.\n\nWhen a Variant configuration overrides the Common configuration the configurations are merged. The way in which configuration is merged depends on whether the type of the configuration is a compound type; e.g., a map or sequence, or a scalar type; e.g., a string or integer.\n\nIn general, configuration that is a compound type is appended, whereas configuration that is of a scalar type is overridden.\n\nFor example in this Blubberfile:\n```yaml\nversion: v4\nbase: scratch\napt: { packages: [cowsay] }\nvariants:\n  test:\n    base: nodejs\n    apt: { packages: [libcaca] }\n```\n\nThe `base` scalar will be overwritten, whereas the `apt[packages]` sequence will be appended so that both `cowsay` and `libcaca` are installed in the image produced from the `test` Blubberfile variant.\n",
+            "items" : {
+              "description" : "Variant name.",
+              "type" : "string"
+            }
+          },
+          "copies" : {
+            "$ref" : "#/$defs/v4.Copies"
+          }
+        }
+      } ]
+    },
+    "v4.PythonBuilder" : {
+      "type" : "object",
+      "title" : "python",
+      "description" : "Predefined configurations for Python build tools",
+      "properties" : {
+        "version" : {
+          "type" : "string",
+          "description" : "Python binary present in the system (e.g. python3)."
+        },
+        "requirements" : {
+          "$ref" : "#/$defs/v4.Requirements"
+        },
+        "use-system-flag" : {
+          "type" : "boolean",
+          "description" : "Whether to inject the --system flag into the install command."
+        },
+        "no-deps" : {
+          "type" : "boolean",
+          "description" : "Inject `--no-deps` into the `pip install` command. All transitive requirements thus must be explicitly listed in the requirements file. `pip check` will be run to verify all dependencies are fulfilled."
+        },
+        "poetry" : {
+          "type" : "object",
+          "description" : "Configuration related to installation of pip dependencies using [Poetry](https://python-poetry.org/).",
+          "properties" : {
+            "version" : {
+              "type" : "string",
+              "description" : "Version constraint for installing Poetry package."
+            },
+            "devel" : {
+              "type" : "boolean",
+              "description" : "Whether to install development dependencies or not when using Poetry."
+            }
+          }
+        }
+      }
+    },
+    "v4.Common" : {
+      "title" : "Blubber",
+      "type" : "object",
+      "description" : "Common configuration keys that may be included as a variant, or they may appear at the top level of a Blubberfile.",
+      "properties" : {
+        "apt" : {
+          "descriptions" : "Settings for the APT package manager",
+          "type" : "object",
+          "title" : "apt",
+          "properties" : {
+            "packages" : {
+              "oneOf" : [ {
+                "type" : "array",
+                "description" : "Packages to install from APT sources of base image.\n\nFor example:\n\n```yaml\napt:\n  sources:\n    - url: http://apt.wikimedia.org/wikimedia\n      distribution: buster-wikimedia\n      components: [thirdparty/confluent]\n  packages: [ ca-certificates, confluent-kafka-2.11, curl ]\n```",
+                "items" : {
+                  "type" : "string"
+                },
+                "example" : [ "librsvg2-dev", "git", "pkg-config", "build-essential" ]
+              }, {
+                "type" : "object",
+                "title" : "apt object",
+                "description" : "Key-Value pairs of target release and packages to install from APT sources.",
+                "additionalProperties" : {
+                  "type" : "array",
+                  "title" : "apt array",
+                  "description" : "The packages to install using the target release.",
+                  "items" : {
+                    "type" : "string"
+                  }
+                },
+                "example" : {
+                  "buster-backports" : [ "npm" ]
+                }
+              } ]
+            },
+            "sources" : {
+              "type" : "array",
+              "description" : "Additional APT sources to configure prior to package installation.",
+              "items" : {
+                "type" : "object",
+                "title" : "APT sources object",
+                "description" : "APT source URL, distribution/release name, and components.",
+                "required" : [ "url" ],
+                "properties" : {
+                  "url" : {
+                    "type" : "string",
+                    "description" : "APT source URL.",
+                    "format" : "uri",
+                    "pattern" : "^https?://"
+                  },
+                  "distribution" : {
+                    "type" : "string",
+                    "description" : "Debian distribution/release name (e.g. buster). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields."
+                  },
+                  "components" : {
+                    "type" : "array",
+                    "description" : "List of distribution components (e.g. main, contrib). See [APT repository structure](https://wikitech.wikimedia.org/wiki/APT_repository#Repository_Structure) for more information about our use of the distribution and component fields.",
+                    "items" : {
+                      "type" : "string"
+                    }
+                  }
+                }
+              }
+            },
+            "proxies" : {
+              "type" : "array",
+              "description" : "HTTP/HTTPS proxies to use during package installation.",
+              "items" : {
+                "oneOf" : [ {
+                  "type" : "string",
+                  "description" : "Shorthand configuration of a proxy that applies to all sources of its protocol.",
+                  "format" : "uri",
+                  "pattern" : "^https?://"
+                }, {
+                  "type" : "object",
+                  "description" : "Proxy for either all sources of a given protocol or a specific source.",
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "type" : "string",
+                      "description" : "HTTP/HTTPS proxy URL.",
+                      "format" : "uri",
+                      "pattern" : "^https?://"
+                    },
+                    "source" : {
+                      "type" : "string",
+                      "description" : "APT source to which this proxy applies.",
+                      "format" : "uri",
+                      "pattern" : "^https?://"
+                    }
+                  }
+                } ]
+              }
+            }
+          }
+        },
+        "builder" : {
+          "$ref" : "#/$defs/v4.CustomBuilder"
+        },
+        "base" : {
+          "type" : [ "string", "null" ],
+          "description" : "Base image on which the new image will be built; a list of available images can be found by querying the [Wikimedia Docker Registry](https://docker-registry.wikimedia.org/)."
+        },
+        "runs" : {
+          "type" : "object",
+          "description" : "Settings for things run in the container.",
+          "properties" : {
+            "as" : {
+              "type" : "string",
+              "description" : "Runtime process owner (name) of application entrypoint."
+            },
+            "uid" : {
+              "type" : "integer",
+              "description" : "Runtime process owner (UID) of application entrypoint."
+            },
+            "gid" : {
+              "type" : "integer",
+              "description" : "Runtime process group (GID) of application entrypoint."
+            },
+            "environment" : {
+              "type" : "object",
+              "description" : "Environment variables and values to be set before entrypoint execution.",
+              "additionalProperties" : true
+            },
+            "insecurely" : {
+              "type" : "boolean",
+              "description" : "Skip dropping of privileges to the runtime process owner before entrypoint execution. Production variants should have this set to `false`, but other variants may set it to `true` in some circumstances, for example when enabling [caching for ESLint](https://eslint.org/docs/user-guide/command-line-interface#caching)."
+            }
+          }
+        },
+        "php" : {
+          "$ref" : "#/$defs/v4.PhpBuilder"
+        },
+        "lives" : {
+          "type" : "object",
+          "properties" : {
+            "as" : {
+              "type" : "string",
+              "description" : "Owner (name) of application files within the container."
+            },
+            "uid" : {
+              "type" : "integer",
+              "description" : "Owner (UID) of application files within the container."
+            },
+            "gid" : {
+              "type" : "integer",
+              "description" : "Group owner (GID) of application files within the container."
+            },
+            "in" : {
+              "type" : "string",
+              "description" : "Application working directory within the container."
+            }
+          }
+        },
+        "builders" : {
+          "type" : "array",
+          "description" : "Multiple builders to be executed in an explicit order. You can specify any of the predefined standalone builder keys (node, python and php), but each can only appear once. Additionally, any number of custom keys can appear; their definition and subkeys are the same as the standalone builder key.",
+          "items" : {
+            "anyOf" : [ {
+              "type" : "object",
+              "properties" : {
+                "custom" : {
+                  "$ref" : "#/$defs/v4.CustomBuilder"
+                }
+              }
+            }, {
+              "type" : "object",
+              "properties" : {
+                "node" : {
+                  "$ref" : "#/$defs/v4.NodeBuilder"
+                }
+              }
+            }, {
+              "type" : "object",
+              "properties" : {
+                "php" : {
+                  "$ref" : "#/$defs/v4.PhpBuilder"
+                }
+              }
+            }, {
+              "type" : "object",
+              "properties" : {
+                "python" : {
+                  "$ref" : "#/$defs/v4.PythonBuilder"
+                }
+              }
+            } ]
+          }
+        },
+        "entrypoint" : {
+          "type" : "array",
+          "description" : "Runtime entry point command and arguments.",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "python" : {
+          "$ref" : "#/$defs/v4.PythonBuilder"
+        },
+        "node" : {
+          "$ref" : "#/$defs/v4.NodeBuilder"
+        }
+      }
+    },
+    "v4.CustomBuilder" : {
+      "type" : "object",
+      "description" : "Run an arbitrary build command.",
+      "properties" : {
+        "command" : {
+          "type" : "array",
+          "description" : "Command and arguments of an arbitrary build command, for example `[make, build]`.",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "requirements" : {
+          "$ref" : "#/$defs/v4.Requirements"
+        }
+      }
+    },
+    "v4.Requirements" : {
+      "type" : "array",
+      "description" : "Path of files/directories to copy from the local build context. This is done before any of the build steps. Note that there are two possible formats for `requirements`. The first is a simple shorthand notation that means copying a list of source files from the local build context to a destination of the same relative path in the image. The second is a longhand form that gives more control over the source context (local or another variant), source and destination paths.\n\nExample (shorthand)\n\n```yaml\nbuilder:\n  command: [\"some\", \"build\", \"command\"]\n  requirements: [config.json, Makefile, src/] # copy files/directories to the same paths in the image\n```\n\nExample (longhand/advanced)\n\n```yaml\nbuilder:\n  command: [\"some\", \"build\", \"command\"]\n  requirements:\n    - from: local\n      source: config.production.json\n      destination: config.json\n    - Makefile # note that longhand/shorthand can be mixed\n    - src/\n    - from: other-variant\n      source: /srv/some/previous/build/product\n      destination: dist/product\n```",
+      "items" : {
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "$ref" : "#/$defs/v4.Artifacts"
+        } ]
+      }
+    },
+    "v4.PhpBuilder" : {
+      "type" : "object",
+      "properties" : {
+        "requirements" : {
+          "$ref" : "#/$defs/v4.Requirements"
+        },
+        "production" : {
+          "type" : "boolean",
+          "description" : "Whether to inject the --no-dev flag into the install command."
+        }
+      }
+    },
+    "v4.Artifacts" : {
+      "type" : "object",
+      "properties" : {
+        "from" : {
+          "type" : [ "string", "null" ],
+          "description" : "Variant from which to copy files. Set to `local` to copy build-context files that match the `source` pattern, or another variant name to copy files that match the `source` pattern from the variant's filesystem."
+        },
+        "source" : {
+          "type" : "string",
+          "description" : "Path of files/directories to copy."
+        },
+        "destination" : {
+          "type" : "string",
+          "description" : "Destination path. Defaults to source path."
+        }
+      }
+    },
+    "v4.Config" : {
+      "allOf" : [ {
+        "title" : "Blubber configuration (v4)",
+        "$ref" : "#/$defs/v4.Common"
+      }, {
+        "type" : "object",
+        "required" : [ "version" ],
+        "properties" : {
+          "version" : {
+            "type" : "string",
+            "description" : "Blubber configuration version. Currently `v4`.",
+            "x-docIndex" : -1
+          },
+          "variants" : {
+            "type" : "object",
+            "description" : "Configuration variants (e.g. development, test, production).\n\nBlubber can build several variants of an image from the same specification file. The variants are named and described under the `variants` top level item. Typically, there are variants for development versus production: the development variant might have more debugging tools, while the production variant should have no extra software installed to minimize the risk of security issues and other problems.\n\nA variant is built using the top level items, combined with the items for the variant. So if the top level `apt` installed some packages, and the variant's `apt` some other packages, both sets of packages get installed in that variant.\n",
+            "additionalProperties" : {
+              "$ref" : "#/$defs/v4.Variant"
+            }
+          }
+        }
+      } ]
+    },
+    "v4.NodeBuilder" : {
+      "type" : "object",
+      "description" : "Configuration related to the NodeJS/NPM environment",
+      "properties" : {
+        "env" : {
+          "type" : "string",
+          "description" : "Node environment (e.g. production, etc.). Sets the environment variable `NODE_ENV`. Will pass `npm install --production` and run `npm dedupe` if set to production."
+        },
+        "requirements" : {
+          "$ref" : "#/$defs/v4.Requirements"
+        },
+        "use-npm-ci" : {
+          "type" : "boolean",
+          "description" : "Whether to run `npm ci` instead of `npm install`."
+        },
+        "allow-dedupe-failure" : {
+          "type" : "boolean",
+          "description" : "Whether to allow `npm dedupe` to fail; can be used to temporarily unblock CI while conflicts are resolved."
+        }
+      }
+    },
+    "v4.Copies" : {
+      "type" : "array",
+      "items" : {
+        "oneOf" : [ {
+          "type" : "string",
+          "description" : "Variant from which to copy application and library files. Note that prior to v4, copying of local build-context files was implied by the omission of `copies`. With v4, the configuration must always be explicit. Omitting the field will result in no `COPY` instructions whatsoever, which may be helpful in building very minimal utility images."
+        }, {
+          "$ref" : "#/$defs/v4.Artifacts"
+        } ]
+      }
+    }
+  }
 }

@@ -1,12 +1,10 @@
-![Blubber](docs/logo-400.png)
-
 Blubber is a BuildKit frontend for building application container images from
 a minimal set of declarative constructs in YAML. Its focus is on
 composability, determinism, cache efficiency, and secure default behaviors.
 
 ## Examples
 
-To skip to the examples, see the feature files in the [examples](./examples)
+To skip to the examples, see the feature files in the [examples](https://gitlab.wikimedia.org/repos/releng/blubber/-/blob/main/examples/)
 directory. The examples are implemented as executable Cucumber tests to ensure
 Blubber is always working as expected by users.
 
@@ -21,14 +19,14 @@ may require some development and debugging packages which you wouldn't want in
 production lest they contain vulnerabilities and somehow end up linked or
 included in the application runtime.
 
-See the [copying from other variants example](./examples/05-copying-from-other-variants.feature).
+See the [copying from other variants example](https://gitlab.wikimedia.org/repos/releng/blubber/-/blob/main/examples/05-copying-from-other-variants.feature).
 
 ### Builders
 
 Builders represent a discrete process and a set of files that is needed to
 produce an application artifact.
 
-See the [builders example](./examples/04-builders.feature).
+See the [builders example](https://gitlab.wikimedia.org/repos/releng/blubber/-/blob/main/examples/04-builders.feature).
 
 When defining multiple builders, be sure to use the `builders` field to ensure
 an explicit ordering.

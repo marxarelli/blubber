@@ -65,3 +65,29 @@ variants:
           requirements: [Makefile, .git, VERSION]
           command: [make, FULLVERSION]
     entrypoint: [cat, VERSION, FULLVERSION]
+
+  build-docs:
+    base: docker-registry.wikimedia.org/nodejs18-devel:0.0.1-20240303
+    runs: { insecurely: true }
+    node:
+      use-npm-ci: true
+      requirements:
+        - from: local
+          source: ./docs/
+          destination: ./
+        - CHANGELOG.md
+        - CONTRIBUTING.md
+        - README.md
+        - RELEASE.md
+    builder:
+      command: [npm, run, docs:build]
+
+  docs-for-publishing:
+    copies:
+      - from: build-docs
+        source: /srv/app/.vitepress/dist/
+        destination: docs/
+
+  preview-docs:
+    includes: [build-docs]
+    entrypoint: [npm, run, docs:preview]

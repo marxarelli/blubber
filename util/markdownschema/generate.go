@@ -85,7 +85,15 @@ func writeSchema(md *doc.MarkDownDoc, name string, schema *jsonschema.Schema, lv
 		if required {
 			nameAndType += " (required)"
 		}
-		md.WriteTitle(nameAndType, lvl)
+
+		if title == "" {
+			nameParts := strings.Split(name, ".")
+			nameLast := nameParts[len(nameParts)-1]
+			md.WriteTitle(nameLast, lvl)
+		}
+
+		md.Write(nameAndType)
+		md.Writeln()
 	}
 
 	if schema.Description != "" {
@@ -125,7 +133,7 @@ func typesOf(schema *jsonschema.Schema) []string {
 			if schema.Items2020 != nil {
 				itemsTypes := typesOf(schema.Items2020)
 				if len(itemsTypes) > 0 {
-					types[i] = fmt.Sprintf("array<%s>", strings.Join(itemsTypes, "|"))
+					types[i] = fmt.Sprintf("array&lt;%s&gt;", strings.Join(itemsTypes, "|"))
 				}
 			}
 		}

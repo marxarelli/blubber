@@ -1,6 +1,8 @@
 include:
   - project: 'repos/releng/kokkuri'
     file: 'includes/images.yaml'
+  - project: 'repos/releng/docpub'
+    file: 'includes/publish.yml'
 
 default:
   tags:
@@ -11,6 +13,7 @@ stages:
   - test
   - acceptance
   - publish
+  - build-publish-docs
 
 workflow:
   rules:
@@ -92,3 +95,24 @@ build-and-publish-frontend:
     - trusted
   rules:
     - if: $CI_COMMIT_TAG && $CI_COMMIT_REF_PROTECTED
+
+.docs-common:
+  stage: build-publish-docs
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build-documentation:
+  variables:
+    BUILD_VARIANT: docs-for-publishing
+    BUILDCTL_BUILD_FLAGS: --output type=local,dest=generated-documentation
+    DOCS_DIR: generated-documentation/docs
+  extends:
+    - .kokkuri:build-image
+    - .docs-common
+    - .docpub:build-docs
+
+publish-documentation:
+  needs: [build-documentation]
+  extends:
+    - .docs-common
+    - .docpub:publish-docs
