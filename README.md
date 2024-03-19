@@ -65,11 +65,13 @@ invoke it like `docker-compose`), specify a [syntax
 directive](https://docs.docker.com/engine/reference/builder/#syntax) at the
 top of your Blubber configuration like so.
 
-    # syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0
-    version: v4
-    variants:
-      my-variant:
-      [...]
+```yaml
+# syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0
+version: v4
+variants:
+  my-variant:
+  [...]
+```
 
 And invoke `docker build --target my-variant -f blubber.yaml .`. Note that
 Docker must have BuildKit enabled as the default builder. You can also use

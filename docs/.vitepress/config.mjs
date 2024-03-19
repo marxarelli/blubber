@@ -13,7 +13,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
     ],
-    logo: 'https://gitlab.wikimedia.org/repos/releng/blubber/-/raw/main/docs/logo-400.png',
+    logo: '/logo-400.png',
     docFooter: {
       prev: false,
       next: false
