@@ -22,14 +22,21 @@ export default defineConfig({
       {
         text: 'Documentation',
         items: [
+          { text: 'Home',
+            link: '/',
+            items: [
+              {text: 'Examples', link: '/#examples'},
+              {text: 'Concepts', link: '/#concepts'},
+              {text: 'Usage', link: '/#usage'}]
+          },
           { text: 'Configuration',
             link: '/configuration',
             items: [
               {text: 'Variants', link: '/configuration#variants'},
               {text: 'APT', link: '/configuration#apt'},
-              {text: 'NodeJS', link: '/configuration#node'},
-              {text: 'PHP', link: '/configuration#php'},
-              {text: 'Python', link: '/configuration#python'},
+              {text: 'NodeJS', link: '/configuration#node-1'},
+              {text: 'PHP', link: '/configuration#php-1'},
+              {text: 'Python', link: '/configuration#python-1'},
             ]}
         ],
       },
@@ -41,17 +48,7 @@ export default defineConfig({
           { text: 'Contributing', link: '/CONTRIBUTING'},
           { text: 'Release', link: '/RELEASE'}
         ]
-      },
-      {
-        text: 'Other',
-        collapsed: 'true',
-        items: [
-          { text: 'Deploying services to production', link: 'https://www.mediawiki.org/wiki/GitLab/Workflows/Deploying_services_to_production'},
-        ]
       }
-    ],
-
-    socialLinks: [
     ],
 
     search: {
