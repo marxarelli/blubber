@@ -26,7 +26,11 @@ GOARCH = $(TARGETARCH)
 export GOOS
 export GOARCH
 
-all: code blubber blubberoid blubber-buildkit
+BINARIES = blubber blubberoid blubber-buildkit
+
+all: code $(BINARIES)
+
+.PHONY: $(BINARIES)
 
 blubber:
 	$(GO_BUILD) ./cmd/blubber
@@ -42,7 +46,7 @@ code:
 
 clean:
 	go clean $(GO_PACKAGES) || true
-	rm -f blubber blubberoid || true
+	rm -f $(BINARIES) || true
 
 .PHONY: docs
 docs:
