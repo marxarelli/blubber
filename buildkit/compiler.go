@@ -41,7 +41,7 @@ func CompileToLLB(
 }
 
 // Compile takes a parsed config.Config and a configured variant name and
-// returns an llb.State graph as JSON.
+// returns an llb.State graph in binary format.
 func Compile(cfg *config.Config, variant string) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	ctx := context.Background()
