@@ -136,16 +136,6 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 		}
 
 	case build.PhasePreInstall:
-		if !pc.usePoetry() {
-			ins = append(ins, []build.Instruction{
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  PythonLibPrefix,
-					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
-				}},
-				build.CreateDirectory(PythonLibPrefix),
-			}...)
-		}
-
 		if pc.usePoetry() {
 			cmd := []string{"install", "--no-root"}
 			if !pc.Poetry.Devel.True {
@@ -153,8 +143,15 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 			}
 			ins = append(ins, build.CreateDirectory(PythonPoetryVenvs))
 			ins = append(ins, build.Run{"poetry", cmd})
+		} else {
+			ins = append(ins, []build.Instruction{
+				build.Env{map[string]string{
+					"PIP_WHEEL_DIR":  PythonLibPrefix,
+					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
+				}},
+				build.CreateDirectory(PythonLibPrefix),
+			}...)
 
-		} else if args := pc.RequirementsArgs(); len(args) > 0 {
 			installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
 			if pc.UseSystemFlag.True {
 				installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
@@ -167,13 +164,12 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 				wheelCmd = InsertElement(wheelCmd, "--no-deps", PosOf(wheelCmd, "wheel")+1)
 			}
 
+			args := pc.RequirementsArgs()
 			ins = append(ins, build.RunAll{[]build.Run{
 				{pc.version(), append(wheelCmd, args...)},
 				{pc.version(), append(installCmd, args...)},
 			}})
-		}
 
-		if !pc.usePoetry() {
 			// PythonSitePackages and the wheel cache are not used with
 			// Poetry. Instead Poetry is allowed to  manage a venv
 			// containing the installed packages and their related
