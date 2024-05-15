@@ -90,15 +90,7 @@ func TestPythonConfigInstructionsNoRequirementsWithVersion(t *testing.T) {
 	})
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
-					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePreInstall))
 	})
 
 	t.Run("PhasePostInstall", func(t *testing.T) {

@@ -106,100 +106,96 @@ func (pc *PoetryConfig) Merge(pc2 PoetryConfig) {
 func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instruction {
 	ins := []build.Instruction{}
 
-	if pc.Version != "" {
-		if pc.Requirements != nil {
-			ins = append(ins, pc.Requirements.InstructionsForPhase(phase)...)
+	// "version" and "requirements" MUST be populated to enable the Python builder.
+	if pc.Version == "" || pc.Requirements == nil {
+		return ins
+	}
+
+	// This only does something for build.PhasePreInstall
+	ins = append(ins, pc.Requirements.InstructionsForPhase(phase)...)
+
+	switch phase {
+	case build.PhasePrivileged:
+		ins = append(ins, build.Env{map[string]string{
+			"PIP_BREAK_SYSTEM_PACKAGES": "1",
+		}})
+		ins = append(ins, build.RunAll{[]build.Run{
+			{pc.version(), append([]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"})},
+			{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", pc.toxPackage(), pc.pipPackage()})},
+		}})
+
+		if pc.usePoetry() {
+			ins = append(ins, build.Env{map[string]string{
+				"POETRY_VIRTUALENVS_PATH": PythonPoetryVenvs,
+			}})
+			ins = append(ins, build.Run{
+				pc.version(), []string{
+					"-m", "pip", "install", "-U", "poetry" + pc.Poetry.Version,
+				},
+			})
 		}
 
-		switch phase {
-		case build.PhasePrivileged:
-			if pc.Requirements != nil || pc.usePoetry() {
-				if pc.Requirements != nil {
-					ins = append(ins, build.Env{map[string]string{
-						"PIP_BREAK_SYSTEM_PACKAGES": "1",
-					}})
-					ins = append(ins, build.RunAll{[]build.Run{
-						{pc.version(), append([]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"})},
-						{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", pc.toxPackage(), pc.pipPackage()})},
-					}})
-				}
+	case build.PhasePreInstall:
+		if !pc.usePoetry() {
+			ins = append(ins, []build.Instruction{
+				build.Env{map[string]string{
+					"PIP_WHEEL_DIR":  PythonLibPrefix,
+					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
+				}},
+				build.CreateDirectory(PythonLibPrefix),
+			}...)
+		}
 
-				if pc.usePoetry() {
-					ins = append(ins, build.Env{map[string]string{
-						"POETRY_VIRTUALENVS_PATH": PythonPoetryVenvs,
-					}})
-					ins = append(ins, build.Run{
-						pc.version(), []string{
-							"-m", "pip", "install", "-U", "poetry" + pc.Poetry.Version,
-						},
-					})
-				}
+		if pc.usePoetry() {
+			cmd := []string{"install", "--no-root"}
+			if !pc.Poetry.Devel.True {
+				cmd = append(cmd, "--no-dev")
+			}
+			ins = append(ins, build.CreateDirectory(PythonPoetryVenvs))
+			ins = append(ins, build.Run{"poetry", cmd})
+
+		} else if args := pc.RequirementsArgs(); len(args) > 0 {
+			installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
+			if pc.UseSystemFlag.True {
+				installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
+			}
+			if pc.UseNoDepsFlag.True {
+				installCmd = InsertElement(installCmd, "--no-deps", PosOf(installCmd, "install")+1)
+			}
+			wheelCmd := append([]string{"-m", "pip", "wheel"})
+			if pc.UseNoDepsFlag.True {
+				wheelCmd = InsertElement(wheelCmd, "--no-deps", PosOf(wheelCmd, "wheel")+1)
 			}
 
-		case build.PhasePreInstall:
-			if pc.Requirements != nil {
-				if !pc.usePoetry() {
-					ins = append(ins, []build.Instruction{
-						build.Env{map[string]string{
-							"PIP_WHEEL_DIR":  PythonLibPrefix,
-							"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
-						}},
-						build.CreateDirectory(PythonLibPrefix),
-					}...)
-				}
+			ins = append(ins, build.RunAll{[]build.Run{
+				{pc.version(), append(wheelCmd, args...)},
+				{pc.version(), append(installCmd, args...)},
+			}})
+		}
 
-				if pc.usePoetry() {
-					cmd := []string{"install", "--no-root"}
-					if !pc.Poetry.Devel.True {
-						cmd = append(cmd, "--no-dev")
-					}
-					ins = append(ins, build.CreateDirectory(PythonPoetryVenvs))
-					ins = append(ins, build.Run{"poetry", cmd})
+		if !pc.usePoetry() {
+			// PythonSitePackages and the wheel cache are not used with
+			// Poetry. Instead Poetry is allowed to  manage a venv
+			// containing the installed packages and their related
+			// scripts.
+			ins = append(ins, build.Env{map[string]string{
+				"PYTHONPATH": PythonSitePackages + ":${PYTHONPATH}",
+				"PATH":       PythonSiteBin + ":${PATH}",
+			}})
+		}
 
-				} else if args := pc.RequirementsArgs(); len(args) > 0 {
-					installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
-					if pc.UseSystemFlag.True {
-						installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
-					}
-					if pc.UseNoDepsFlag.True {
-						installCmd = InsertElement(installCmd, "--no-deps", PosOf(installCmd, "install")+1)
-					}
-					wheelCmd := append([]string{"-m", "pip", "wheel"})
-					if pc.UseNoDepsFlag.True {
-						wheelCmd = InsertElement(wheelCmd, "--no-deps", PosOf(wheelCmd, "wheel")+1)
-					}
-
-					ins = append(ins, build.RunAll{[]build.Run{
-						{pc.version(), append(wheelCmd, args...)},
-						{pc.version(), append(installCmd, args...)},
-					}})
-				}
-			}
-
-			if !pc.usePoetry() {
-				// PythonSitePackages and the wheel cache are not used with
-				// Poetry. Instead Poetry is allowed to  manage a venv
-				// containing the installed packages and their related
-				// scripts.
-				ins = append(ins, build.Env{map[string]string{
-					"PYTHONPATH": PythonSitePackages + ":${PYTHONPATH}",
-					"PATH":       PythonSiteBin + ":${PATH}",
-				}})
-			}
-
-		case build.PhasePostInstall:
-			if !pc.usePoetry() && pc.Requirements != nil {
-				ins = append(ins, build.Env{map[string]string{
-					"PIP_NO_INDEX": "1",
-				}})
-				if pc.UseNoDepsFlag.True {
-					// Ensure requirements has all transitive dependencies
-					ins = append(ins, build.Run{
-						pc.version(), []string{
-							"-m", "pip", "check",
-						},
-					})
-				}
+	case build.PhasePostInstall:
+		if !pc.usePoetry() {
+			ins = append(ins, build.Env{map[string]string{
+				"PIP_NO_INDEX": "1",
+			}})
+			if pc.UseNoDepsFlag.True {
+				// Ensure requirements has all transitive dependencies
+				ins = append(ins, build.Run{
+					pc.version(), []string{
+						"-m", "pip", "check",
+					},
+				})
 			}
 		}
 	}
