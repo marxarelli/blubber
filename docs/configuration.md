@@ -452,10 +452,10 @@ Variant from which to copy files. Set to `local` to copy build-context files tha
 
 Path of files/directories to copy.
 
-#### use-system-flag
-`.builders[].python.use-system-flag` _boolean_
+#### use-system-site-packages
+`.builders[].python.use-system-site-packages` _boolean_
 
-Whether to inject the --system flag into the install command.
+Whether to inject the --system-site-packages flag into the venv setup command.
 
 #### version
 `.builders[].python.version` _string_
@@ -699,10 +699,10 @@ Variant from which to copy files. Set to `local` to copy build-context files tha
 
 Path of files/directories to copy.
 
-### use-system-flag
-`.python.use-system-flag` _boolean_
+### use-system-site-packages
+`.python.use-system-site-packages` _boolean_
 
-Whether to inject the --system flag into the install command.
+Whether to inject the --system-site-packages flag into the venv setup command.
 
 ### version
 `.python.version` _string_
@@ -1199,10 +1199,10 @@ Variant from which to copy files. Set to `local` to copy build-context files tha
 
 Path of files/directories to copy.
 
-#### use-system-flag
-`.variants.*.builders[].python.use-system-flag` _boolean_
+#### use-system-site-packages
+`.variants.*.builders[].python.use-system-site-packages` _boolean_
 
-Whether to inject the --system flag into the install command.
+Whether to inject the --system-site-packages flag into the venv setup command.
 
 #### version
 `.variants.*.builders[].python.version` _string_
@@ -1501,10 +1501,10 @@ Variant from which to copy files. Set to `local` to copy build-context files tha
 
 Path of files/directories to copy.
 
-#### use-system-flag
-`.variants.*.python.use-system-flag` _boolean_
+#### use-system-site-packages
+`.variants.*.python.use-system-site-packages` _boolean_
 
-Whether to inject the --system flag into the install command.
+Whether to inject the --system-site-packages flag into the venv setup command.
 
 #### version
 `.variants.*.python.version` _string_

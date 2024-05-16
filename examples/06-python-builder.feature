@@ -23,6 +23,29 @@ Feature: Python builder
     When you build and run the "hello" variant
     Then the entrypoint will have run successfully
 
+  @set4
+  Scenario: Installing Python application using use-system-site-packages
+    Given this "blubber.yaml"
+      """
+      version: v4
+      variants:
+        hello:
+          base: docker-registry.wikimedia.org/bookworm
+          apt:
+            packages:
+            - python3-venv
+            - python3-colors
+          builders:
+            - python:
+                version: python3
+                requirements: [alt-requirements.txt]
+                use-system-site-packages: true
+          copies: [local]
+          entrypoint: [python3, hello.py]
+      """
+    When you build and run the "hello" variant
+    Then the entrypoint will have run successfully
+
   @set3
   Scenario: Installing Python application dependencies via Poetry
     Given this "blubber.yaml"

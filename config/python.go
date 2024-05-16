@@ -4,17 +4,11 @@ import (
 	"gitlab.wikimedia.org/repos/releng/blubber/build"
 )
 
-// PythonLibPrefix is the path to installed dependency wheels.
-const PythonLibPrefix = LocalLibPrefix + "/python"
-
-// PythonSitePackages is the path to installed Python packages.
-const PythonSitePackages = PythonLibPrefix + "/site-packages"
-
-// PythonSiteBin is the path to installed Python packages bin files.
-const PythonSiteBin = PythonSitePackages + "/bin"
-
 // PythonPoetryVenvs is the path where Poetry will create virtual environments.
 const PythonPoetryVenvs = LocalLibPrefix + "/poetry"
+
+// PythonVenv is the path of the virtualenv that will be created if use-virtualenv is true.
+const PythonVenv = LocalLibPrefix + "/venv"
 
 // PythonConfig holds configuration fields related to pre-installation of project
 // dependencies via PIP.
@@ -25,8 +19,7 @@ type PythonConfig struct {
 	// Install requirements from given files
 	Requirements RequirementsConfig `json:"requirements" validate:"omitempty,unique,dive"`
 
-	// Inject the --system flag into the install command (T227919)
-	UseSystemFlag Flag `json:"use-system-flag"`
+	UseSystemSitePackages Flag `json:"use-system-site-packages"`
 
 	UseNoDepsFlag Flag `json:"no-deps"`
 
@@ -52,7 +45,7 @@ func (pc PythonConfig) Dependencies() []string {
 // Merge takes another PythonConfig and merges its fields into this one's,
 // overwriting both the dependencies flag and requirements.
 func (pc *PythonConfig) Merge(pc2 PythonConfig) {
-	pc.UseSystemFlag.Merge(pc2.UseSystemFlag)
+	pc.UseSystemSitePackages.Merge(pc2.UseSystemSitePackages)
 	pc.UseNoDepsFlag.Merge(pc2.UseNoDepsFlag)
 	pc.Poetry.Merge(pc2.Poetry)
 	if pc2.Version != "" {
@@ -114,28 +107,23 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 	// This only does something for build.PhasePreInstall
 	ins = append(ins, pc.Requirements.InstructionsForPhase(phase)...)
 
+	python := pc.version()
+
 	switch phase {
-	case build.PhasePrivileged:
-		ins = append(ins, build.Env{map[string]string{
-			"PIP_BREAK_SYSTEM_PACKAGES": "1",
-		}})
-		ins = append(ins, build.RunAll{[]build.Run{
-			{pc.version(), append([]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"})},
-			{pc.version(), append([]string{"-m", "pip", "install", "-U", "wheel", pc.toxPackage(), pc.pipPackage()})},
-		}})
-
-		if pc.usePoetry() {
-			ins = append(ins, build.Env{map[string]string{
-				"POETRY_VIRTUALENVS_PATH": PythonPoetryVenvs,
-			}})
-			ins = append(ins, build.Run{
-				pc.version(), []string{
-					"-m", "pip", "install", "-U", "poetry" + pc.Poetry.Version,
-				},
-			})
-		}
-
 	case build.PhasePreInstall:
+		venvSetupCmd := []string{"-m", "venv", PythonVenv}
+		if pc.UseSystemSitePackages.True {
+			venvSetupCmd = append(venvSetupCmd, "--system-site-packages")
+		}
+		ins = append(ins, build.Run{python, venvSetupCmd})
+
+		// "Activate" the virtualenv
+		ins = append(ins, build.Env{map[string]string{
+			"VIRTUAL_ENV": PythonVenv,
+			"PATH":        PythonVenv + "/bin:$PATH",
+		}})
+		ins = append(ins, pc.setupPipAndPoetry()...)
+
 		if pc.usePoetry() {
 			cmd := []string{"install", "--no-root"}
 			if !pc.Poetry.Devel.True {
@@ -144,56 +132,48 @@ func (pc PythonConfig) InstructionsForPhase(phase build.Phase) []build.Instructi
 			ins = append(ins, build.CreateDirectory(PythonPoetryVenvs))
 			ins = append(ins, build.Run{"poetry", cmd})
 		} else {
-			ins = append(ins, []build.Instruction{
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  PythonLibPrefix,
-					"PIP_FIND_LINKS": "file://" + PythonLibPrefix,
-				}},
-				build.CreateDirectory(PythonLibPrefix),
-			}...)
-
-			installCmd := append([]string{"-m", "pip", "install", "--target"}, PythonSitePackages)
-			if pc.UseSystemFlag.True {
-				installCmd = InsertElement(installCmd, "--system", PosOf(installCmd, "install")+1)
-			}
-			if pc.UseNoDepsFlag.True {
-				installCmd = InsertElement(installCmd, "--no-deps", PosOf(installCmd, "install")+1)
-			}
-			wheelCmd := append([]string{"-m", "pip", "wheel"})
-			if pc.UseNoDepsFlag.True {
-				wheelCmd = InsertElement(wheelCmd, "--no-deps", PosOf(wheelCmd, "wheel")+1)
-			}
-
 			args := pc.RequirementsArgs()
-			ins = append(ins, build.RunAll{[]build.Run{
-				{pc.version(), append(wheelCmd, args...)},
-				{pc.version(), append(installCmd, args...)},
-			}})
 
-			// PythonSitePackages and the wheel cache are not used with
-			// Poetry. Instead Poetry is allowed to  manage a venv
-			// containing the installed packages and their related
-			// scripts.
-			ins = append(ins, build.Env{map[string]string{
-				"PYTHONPATH": PythonSitePackages + ":${PYTHONPATH}",
-				"PATH":       PythonSiteBin + ":${PATH}",
-			}})
+			installCmd := []string{"-m", "pip", "install"}
+			if pc.UseNoDepsFlag.True {
+				installCmd = append(installCmd, "--no-deps")
+			}
+			ins = append(ins, build.Run{python, append(installCmd, args...)})
 		}
 
 	case build.PhasePostInstall:
 		if !pc.usePoetry() {
-			ins = append(ins, build.Env{map[string]string{
-				"PIP_NO_INDEX": "1",
-			}})
 			if pc.UseNoDepsFlag.True {
 				// Ensure requirements has all transitive dependencies
 				ins = append(ins, build.Run{
-					pc.version(), []string{
+					python, []string{
 						"-m", "pip", "check",
 					},
 				})
 			}
 		}
+	}
+
+	return ins
+}
+
+func (pc PythonConfig) setupPipAndPoetry() []build.Instruction {
+	ins := []build.Instruction{}
+
+	ins = append(ins, build.RunAll{[]build.Run{
+		{pc.version(), []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+		{pc.version(), []string{"-m", "pip", "install", "-U", "wheel", pc.toxPackage(), pc.pipPackage()}},
+	}})
+
+	if pc.usePoetry() {
+		ins = append(ins, build.Env{map[string]string{
+			"POETRY_VIRTUALENVS_PATH": PythonPoetryVenvs,
+		}})
+		ins = append(ins, build.Run{
+			pc.version(), []string{
+				"-m", "pip", "install", "-U", "poetry" + pc.Poetry.Version,
+			},
+		})
 	}
 
 	return ins
@@ -237,22 +217,4 @@ func (pc PythonConfig) toxPackage() string {
 	}
 
 	return "tox==" + pc.ToxVersion
-}
-
-// InsertElement - insert el into slice at pos
-func InsertElement(slice []string, el string, pos int) []string {
-	slice = append(slice, "")
-	copy(slice[pos+1:], slice[pos:])
-	slice[pos] = el
-	return slice
-}
-
-// PosOf - find position of an element in a slice
-func PosOf(slice []string, el string) int {
-	for p, v := range slice {
-		if v == el {
-			return p
-		}
-	}
-	return -1
 }

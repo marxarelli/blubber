@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
           version: python3
           requirements: [other-requirements.txt, requirements-test.txt]
           tox-version: 4.11.2
-          use-system-flag: true`))
+          use-system-site-packages: true`))
 
 	if assert.NoError(t, err) {
 		assert.Equal(t, config.RequirementsConfig{
@@ -43,7 +42,7 @@ func TestPythonConfigYAMLMerge(t *testing.T) {
 				{From: "local", Source: "requirements-test.txt"},
 			}, variant.Python.Requirements)
 			assert.Equal(t, "python3", variant.Python.Version)
-			assert.Equal(t, true, variant.Python.UseSystemFlag.True)
+			assert.Equal(t, true, variant.Python.UseSystemSitePackages.True)
 			assert.Equal(t, "4.11.2", variant.Python.ToxVersion)
 		}
 	}
@@ -129,25 +128,21 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 	}
 
 	t.Run("PhasePrivileged", func(t *testing.T) {
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivileged))
+	})
+
+	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_BREAK_SYSTEM_PACKAGES": "1",
-				}},
-				build.RunAll{
-					[]build.Run{
-						{
-							"python2.7",
-							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
-						},
-						{
-							"python2.7",
-							[]string{"-m", "pip", "install", "-U", "wheel", "tox", "pip<21"},
-						},
-					},
-				},
-			},
-			cfg.InstructionsForPhase(build.PhasePrivileged),
+				build.Copy{Sources: []string{"requirements.txt", "requirements-test.txt"}, Destination: "./"},
+				build.Copy{Sources: []string{"docs/requirements.txt"}, Destination: "docs/"},
+				build.Run{Command: "python2.7", Arguments: []string{"-m", "venv", "/opt/lib/venv"}},
+				build.Env{Definitions: map[string]string{"PATH": "/opt/lib/venv/bin:$PATH", "VIRTUAL_ENV": "/opt/lib/venv"}},
+				build.RunAll{Runs: []build.Run{
+					{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+					{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-U", "wheel", "tox", "pip<21"}}}},
+				build.Run{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-r", "requirements.txt", "-r", "requirements-test.txt", "-r", "docs/requirements.txt"}}},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
 	})
 
@@ -155,51 +150,12 @@ func TestPythonConfigInstructionsWithRequirements(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
 	})
 
-	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
-				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  "/opt/lib/python",
-					"PIP_FIND_LINKS": "file:///opt/lib/python",
-				}},
-				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
-				build.RunAll{[]build.Run{
-					{"python2.7", []string{"-m", "pip", "wheel",
-						"-r", "requirements.txt",
-						"-r", "requirements-test.txt",
-						"-r", "docs/requirements.txt",
-					}},
-					{"python2.7", []string{"-m", "pip", "install",
-						"--target", "/opt/lib/python/site-packages",
-						"-r", "requirements.txt",
-						"-r", "requirements-test.txt",
-						"-r", "docs/requirements.txt",
-					}},
-				}},
-				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
-					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
-	})
-
 	t.Run("PhasePostInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_NO_INDEX": "1",
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePostInstall),
-		)
+		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePostInstall))
 	})
 }
 
-func TestPythonConfigUseSystemFlag(t *testing.T) {
+func TestPythonConfigUseSystemSitePackages(t *testing.T) {
 	cfg := config.PythonConfig{
 		Version: "python2.7",
 		Requirements: config.RequirementsConfig{
@@ -207,39 +163,20 @@ func TestPythonConfigUseSystemFlag(t *testing.T) {
 			{From: "local", Source: "requirements-test.txt"},
 			{From: "local", Source: "docs/requirements.txt"},
 		},
-		UseSystemFlag: config.Flag{True: true},
+		UseSystemSitePackages: config.Flag{True: true},
 	}
 
 	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Copy{[]string{"requirements.txt", "requirements-test.txt"}, "./"},
-				build.Copy{[]string{"docs/requirements.txt"}, "docs/"},
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  "/opt/lib/python",
-					"PIP_FIND_LINKS": "file:///opt/lib/python",
-				}},
-				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
-				build.RunAll{[]build.Run{
-					{"python2.7", []string{"-m", "pip", "wheel",
-						"-r", "requirements.txt",
-						"-r", "requirements-test.txt",
-						"-r", "docs/requirements.txt",
-					}},
-					{"python2.7", []string{"-m", "pip", "install", "--system",
-						"--target", "/opt/lib/python/site-packages",
-						"-r", "requirements.txt",
-						"-r", "requirements-test.txt",
-						"-r", "docs/requirements.txt",
-					}},
-				}},
-				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
-					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
-				}},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
+		assert.Equal(t, []build.Instruction{
+			build.Copy{Sources: []string{"requirements.txt", "requirements-test.txt"}, Destination: "./"},
+			build.Copy{Sources: []string{"docs/requirements.txt"}, Destination: "docs/"},
+			build.Run{Command: "python2.7", Arguments: []string{"-m", "venv", "/opt/lib/venv", "--system-site-packages"}},
+			build.Env{Definitions: map[string]string{"PATH": "/opt/lib/venv/bin:$PATH", "VIRTUAL_ENV": "/opt/lib/venv"}},
+			build.RunAll{Runs: []build.Run{
+				{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+				{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-U", "wheel", "tox", "pip<21"}}}},
+			build.Run{Command: "python2.7", Arguments: []string{"-m", "pip", "install", "-r", "requirements.txt", "-r", "requirements-test.txt", "-r", "docs/requirements.txt"}}},
+			cfg.InstructionsForPhase(build.PhasePreInstall))
 	})
 }
 
@@ -255,26 +192,13 @@ func TestPythonConfigUseNoDepsFlag(t *testing.T) {
 	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Copy{[]string{"requirements.txt"}, "./"},
-				build.Env{map[string]string{
-					"PIP_WHEEL_DIR":  "/opt/lib/python",
-					"PIP_FIND_LINKS": "file:///opt/lib/python",
-				}},
-				build.Run{"mkdir -p", []string{"/opt/lib/python"}},
-				build.RunAll{[]build.Run{
-					{"python3.9", []string{"-m", "pip", "wheel", "--no-deps",
-						"-r", "requirements.txt",
-					}},
-					{"python3.9", []string{"-m", "pip", "install", "--no-deps",
-						"--target", "/opt/lib/python/site-packages",
-						"-r", "requirements.txt",
-					}},
-				}},
-				build.Env{map[string]string{
-					"PYTHONPATH": "/opt/lib/python/site-packages:${PYTHONPATH}",
-					"PATH":       "/opt/lib/python/site-packages/bin:${PATH}",
-				}},
-			},
+				build.Copy{Sources: []string{"requirements.txt"}, Destination: "./"},
+				build.Run{Command: "python3.9", Arguments: []string{"-m", "venv", "/opt/lib/venv"}},
+				build.Env{Definitions: map[string]string{"PATH": "/opt/lib/venv/bin:$PATH", "VIRTUAL_ENV": "/opt/lib/venv"}},
+				build.RunAll{Runs: []build.Run{
+					{Command: "python3.9", Arguments: []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+					{Command: "python3.9", Arguments: []string{"-m", "pip", "install", "-U", "wheel", "tox", "pip"}}}},
+				build.Run{Command: "python3.9", Arguments: []string{"-m", "pip", "install", "--no-deps", "-r", "requirements.txt"}}},
 			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
 	})
@@ -282,9 +206,6 @@ func TestPythonConfigUseNoDepsFlag(t *testing.T) {
 	t.Run("PhasePostInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_NO_INDEX": "1",
-				}},
 				build.Run{"python3.9", []string{"-m", "pip", "check"}},
 			},
 			cfg.InstructionsForPhase(build.PhasePostInstall),
@@ -312,56 +233,6 @@ func TestPythonConfigRequirementsArgs(t *testing.T) {
 	)
 }
 
-func TestSliceInsert(t *testing.T) {
-	t.Run("test inserting an element", func(t *testing.T) {
-		got := config.InsertElement([]string{"Hello", "World"}, "Beautiful", 1)
-		expected := []string{"Hello", "Beautiful", "World"}
-
-		if !reflect.DeepEqual(got, expected) {
-			t.Errorf("Expected '%v'; got '%v'", expected, got)
-		}
-	})
-
-	t.Run("test inserting an element at the end", func(t *testing.T) {
-		orig := []string{"Foo", "Bar", "Baz"}
-		got := config.InsertElement(orig, "Beautiful", len(orig))
-		expected := []string{"Foo", "Bar", "Baz", "Beautiful"}
-
-		if !reflect.DeepEqual(got, expected) {
-			t.Errorf("Expected '%v'; got '%v'", expected, got)
-		}
-	})
-
-	t.Run("test inserting an element at the beginning", func(t *testing.T) {
-		orig := []string{"Foo", "Bar", "Baz"}
-		got := config.InsertElement(orig, "Beautiful", 0)
-		expected := []string{"Beautiful", "Foo", "Bar", "Baz"}
-
-		if !reflect.DeepEqual(got, expected) {
-			t.Errorf("Expected '%v'; got '%v'", expected, got)
-		}
-	})
-}
-
-func TestPosFinding(t *testing.T) {
-	t.Run("test finding string in slice", func(t *testing.T) {
-		got := config.PosOf([]string{"foo", "bar"}, "foo")
-		expected := 0
-		if got != expected {
-			t.Errorf("Expected '%v'; got '%v'", expected, got)
-		}
-	})
-
-	t.Run("test finding string NOT in slice", func(t *testing.T) {
-		got := config.PosOf([]string{"foo", "bar"}, "baz")
-		expected := -1
-		if got != expected {
-			t.Errorf("Expected '%v'; got '%v'", expected, got)
-		}
-	})
-
-}
-
 func TestPythonConfigToxVersion(t *testing.T) {
 	cfg := config.PythonConfig{
 		Version: "python3",
@@ -374,23 +245,14 @@ func TestPythonConfigToxVersion(t *testing.T) {
 	t.Run("tox version honored", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_BREAK_SYSTEM_PACKAGES": "1",
-				}},
-				build.RunAll{
-					[]build.Run{
-						{
-							"python3",
-							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
-						},
-						{
-							"python3",
-							[]string{"-m", "pip", "install", "-U", "wheel", "tox==1.23.4", "pip"},
-						},
-					},
-				},
-			},
-			cfg.InstructionsForPhase(build.PhasePrivileged),
+				build.Copy{Sources: []string{"requirements.txt"}, Destination: "./"},
+				build.Run{Command: "python3", Arguments: []string{"-m", "venv", "/opt/lib/venv"}},
+				build.Env{Definitions: map[string]string{"PATH": "/opt/lib/venv/bin:$PATH", "VIRTUAL_ENV": "/opt/lib/venv"}},
+				build.RunAll{Runs: []build.Run{
+					{Command: "python3", Arguments: []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+					{Command: "python3", Arguments: []string{"-m", "pip", "install", "-U", "wheel", "tox==1.23.4", "pip"}}}},
+				build.Run{Command: "python3", Arguments: []string{"-m", "pip", "install", "-r", "requirements.txt"}}},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
 	})
 }
@@ -405,52 +267,25 @@ func TestPythonConfigInstructionsWithPoetry(t *testing.T) {
 		Poetry: config.PoetryConfig{Version: "==10.0.1"},
 	}
 
-	t.Run("PhasePrivileged", func(t *testing.T) {
+	t.Run("PhasePreInstall", func(t *testing.T) {
 		assert.Equal(t,
 			[]build.Instruction{
-				build.Env{map[string]string{
-					"PIP_BREAK_SYSTEM_PACKAGES": "1",
-				}},
-				build.RunAll{
-					[]build.Run{
-						{
-							"python3",
-							[]string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"},
-						},
-						{
-							"python3",
-							[]string{"-m", "pip", "install", "-U", "wheel", "tox", "pip"},
-						},
-					},
-				},
-				build.Env{map[string]string{
-					"POETRY_VIRTUALENVS_PATH": "/opt/lib/poetry",
-				}},
-				build.Run{
-					"python3", []string{
-						"-m", "pip", "install", "-U", "poetry==10.0.1",
-					},
-				},
-			},
-			cfg.InstructionsForPhase(build.PhasePrivileged),
+				build.Copy{Sources: []string{"pyproject.toml", "poetry.lock"}, Destination: "./"},
+				build.Run{Command: "python3", Arguments: []string{"-m", "venv", "/opt/lib/venv"}},
+				build.Env{Definitions: map[string]string{"PATH": "/opt/lib/venv/bin:$PATH", "VIRTUAL_ENV": "/opt/lib/venv"}},
+				build.RunAll{Runs: []build.Run{
+					{Command: "python3", Arguments: []string{"-m", "pip", "install", "-U", "setuptools!=60.9.0"}},
+					{Command: "python3", Arguments: []string{"-m", "pip", "install", "-U", "wheel", "tox", "pip"}}}},
+				build.Env{Definitions: map[string]string{"POETRY_VIRTUALENVS_PATH": "/opt/lib/poetry"}},
+				build.Run{Command: "python3", Arguments: []string{"-m", "pip", "install", "-U", "poetry==10.0.1"}},
+				build.Run{Command: "mkdir -p", Arguments: []string{"/opt/lib/poetry"}},
+				build.Run{Command: "poetry", Arguments: []string{"install", "--no-root", "--no-dev"}}},
+			cfg.InstructionsForPhase(build.PhasePreInstall),
 		)
 	})
 
 	t.Run("PhasePrivilegeDropped", func(t *testing.T) {
 		assert.Empty(t, cfg.InstructionsForPhase(build.PhasePrivilegeDropped))
-	})
-
-	t.Run("PhasePreInstall", func(t *testing.T) {
-		assert.Equal(t,
-			[]build.Instruction{
-				build.Copy{[]string{"pyproject.toml", "poetry.lock"}, "./"},
-				build.CreateDirectory("/opt/lib/poetry"),
-				build.Run{
-					"poetry", []string{"install", "--no-root", "--no-dev"},
-				},
-			},
-			cfg.InstructionsForPhase(build.PhasePreInstall),
-		)
 	})
 
 	t.Run("PhasePostInstall", func(t *testing.T) {
