@@ -34,18 +34,18 @@ readRecords:
 				return nil, errors.Wrap(err, "error reading tar")
 			}
 
-			var reader *bytes.Reader
+			var data []byte
+
 			if header.Typeflag == tar.TypeReg {
-				data, err := io.ReadAll(tr)
+				data, err = io.ReadAll(tr)
 
 				if err != nil {
 					return nil, errors.Wrapf(err, "error reading tar entry %s", header.Name)
 				}
 
-				reader = bytes.NewReader(data)
 			}
 
-			files[header.Name] = &tarFile{reader, header}
+			files[header.Name] = &tarFile{data, header}
 		}
 	}
 
@@ -72,7 +72,7 @@ func (tfs *tarFS) Open(name string) (fs.File, error) {
 	}
 
 	if file, ok := tfs.files[name]; ok {
-		return file, nil
+		return file.Open(), nil
 	}
 
 	return nil, fs.ErrNotExist
@@ -87,15 +87,24 @@ func (tfs *tarFS) WithContext(_ context.Context) FS {
 }
 
 type tarFile struct {
+	data   []byte
+	header *tar.Header
+}
+
+func (tf *tarFile) Open() fs.File {
+	return &openTarFile{bytes.NewReader(tf.data), tf.header}
+}
+
+type openTarFile struct {
 	*bytes.Reader
 	header *tar.Header
 }
 
-func (tf *tarFile) Stat() (fs.FileInfo, error) {
-	return tf.header.FileInfo(), nil
+func (otf *openTarFile) Stat() (fs.FileInfo, error) {
+	return otf.header.FileInfo(), nil
 }
 
-func (tf *tarFile) Close() error {
+func (otf *openTarFile) Close() error {
 	return nil
 }
 

@@ -74,9 +74,13 @@ func initializeScenario(ctx *godog.ScenarioContext) {
 
 	// Clean up any working directory we've created during the scenario
 	if os.Getenv("BLUBBER_DEBUG_EXAMPLES") == "" {
-		ctx.After(func(ctx context.Context, _ *godog.Scenario, err error) (context.Context, error) {
+		ctx.After(func(ctx context.Context, _ *godog.Scenario, _ error) (context.Context, error) {
 			if wd, ok := ctx.Value(wdKey).(*workingDirectory); ok {
 				wd.Remove()
+			}
+
+			if ifs, ok := ctx.Value(imageFsKey).(imagefs.FS); ok {
+				ifs.Close()
 			}
 
 			if imageTar, ok := ctx.Value(imageTarfileKey).(*os.File); ok {
@@ -87,7 +91,7 @@ func initializeScenario(ctx *godog.ScenarioContext) {
 				client.Close()
 			}
 
-			return ctx, err
+			return ctx, nil
 		})
 	}
 }
@@ -215,6 +219,7 @@ func buildVariant(ctx context.Context, andRun string, variant string) (context.C
 		cache := memoryblobcache.New()
 
 		img, err := ref.NewImage(ctx, sys)
+		defer img.Close()
 
 		if err != nil {
 			return ctx, errors.Wrapf(err, "failed to get image from ref %s", ref.StringWithinTransport())
