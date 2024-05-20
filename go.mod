@@ -4,7 +4,7 @@ require (
 	github.com/atsushinee/go-markdown-generator v0.0.0-20231027094725-92d26ffbe778
 	github.com/containerd/containerd v1.6.20
 	github.com/containers/image/v5 v5.25.0
-	github.com/cucumber/godog v0.12.6
+	github.com/cucumber/godog v0.14.1
 	github.com/distribution/distribution v2.8.1+incompatible
 	github.com/getkin/kin-openapi v0.90.0
 	github.com/ghodss/yaml v1.0.0
@@ -15,7 +15,6 @@ require (
 	github.com/pborman/getopt v1.1.0
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/santhosh-tekuri/jsonschema v1.2.4
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/stretchr/testify v1.8.2
 	github.com/utahta/go-openuri v0.1.0
@@ -41,8 +40,8 @@ require (
 	github.com/containers/storage v1.46.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/cucumber/gherkin-go/v19 v19.0.3 // indirect
-	github.com/cucumber/messages-go/v16 v16.0.1 // indirect
+	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
+	github.com/cucumber/messages/go/v21 v21.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/docker v23.0.2+incompatible // indirect
@@ -57,7 +56,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
-	github.com/gofrs/uuid v4.2.0+incompatible // indirect
+	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible // indirect
@@ -67,7 +66,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-memdb v1.3.2 // indirect
+	github.com/hashicorp/go-memdb v1.3.4 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
