@@ -67,7 +67,7 @@ variants:
     entrypoint: [cat, VERSION, FULLVERSION]
 
   build-docs:
-    base: docker-registry.wikimedia.org/nodejs18-devel:0.0.1-20240303
+    base: docker-registry.wikimedia.org/nodejs20-slim:0.0.1-20240519
     runs: { insecurely: true }
     node:
       use-npm-ci: true
