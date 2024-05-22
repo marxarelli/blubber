@@ -4,9 +4,27 @@
 
 > 2024-05-16
 
-### BuildKit
+### Python
 
-* Fix comment
+* The Python builder now establishes a virtualenv before performing any
+  other Python operations.  This ensure that subsequent operations will
+  not affect system Python packages.  This is especially important when
+  using a Debian Bookworm base image.
+
+  Removed support for `use-system-flag`, which should not be needed
+  anymore.
+
+  Added support for `use-system-site-packages`, which will pass
+  `--system-site-packages` to `python -m venv`.
+
+Notes:
+
+* Support for building wheels of requirements has been removed.  The
+  Python builder no longer messes with the PIP_WHEEL_DIR,
+  PIP_FIND_LINKS, PIP_NO_INDEX, or PYTHONPATH environment variables.
+
+* The prior workaround from (T346090) which set
+  PIP_BREAK_SYSTEM_PACKAGES has been removed.
 
 ### Examples
 
