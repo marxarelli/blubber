@@ -3,7 +3,7 @@ version: v4
 
 variants:
   build:
-    base: docker-registry.wikimedia.org/golang1.19:1.19-1-20230730
+    base: docker-registry.wikimedia.org/golang1.21:1.21-1-20240609
     apt: {packages: [gcc, git, make]}
     runs:
       environment:

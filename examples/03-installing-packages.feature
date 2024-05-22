@@ -30,7 +30,7 @@ Feature: Installing packages
       version: v4
       variants:
         build:
-          base: docker-registry.wikimedia.org/golang1.19:1.19-1-20230604
+          base: docker-registry.wikimedia.org/golang1.21:1.21-1-20240609
           apt:
             sources:
               - url: https://apt.wikimedia.org/wikimedia

@@ -1,6 +1,6 @@
 module gitlab.wikimedia.org/repos/releng/blubber/examples/hello-world-go
 
-go 1.18
+go 1.21
 
 require github.com/fatih/color v1.15.0
 

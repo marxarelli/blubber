@@ -134,4 +134,4 @@ require (
 // See https://github.com/moby/moby/issues/42939
 replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220414164044-61404de7df1a+incompatible
 
-go 1.19
+go 1.21
