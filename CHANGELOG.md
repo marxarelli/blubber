@@ -1,4 +1,19 @@
-# Changelog
+
+<a name="v0.23.0"></a>
+## [v0.23.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.22.0...v0.23.0)
+
+> 2024-05-16
+
+### BuildKit
+
+* Fix comment
+
+### Examples
+
+* Fix OCI tempfile garbage
+* Upgrade godoc for fixes to scenario hooks
+
+
 <a name="v0.22.0"></a>
 ## [v0.22.0](https://gitlab.wikimedia.org/repos/releng/blubber/compare/v0.21.1...v0.22.0)
 

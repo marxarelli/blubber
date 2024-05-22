@@ -53,7 +53,7 @@ To build from Blubber configuration using `buildctl`, do:
 
 ```console
 $ buildctl build --frontend gateway.v0 \
-  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.23.0 \
   --local context=. \
   --local dockerfile=. \
   --opt filename=blubber.yaml \
@@ -66,7 +66,7 @@ directive](https://docs.docker.com/engine/reference/builder/#syntax) at the
 top of your Blubber configuration like so.
 
 ```yaml
-# syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0
+# syntax=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.23.0
 version: v4
 variants:
   my-variant:
@@ -82,7 +82,7 @@ used to provide proxies to build processes.
 
 ```console
 buildctl build --frontend gateway.v0 \
-  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.23.0 \
   --opt build-arg:http_proxy=http://proxy.example \
   --opt variant=pulls-in-stuff-from-the-internet
   ...
@@ -102,7 +102,7 @@ Example usage:
 
 ```console
 $ buildctl build --frontend gateway.v0 \
-  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.23.0 \
   --local context=. \
   --local dockerfile=. \
   --opt filename=blubber.yaml \
@@ -128,7 +128,7 @@ Example usage:
 
 ```console
 $ buildctl build --frontend gateway.v0 \
-  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.22.0 \
+  --opt source=docker-registry.wikimedia.org/repos/releng/blubber/buildkit:v0.23.0 \
   --local context=. \
   --local dockerfile=. \
   --opt filename=blubber.yaml \
