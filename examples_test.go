@@ -47,6 +47,7 @@ func defineSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the image runtime user will be "([^"]*)"$`, theImageRuntimeUserIs)
 	ctx.Step(`^the image entrypoint will be "([^"]*)"$`, theImageEntrypointIs)
 	ctx.Step(`^the image will include environment variables$`, theImageEnvironmentContains)
+	ctx.Step(`^the image will include labels$`, theImageLabelsContain)
 	ctx.Step(`^the image will contain a file "([^"]*)" that looks like$`, theImageContainsFileWithContent)
 	ctx.Step(`^the entrypoint will have run successfully$`, noop)
 }
@@ -383,7 +384,7 @@ func theImageHasTheEntity(ctx context.Context, ent, name, id string) (context.Co
 }
 
 func theImageRuntimeUserIs(ctx context.Context, user string) (context.Context, error) {
-	return withCtxValue[*ociv1.Image](ctx, imageCfgKey, func(image *ociv1.Image) (context.Context, error) {
+	return withImage(ctx, func(image *ociv1.Image) (context.Context, error) {
 		if image.Config.User != user {
 			return ctx, errors.Errorf("expected image user to be %s but got %s", user, image.Config.User)
 		}
@@ -393,7 +394,7 @@ func theImageRuntimeUserIs(ctx context.Context, user string) (context.Context, e
 }
 
 func theImageEntrypointIs(ctx context.Context, entrypoint string) (context.Context, error) {
-	return withCtxValue[*ociv1.Image](ctx, imageCfgKey, func(image *ociv1.Image) (context.Context, error) {
+	return withImage(ctx, func(image *ociv1.Image) (context.Context, error) {
 		if !(len(image.Config.Entrypoint) == 1 && image.Config.Entrypoint[0] == entrypoint) {
 			return ctx, errors.Errorf("expected entrypoint to be [%s] but got %s", entrypoint, image.Config.Entrypoint)
 		}
@@ -411,7 +412,7 @@ func theImageEnvironmentContains(ctx context.Context, envTable *godog.Table) (co
 		}
 	}
 
-	return withCtxValue[*ociv1.Image](ctx, imageCfgKey, func(image *ociv1.Image) (context.Context, error) {
+	return withImage(ctx, func(image *ociv1.Image) (context.Context, error) {
 		imageEnvs := parseEnvs(image.Config.Env)
 
 		missing := []string{}
@@ -444,6 +445,46 @@ func theImageEnvironmentContains(ctx context.Context, envTable *godog.Table) (co
 	})
 }
 
+func theImageLabelsContain(ctx context.Context, labelTable *godog.Table) (context.Context, error) {
+	expectedLabels := make(map[string]string, len(labelTable.Rows))
+
+	for _, row := range labelTable.Rows {
+		if len(row.Cells) > 1 {
+			expectedLabels[row.Cells[0].Value] = row.Cells[1].Value
+		} else if len(row.Cells) > 0 {
+			expectedLabels[row.Cells[0].Value] = ""
+		}
+	}
+
+	return withImage(ctx, func(image *ociv1.Image) (context.Context, error) {
+		missing := []string{}
+		mismatched := []string{}
+
+		for labelName, expected := range expectedLabels {
+			if actual, ok := image.Config.Labels[labelName]; ok {
+				if expected != "" && actual != expected {
+					mismatched = append(
+						mismatched,
+						fmt.Sprintf("%s=%#v (expected) != %s=%#v (actual)", labelName, expected, labelName, actual),
+					)
+				}
+			} else {
+				missing = append(missing, labelName)
+			}
+		}
+
+		if len(missing) > 0 {
+			return ctx, errors.Errorf("the image is missing labels: %v", missing)
+		}
+
+		if len(mismatched) > 0 {
+			return ctx, errors.Errorf("some image labels differ: %s", strings.Join(mismatched, ", "))
+		}
+
+		return ctx, nil
+	})
+}
+
 func withCtxValue[T any](ctx context.Context, key ctxKey, f func(T) (context.Context, error)) (context.Context, error) {
 	val, ok := ctx.Value(key).(T)
 
@@ -452,6 +493,12 @@ func withCtxValue[T any](ctx context.Context, key ctxKey, f func(T) (context.Con
 	}
 
 	return f(val)
+}
+
+func withImage(ctx context.Context, f func(*ociv1.Image) (context.Context, error)) (context.Context, error) {
+	return withCtxValue[*ociv1.Image](ctx, imageCfgKey, func(image *ociv1.Image) (context.Context, error) {
+		return f(image)
+	})
 }
 
 func withImageFS(ctx context.Context, f func(fs.FS) (context.Context, error)) (context.Context, error) {

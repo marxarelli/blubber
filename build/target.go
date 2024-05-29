@@ -16,6 +16,8 @@ import (
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
+
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 )
 
 const (
@@ -23,6 +25,9 @@ const (
 	emojiImage    = "📦"
 	emojiLocal    = "📂"
 	emojiShell    = "🖥️"
+
+	labelVariant = "blubber.variant"
+	labelVersion = "blubber.version"
 )
 
 // Target is used during compilation to keep track of build arguments, the
@@ -146,6 +151,10 @@ func (target *Target) Initialize(ctx context.Context) error {
 	if target.image.Config.Labels == nil {
 		target.image.Config.Labels = map[string]string{}
 	}
+
+	// Add default blubber.version and blubber.variant labels
+	target.image.Config.Labels[labelVariant] = target.Name
+	target.image.Config.Labels[labelVersion] = meta.FullVersion()
 
 	// Add labels from build options
 	for k, v := range target.Options.Labels {

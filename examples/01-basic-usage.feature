@@ -1,3 +1,4 @@
+@basic
 Feature: Basic usage
 
   The most basic operations when building an image are: starting with a given
@@ -64,3 +65,27 @@ Feature: Basic usage
     Then the image will have the following files in the default working directory
       | README.md |
       | hello.sh  |
+
+  @set4
+  Scenario: Blubber embeds its version as a label
+    Given this "blubber.yaml"
+      """
+      version: v4
+      variants:
+        hello: {}
+      """
+    When you build the "hello" variant
+    Then the image will include labels
+      | blubber.version |
+
+  @set1
+  Scenario: Blubber embeds the target variant name as a label
+    Given this "blubber.yaml"
+      """
+      version: v4
+      variants:
+        hello: {}
+      """
+    When you build the "hello" variant
+    Then the image will include labels
+      | blubber.variant | hello |

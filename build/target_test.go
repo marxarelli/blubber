@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"gitlab.wikimedia.org/repos/releng/blubber/build"
+	"gitlab.wikimedia.org/repos/releng/blubber/meta"
 	"gitlab.wikimedia.org/repos/releng/blubber/util/llbtest"
 	"gitlab.wikimedia.org/repos/releng/blubber/util/testmetaresolver"
 	"gitlab.wikimedia.org/repos/releng/blubber/util/testtarget"
@@ -61,7 +62,18 @@ func TestInitialize(t *testing.T) {
 	req.Equal("/base/workdir", image.Config.WorkingDir)
 	req.Equal([]string{"/base/entry"}, image.Config.Entrypoint)
 	req.Equal([]string{"arg1", "arg2"}, image.Config.Cmd)
-	req.Equal(map[string]string{"foo.label": "foo", "bar.label": "bar"}, image.Config.Labels)
+	req.Contains(image.Config.Labels, "bar.label")
+	req.Equal("bar", image.Config.Labels["bar.label"])
+
+	// Labels from build options should have been added
+	req.Contains(image.Config.Labels, "foo.label")
+	req.Equal("foo", image.Config.Labels["foo.label"])
+
+	// blubber.* labels should have been added for variant and version
+	req.Contains(image.Config.Labels, "blubber.version")
+	req.Equal(meta.FullVersion(), image.Config.Labels["blubber.version"])
+	req.Contains(image.Config.Labels, "blubber.variant")
+	req.Equal("foo", image.Config.Labels["blubber.variant"])
 
 	// Assert the correctness of the returned LLB ops. There should be a source
 	// op for the base image, and an exec op for the run we added with

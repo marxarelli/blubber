@@ -81,11 +81,9 @@ func TestImageAddLabels(t *testing.T) {
 		},
 	)
 
-	req.Equal(
-		map[string]string{
-			"BAZ": "baz-foo",
-			"QUX": `qux-"bar"`,
-		},
-		image.Config.Labels,
-	)
+	req.Contains(image.Config.Labels, "BAZ")
+	req.Equal(image.Config.Labels["BAZ"], "baz-foo")
+
+	req.Contains(image.Config.Labels, "QUX")
+	req.Equal(image.Config.Labels["QUX"], `qux-"bar"`)
 }
