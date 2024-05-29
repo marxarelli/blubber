@@ -3,19 +3,32 @@ package build_test
 import (
 	"testing"
 
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
+
 	"gitlab.wikimedia.org/repos/releng/blubber/build"
 	"gitlab.wikimedia.org/repos/releng/blubber/util/testtarget"
 )
 
 func TestImageEntrypoint(t *testing.T) {
 	image, req := testtarget.Setup(t,
-		testtarget.NewTargets("foo"),
+		testtarget.NewTargetsWithBaseImage(
+			[]string{"foo"},
+			oci.Image{
+				Config: oci.ImageConfig{
+					Cmd: []string{"base", "cmd"},
+				},
+			},
+		),
 		func(target *build.Target) {
 			target.Image.Entrypoint([]string{"/bin/foo", "bar"})
 		},
 	)
 
 	req.Equal([]string{"/bin/foo", "bar"}, image.Config.Entrypoint)
+
+	// Ensure parity with Dockerfile behavior whereby a new ENTRYPOINT resets
+	// the value of CMD inherited from the base image
+	req.Nil(image.Config.Cmd)
 }
 
 func TestImageUser(t *testing.T) {

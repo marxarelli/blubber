@@ -9,6 +9,11 @@ type TargetImage struct {
 // Entrypoint sets the runtime entrypoint of the image.
 func (img *TargetImage) Entrypoint(entrypoint []string) *TargetImage {
 	img.target.image.Config.Entrypoint = entrypoint
+
+	// Maintain parity with Dockerfile behavior whereby a new ENTRYPOINT resets
+	// the value of CMD
+	img.target.image.Config.Cmd = nil
+
 	return img
 }
 

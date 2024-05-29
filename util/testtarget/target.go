@@ -24,6 +24,21 @@ func NewTarget(name string) *build.Target {
 
 // NewTargets returns a boilerlplate [build.TargetGroup] for use in tests.
 func NewTargets(names ...string) build.TargetGroup {
+	return NewTargetsWithBaseImage(
+		names,
+		oci.Image{
+			Config: oci.ImageConfig{
+				User:       "root",
+				Env:        []string{},
+				WorkingDir: "/srv/app",
+			},
+		},
+	)
+}
+
+// NewTargetsWithBaseImage returns a boilerlplate [build.TargetGroup] for use in
+// tests and uses the given oci.Image as the resolved base image.
+func NewTargetsWithBaseImage(names []string, baseImage oci.Image) build.TargetGroup {
 	var group build.TargetGroup
 
 	for _, name := range names {
@@ -32,14 +47,9 @@ func NewTargets(names ...string) build.TargetGroup {
 		options := build.NewOptions()
 		options.MetaResolver = testmetaresolver.New(
 			baseImageRef,
-			oci.Image{
-				Config: oci.ImageConfig{
-					User:       "root",
-					Env:        []string{},
-					WorkingDir: "/srv/app",
-				},
-			},
+			baseImage,
 		)
+
 		group.NewTarget(
 			name,
 			baseImageRef,
