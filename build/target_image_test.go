@@ -47,20 +47,25 @@ func TestImageAddEnv(t *testing.T) {
 		testtarget.NewTargets("foo"),
 		func(target *build.Target) {
 			target.ExposeBuildArg("FOO", "foo")
+			target.Image.AddEnv(map[string]string{
+				"FOO": "foo",
+			})
 			target.AddEnv(map[string]string{
 				"BAR": `"bar"`,
 			})
 			target.Image.AddEnv(map[string]string{
 				"BAZ": "baz-$FOO",
 				"QUX": "qux-$BAR",
+				"FOO": "newfoo",
 			})
 		},
 	)
 
 	req.Equal(
 		[]string{
-			`BAZ="baz-foo"`,
-			`QUX="qux-\"bar\""`,
+			`FOO=newfoo`,
+			`BAZ=baz-foo`,
+			`QUX=qux-"bar"`,
 		},
 		image.Config.Env,
 	)

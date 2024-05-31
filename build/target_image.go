@@ -24,16 +24,18 @@ func (img *TargetImage) WorkingDirectory(path string) *TargetImage {
 	return img
 }
 
-// AddEnv appends the runtime environment variables of the image.
+// AddEnv appends each of the given runtime environment variables of the
+// image, overwriting an existing entry that has the same variable name.
 func (img *TargetImage) AddEnv(env map[string]string) *TargetImage {
 	if img.target.image.Config.Env == nil {
 		img.target.image.Config.Env = []string{}
 	}
 
 	for _, k := range sortedKeys(env) {
-		img.target.image.Config.Env = append(
+		img.target.image.Config.Env = replaceEnv(
 			img.target.image.Config.Env,
-			k+"="+quote(img.target.ExpandEnv(env[k])),
+			k,
+			img.target.ExpandEnv(env[k]),
 		)
 	}
 
@@ -51,4 +53,23 @@ func (img *TargetImage) AddLabels(labels map[string]string) *TargetImage {
 	}
 
 	return img
+}
+
+func replaceEnv(env []string, name, value string) []string {
+	replacedExisting := false
+
+	for i, existingVar := range env {
+		k, _ := parseKeyValue(existingVar)
+
+		if k == name {
+			replacedExisting = true
+			env[i] = k + "=" + value
+		}
+	}
+
+	if replacedExisting {
+		return env
+	}
+
+	return append(env, name+"="+value)
 }

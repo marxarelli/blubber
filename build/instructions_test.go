@@ -236,8 +236,8 @@ func TestEnv(t *testing.T) {
 	)
 
 	t.Run("configures image", func(t *testing.T) {
-		req.Contains(image.Config.Env, `fooname="foovalue"`)
-		req.Contains(image.Config.Env, `barname="barvalue"`)
+		req.Contains(image.Config.Env, "fooname=foovalue")
+		req.Contains(image.Config.Env, "barname=barvalue")
 	})
 
 	t.Run("affects exec ops", func(t *testing.T) {
