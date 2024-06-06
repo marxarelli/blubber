@@ -47,6 +47,7 @@ func defineSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^the image runtime user will be "([^"]*)"$`, theImageRuntimeUserIs)
 	ctx.Step(`^the image entrypoint will be "([^"]*)"$`, theImageEntrypointIs)
 	ctx.Step(`^the image will include environment variables$`, theImageEnvironmentContains)
+	ctx.Step(`^the image will not include default arguments$`, theImageCmdIsNullOrEmpty)
 	ctx.Step(`^the image will include labels$`, theImageLabelsContain)
 	ctx.Step(`^the image will contain a file "([^"]*)" that looks like$`, theImageContainsFileWithContent)
 	ctx.Step(`^the entrypoint will have run successfully$`, noop)
@@ -439,6 +440,16 @@ func theImageEnvironmentContains(ctx context.Context, envTable *godog.Table) (co
 
 		if len(mismatched) > 0 {
 			return ctx, errors.Errorf("some image environment variables differ: %s", strings.Join(mismatched, ", "))
+		}
+
+		return ctx, nil
+	})
+}
+
+func theImageCmdIsNullOrEmpty(ctx context.Context) (context.Context, error) {
+	return withImage(ctx, func(image *ociv1.Image) (context.Context, error) {
+		if image.Config.Cmd != nil && len(image.Config.Cmd) > 0 {
+			return ctx, errors.Errorf("the image default arguments is not empty, it is: %v", image.Config.Cmd)
 		}
 
 		return ctx, nil

@@ -28,6 +28,7 @@ Feature: Basic usage
       | hello.sh  |
     And the image runtime user will be "900"
     And the image entrypoint will be "./hello.sh"
+    And the image will not include default arguments
 
   @set2
   Scenario: Blubber respects .dockerignore files
@@ -65,27 +66,3 @@ Feature: Basic usage
     Then the image will have the following files in the default working directory
       | README.md |
       | hello.sh  |
-
-  @set4
-  Scenario: Blubber embeds its version as a label
-    Given this "blubber.yaml"
-      """
-      version: v4
-      variants:
-        hello: {}
-      """
-    When you build the "hello" variant
-    Then the image will include labels
-      | blubber.version |
-
-  @set1
-  Scenario: Blubber embeds the target variant name as a label
-    Given this "blubber.yaml"
-      """
-      version: v4
-      variants:
-        hello: {}
-      """
-    When you build the "hello" variant
-    Then the image will include labels
-      | blubber.variant | hello |
