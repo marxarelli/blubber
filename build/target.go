@@ -12,6 +12,7 @@ import (
 	"github.com/containerd/containerd/platforms"
 	"github.com/docker/distribution/reference"
 	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/client/llb/sourceresolver"
 	"github.com/moby/buildkit/util/system"
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
@@ -99,11 +100,20 @@ func (target *Target) Initialize(ctx context.Context) error {
 		resolveName := reference.TagNameOnly(ref).String()
 		platform := target.Platform()
 
-		digest, config, err := target.Options.MetaResolver.ResolveImageConfig(ctx, resolveName, llb.ResolveImageConfigOpt{
-			Platform:     &platform,
-			LogName:      target.Logf("resolving image metadata for %s", resolveName),
-			ResolverType: llb.ResolverTypeRegistry,
+		mutRef, digest, config, err := target.Options.MetaResolver.ResolveImageConfig(ctx, resolveName, sourceresolver.Opt{
+			Platform: &platform,
+			LogName:  target.Logf("resolving image metadata for %s", resolveName),
 		})
+
+		// The return of a new ref by ResolveImageConfig is a new behavior as of
+		// buildkit v0.14.0. It isn't clear exactly why this is needed, but the
+		// following overwriting of ref is based on the dockerfile frontend
+		if ref.String() != mutRef {
+			ref, err = reference.ParseNormalizedNamed(mutRef)
+			if err != nil {
+				return errors.Wrapf(err, "failed to parse ref %q", mutRef)
+			}
+		}
 
 		if digest != "" {
 			refWithDigest, err := reference.WithDigest(ref, digest)
@@ -546,8 +556,10 @@ func (tg *TargetGroup) MaxNameLength() int {
 
 func newImage(platform oci.Platform) *oci.Image {
 	image := oci.Image{
-		Architecture: platform.Architecture,
-		OS:           platform.OS,
+		Platform: oci.Platform{
+			Architecture: platform.Architecture,
+			OS:           platform.OS,
+		},
 	}
 	image.RootFS.Type = "layers"
 	image.Config.WorkingDir = "/"

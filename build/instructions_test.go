@@ -160,7 +160,7 @@ func TestCopyAs(t *testing.T) {
 
 		req.IsType((*pb.Op_Source)(nil), inputs[0].Op)
 		req.Equal(
-			"docker-image://testtarget.test/base/foo@sha256:368a265123d2e737d81ecd3693b714e9ee7db56f72dd4c3c060ad3f8eae58c61",
+			"docker-image://testtarget.test/base/foo:latest@sha256:368a265123d2e737d81ecd3693b714e9ee7db56f72dd4c3c060ad3f8eae58c61",
 			inputs[0].Op.(*pb.Op_Source).Source.Identifier,
 		)
 

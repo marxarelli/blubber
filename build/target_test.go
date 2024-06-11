@@ -83,7 +83,7 @@ func TestInitialize(t *testing.T) {
 	_, sourceOps := llbreq.ContainsNSourceOps(1)
 
 	req.Equal(
-		"docker-image://docker-registry.wikimedia.org/foo/base@sha256:91ec0ba821e5708c27e18b22cda1e7647bef0091a386102237614387de2c7c77",
+		"docker-image://docker-registry.wikimedia.org/foo/base:latest@sha256:91ec0ba821e5708c27e18b22cda1e7647bef0091a386102237614387de2c7c77",
 		sourceOps[0].Source.Identifier,
 	)
 
@@ -281,7 +281,7 @@ func TestCopyFrom(t *testing.T) {
 
 	req.IsType((*pb.Op_Source)(nil), inputs[0].Op)
 	req.Equal(
-		"docker-image://testtarget.test/base/foo@sha256:368a265123d2e737d81ecd3693b714e9ee7db56f72dd4c3c060ad3f8eae58c61",
+		"docker-image://testtarget.test/base/foo:latest@sha256:368a265123d2e737d81ecd3693b714e9ee7db56f72dd4c3c060ad3f8eae58c61",
 		inputs[0].Op.(*pb.Op_Source).Source.Identifier,
 	)
 
