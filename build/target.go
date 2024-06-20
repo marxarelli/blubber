@@ -354,12 +354,10 @@ func (target *Target) RunAll(runs ...[]string) error {
 // RunShell runs the given command using /bin/sh
 func (target *Target) RunShell(command string) error {
 	command = target.ExpandEnv(command)
-	target.state = target.state.Run(
+	return target.run(
 		llb.Args([]string{"/bin/sh", "-c", command}),
 		target.Describef("%s $ %s", emojiShell, command),
-	).Root()
-
-	return nil
+	)
 }
 
 // ExpandEnv substitutes environment variable references in the given string
@@ -494,7 +492,56 @@ func (target *Target) RunEntrypoint(args []string, env map[string]string) error 
 		}
 	}
 
+	return target.run(runOpts...)
+}
+
+// run is a common dispatch for all llb.State.Run operations, ensuring certain
+// core behaviors such as the inclusion of proxy settings from build
+// arguments.
+func (target *Target) run(runOpts ...llb.RunOption) error {
+	pe := target.proxyEnv()
+
+	if pe != nil {
+		runOpts = append(runOpts, llb.WithProxy(*pe))
+	}
+
 	target.state = target.state.Run(runOpts...).Root()
+	return nil
+}
+
+// proxyEnv returns a non-nil *llb.ProxyEnv if any build arguments were passed
+// for HTTP_PROXY, HTTPS_PROXY, FTP_PROXY, NO_PROXY, ALL_PROXY. Otherwise, it
+// returns nil.
+func (target *Target) proxyEnv() *llb.ProxyEnv {
+	pe := &llb.ProxyEnv{}
+	hasProxies := false
+
+	for k, v := range target.Options.BuildArgs {
+		if strings.EqualFold(k, "http_proxy") {
+			pe.HTTPProxy = v
+			hasProxies = true
+		}
+		if strings.EqualFold(k, "https_proxy") {
+			pe.HTTPSProxy = v
+			hasProxies = true
+		}
+		if strings.EqualFold(k, "ftp_proxy") {
+			pe.FTPProxy = v
+			hasProxies = true
+		}
+		if strings.EqualFold(k, "no_proxy") {
+			pe.NoProxy = v
+			hasProxies = true
+		}
+		if strings.EqualFold(k, "all_proxy") {
+			pe.AllProxy = v
+			hasProxies = true
+		}
+	}
+
+	if hasProxies {
+		return pe
+	}
 
 	return nil
 }

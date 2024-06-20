@@ -347,18 +347,82 @@ func TestLogf(t *testing.T) {
 	})
 }
 
+func TestRunShell(t *testing.T) {
+	t.Run("creates an ExecOp for the given command", func(t *testing.T) {
+		_, req := testtarget.Setup(t,
+			testtarget.NewTargets("foo"),
+			func(foo *build.Target) {
+				foo.RunShell("foo bar")
+			},
+		)
+
+		_, execOps := req.ContainsNExecOps(1)
+		req.Equal([]string{"/bin/sh", "-c", "foo bar"}, execOps[0].Exec.Meta.Args)
+	})
+
+	t.Run("defines environment variables for supported proxies", func(t *testing.T) {
+		_, req := testtarget.Setup(t,
+			testtarget.NewTargets("foo"),
+			func(foo *build.Target) {
+				foo.Options.BuildArgs["HTTP_PROXY"] = "http://proxy.example:8080"
+				foo.Options.BuildArgs["HTTPS_PROXY"] = "https://proxy.example:8443"
+				foo.Options.BuildArgs["FTP_PROXY"] = "ftp://proxy.example:21"
+				foo.Options.BuildArgs["NO_PROXY"] = "*"
+				foo.Options.BuildArgs["ALL_PROXY"] = "socks://proxy.example:1080"
+				foo.RunShell("foo bar")
+			},
+		)
+
+		_, execOps := req.ContainsNExecOps(1)
+		req.NotNil(execOps[0].Exec.Meta.ProxyEnv)
+
+		req.Equal("http://proxy.example:8080", execOps[0].Exec.Meta.ProxyEnv.HttpProxy)
+		req.Equal("https://proxy.example:8443", execOps[0].Exec.Meta.ProxyEnv.HttpsProxy)
+		req.Equal("ftp://proxy.example:21", execOps[0].Exec.Meta.ProxyEnv.FtpProxy)
+		req.Equal("*", execOps[0].Exec.Meta.ProxyEnv.NoProxy)
+		req.Equal("socks://proxy.example:1080", execOps[0].Exec.Meta.ProxyEnv.AllProxy)
+	})
+}
+
 func TestRunEntrypoint(t *testing.T) {
-	image, req := testtarget.Setup(t,
-		testtarget.NewTargets("foo"),
-		func(foo *build.Target) {
-			foo.Image.Entrypoint([]string{"/bin/foo", "bar"})
-			foo.RunEntrypoint([]string{"baz"}, map[string]string{"FOO": "foo"})
-		},
-	)
+	t.Run("creates an ExecOp for the entrypoint command", func(t *testing.T) {
+		image, req := testtarget.Setup(t,
+			testtarget.NewTargets("foo"),
+			func(foo *build.Target) {
+				foo.Image.Entrypoint([]string{"/bin/foo", "bar"})
+				foo.RunEntrypoint([]string{"baz"}, map[string]string{"FOO": "foo"})
+			},
+		)
 
-	req.Equal([]string{"/bin/foo", "bar"}, image.Config.Entrypoint)
+		req.Equal([]string{"/bin/foo", "bar"}, image.Config.Entrypoint)
 
-	_, execOps := req.ContainsNExecOps(1)
-	req.Equal([]string{"/bin/foo", "bar", "baz"}, execOps[0].Exec.Meta.Args)
-	req.Contains(execOps[0].Exec.Meta.Env, "FOO=foo")
+		_, execOps := req.ContainsNExecOps(1)
+		req.Equal([]string{"/bin/foo", "bar", "baz"}, execOps[0].Exec.Meta.Args)
+		req.Contains(execOps[0].Exec.Meta.Env, "FOO=foo")
+	})
+
+	t.Run("defines environment variables for supported proxies", func(t *testing.T) {
+		_, req := testtarget.Setup(t,
+			testtarget.NewTargets("foo"),
+			func(foo *build.Target) {
+				foo.Options.BuildArgs["HTTP_PROXY"] = "http://proxy.example:8080"
+				foo.Options.BuildArgs["HTTPS_PROXY"] = "https://proxy.example:8443"
+				foo.Options.BuildArgs["FTP_PROXY"] = "ftp://proxy.example:21"
+				foo.Options.BuildArgs["NO_PROXY"] = "*"
+				foo.Options.BuildArgs["ALL_PROXY"] = "socks://proxy.example:1080"
+
+				foo.Image.Entrypoint([]string{"/bin/foo"})
+				foo.RunEntrypoint([]string{}, map[string]string{})
+			},
+		)
+
+		_, execOps := req.ContainsNExecOps(1)
+		req.NotNil(execOps[0].Exec.Meta.ProxyEnv)
+
+		req.Equal("http://proxy.example:8080", execOps[0].Exec.Meta.ProxyEnv.HttpProxy)
+		req.Equal("https://proxy.example:8443", execOps[0].Exec.Meta.ProxyEnv.HttpsProxy)
+		req.Equal("ftp://proxy.example:21", execOps[0].Exec.Meta.ProxyEnv.FtpProxy)
+		req.Equal("*", execOps[0].Exec.Meta.ProxyEnv.NoProxy)
+		req.Equal("socks://proxy.example:1080", execOps[0].Exec.Meta.ProxyEnv.AllProxy)
+	})
 }
