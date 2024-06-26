@@ -108,7 +108,7 @@ func main() {
 	}
 	opts.Variant = variant
 
-	target, err := buildkit.Compile(ctx, &opts, cfg, opts.TargetPlatforms[0])
+	target, err := buildkit.Compile(ctx, &opts, cfg, nil)
 
 	if err != nil {
 		log.Printf("Error compiling config: %v\n", err)

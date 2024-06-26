@@ -83,7 +83,7 @@ type Copy struct {
 
 // Compile to the given [Target]
 func (copy Copy) Compile(target *Target) error {
-	return target.CopyFromClient(copy.Sources, copy.Destination)
+	return target.CopyFromBuildContext(copy.Sources, copy.Destination)
 }
 
 // CopyAs is a concrete build instruction for copying source
@@ -122,7 +122,7 @@ func (ca CopyAs) Compile(target *Target) error {
 	}
 
 	if from == "" {
-		return target.CopyFromClient(sources, destination, opts...)
+		return target.CopyFromBuildContext(sources, destination, opts...)
 	}
 
 	return target.CopyFrom(from, sources, destination, opts...)

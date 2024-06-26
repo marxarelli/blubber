@@ -2,7 +2,6 @@ package testtarget
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	oci "github.com/opencontainers/image-spec/specs-go/v1"
@@ -84,14 +83,10 @@ func Setup(
 		}
 	}
 
-	def, imageJSON, err := targets[len(targets)-1].Marshal(ctx)
+	def, image, err := targets[len(targets)-1].Marshal(ctx)
 	req.NoError(err)
 
-	var image oci.Image
-	err = json.Unmarshal(imageJSON, &image)
-	req.NoError(err)
-
-	return &image, &Assertions{
+	return image, &Assertions{
 		LLBAssertions: llbtest.New(t, def),
 		Assertions:    require.New(t),
 		t:             t,

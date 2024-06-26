@@ -11,7 +11,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/git-chglog/git-chglog v0.15.1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/moby/buildkit v0.14.0
+	github.com/moby/buildkit v0.14.1
+	github.com/moby/docker-image-spec v1.3.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/pborman/getopt v1.1.0
@@ -88,7 +89,6 @@ require (
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
-	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/mountinfo v0.7.1 // indirect

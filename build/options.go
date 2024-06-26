@@ -1,6 +1,8 @@
 package build
 
 import (
+	"context"
+
 	"github.com/containerd/containerd/platforms"
 	"github.com/moby/buildkit/client/llb"
 	"github.com/moby/buildkit/client/llb/imagemetaresolver"
@@ -8,23 +10,14 @@ import (
 )
 
 const (
-	defaultBuildContext  = "context"
-	defaultConfigContext = "dockerfile"
-	defaultVariant       = "test"
-	defaultConfigPath    = ".pipeline/blubber.yaml"
+	defaultBuildContext = "context"
+	defaultVariant      = "test"
 )
 
 // Options stores options to configure the build process.
 type Options struct {
-	// Name of the client's local context that contains the source files
-	ClientBuildContext string
-
-	// Name of the client's local context that contains the build config
-	// (blubber.yaml)
-	ClientConfigContext string
-
-	// Path to the build config, relative to the ConfigContext
-	ConfigPath string
+	// Function that returns the initial llb.State for the main build context.
+	BuildContext ContextResolver
 
 	// The target variant
 	Variant string
@@ -38,17 +31,11 @@ type Options struct {
 	// Extra labels to add to the result
 	Labels map[string]string
 
-	// Session ID
-	SessionID string
-
-	// Files to be excluded from local context copy operations
-	Excludes []string
-
 	// Build platform
-	BuildPlatform *oci.Platform
+	BuildPlatform oci.Platform
 
 	// Target platforms
-	TargetPlatforms []*oci.Platform
+	TargetPlatforms []oci.Platform
 }
 
 // NewOptions creates a new Options with default values assigned
@@ -56,16 +43,16 @@ func NewOptions() *Options {
 	defaultPlatform := platforms.DefaultSpec()
 
 	return &Options{
-		ClientConfigContext: defaultConfigContext,
-		ClientBuildContext:  defaultBuildContext,
-		BuildPlatform:       &defaultPlatform,
-		ConfigPath:          defaultConfigPath,
-		MetaResolver:        imagemetaresolver.Default(),
-		TargetPlatforms:     []*oci.Platform{&defaultPlatform},
-		Variant:             defaultVariant,
-		BuildArgs:           map[string]string{},
-		Labels:              map[string]string{},
-		Excludes:            []string{},
+		BuildContext: func(ctx context.Context) (*llb.State, error) {
+			localCtx := llb.Local(defaultBuildContext, llb.SharedKeyHint(defaultBuildContext))
+			return &localCtx, nil
+		},
+		BuildPlatform:   defaultPlatform,
+		MetaResolver:    imagemetaresolver.Default(),
+		TargetPlatforms: []oci.Platform{defaultPlatform},
+		Variant:         defaultVariant,
+		BuildArgs:       map[string]string{},
+		Labels:          map[string]string{},
 	}
 }
 

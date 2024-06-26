@@ -2,7 +2,6 @@ package build_test
 
 import (
 	"context"
-	"encoding/json"
 	"testing"
 
 	"github.com/moby/buildkit/client/llb"
@@ -22,8 +21,8 @@ func TestInitialize(t *testing.T) {
 	req := require.New(t)
 
 	options := build.NewOptions()
-	options.BuildPlatform = &oci.Platform{OS: "linux", Architecture: "amd64"}
-	options.TargetPlatforms = []*oci.Platform{{OS: "linux", Architecture: "arm64"}}
+	options.BuildPlatform = oci.Platform{OS: "linux", Architecture: "amd64"}
+	options.TargetPlatforms = []oci.Platform{{OS: "linux", Architecture: "arm64"}}
 	options.MetaResolver = testmetaresolver.New(
 		"docker-registry.wikimedia.org/foo/base",
 		oci.Image{
@@ -46,13 +45,11 @@ func TestInitialize(t *testing.T) {
 	// add a run op to test environment variables, etc.
 	target.RunShell("foo")
 
-	def, imageJSON, err := target.Marshal(ctx)
+	def, image, err := target.Marshal(ctx)
 	req.NoError(err)
+	req.NotNil(image)
 
 	llbreq := llbtest.New(t, def)
-
-	var image oci.Image
-	req.NoError(json.Unmarshal(imageJSON, &image))
 
 	// base image config should have been inherited
 	req.Equal("linux", image.OS)
@@ -110,11 +107,11 @@ func TestBuildEnv(t *testing.T) {
 	req := require.New(t)
 
 	target := testtarget.NewTarget("foo")
-	target.Options.BuildPlatform = &oci.Platform{
+	target.Options.BuildPlatform = oci.Platform{
 		OS:           "linux",
 		Architecture: "amd64",
 	}
-	target.Options.TargetPlatforms = []*oci.Platform{
+	target.Options.TargetPlatforms = []oci.Platform{
 		{OS: "linux", Architecture: "arm64", Variant: "v8"},
 	}
 
@@ -201,42 +198,13 @@ func TestDescribef(t *testing.T) {
 	req.Equal("[foo] msg value", c.Metadata.Description["llb.customname"])
 }
 
-func TestClientBuildDir(t *testing.T) {
-	ctx := context.Background()
-	req := require.New(t)
-
-	target := testtarget.NewTarget("foo")
-	target.Options.ClientBuildContext = "context"
-	target.Options.SessionID = "foo-session"
-	target.Options.Excludes = []string{"*.log"}
-
-	state := target.ClientBuildDir()
-
-	def, err := state.Marshal(ctx)
-	req.NoError(err)
-
-	llbreq := llbtest.New(t, def)
-
-	_, sourceOps := llbreq.ContainsNSourceOps(1)
-
-	req.Equal("local://context", sourceOps[0].Source.Identifier)
-	req.Equal(
-		map[string]string{
-			"local.excludepatterns": "[\"*.log\"]",
-			"local.session":         "foo-session",
-			"local.sharedkeyhint":   "context",
-		},
-		sourceOps[0].Source.Attrs,
-	)
-}
-
-func TestCopyFromClient(t *testing.T) {
+func TestCopyFromBuildContext(t *testing.T) {
 	sources := []string{"source1", "source2"}
 
 	_, req := testtarget.Setup(t,
 		testtarget.NewTargets("foo"),
 		func(target *build.Target) {
-			target.CopyFromClient(
+			target.CopyFromBuildContext(
 				sources,
 				"/srv/app/dest/",
 			)
@@ -336,7 +304,7 @@ func TestLogf(t *testing.T) {
 	t.Run("multiple platforms", func(t *testing.T) {
 		req := require.New(t)
 		target := testtarget.NewTarget("foo")
-		target.Options.TargetPlatforms = []*oci.Platform{
+		target.Options.TargetPlatforms = []oci.Platform{
 			{OS: "linux", Architecture: "amd64"},
 			{OS: "linux", Architecture: "arm64"},
 		}

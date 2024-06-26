@@ -210,20 +210,14 @@ func (target *Target) Describef(msg string, v ...interface{}) llb.ConstraintsOpt
 	return llb.WithCustomName(target.Logf(msg, v...))
 }
 
-// ClientBuildDir returns the llb.State for the user's build context
-func (target *Target) ClientBuildDir() llb.State {
-	return llb.Local(
-		target.Options.ClientBuildContext,
-		llb.SessionID(target.Options.SessionID),
-		llb.ExcludePatterns(target.Options.Excludes),
-		llb.SharedKeyHint(target.Options.ClientBuildContext),
-		target.Describef("%s [client build directory]", emojiLocal),
-	)
+// BuildContext returns the llb.State for the main build context
+func (target *Target) BuildContext() (*llb.State, error) {
+	return target.Options.BuildContext(context.TODO())
 }
 
-// CopyFromClient copies one or more sources from the client filesystem to the
-// given destination on the target filesystem
-func (target *Target) CopyFromClient(sources []string, destination string, options ...llb.CopyOption) error {
+// CopyFromBuildContext copies one or more sources from the main build context
+// filesystem to the given destination on the target filesystem
+func (target *Target) CopyFromBuildContext(sources []string, destination string, options ...llb.CopyOption) error {
 	return target.copy(sources, destination, "", options)
 }
 
@@ -260,9 +254,7 @@ func (target *Target) copy(sources []string, destination string, from string, op
 	}
 	fileOpts := []llb.ConstraintsOpt{}
 
-	// Default to using the client's local build context as the source
-	// filesystem unless an explicit one was given
-	fromState := target.ClientBuildDir()
+	var fromState *llb.State
 
 	if from == "" {
 		fileOpts = append(
@@ -278,23 +270,34 @@ func (target *Target) copy(sources []string, destination string, from string, op
 		// We're copying from some other state filesystem, either a variant
 		// dependency or an external image
 		if dep, ok := target.dependencies.Find(from); ok {
-			fromState = dep.state
+			fromState = &dep.state
 		} else {
-			fromState = llb.Image(
+			imgState := llb.Image(
 				from,
 				llb.Platform(target.Platform()),
 				target.Describef("%s %s", emojiExternal, from),
 			)
+			fromState = &imgState
 		}
+	}
+
+	// Default to using the client's main build context as the source
+	// filesystem unless an explicit one was given
+	if fromState == nil {
+		ctxState, err := target.BuildContext()
+		if err != nil {
+			return err
+		}
+		fromState = ctxState
 	}
 
 	copyOpts = append(copyOpts, options...)
 
 	for _, src := range sources {
 		if fa == nil {
-			fa = llb.Copy(fromState, src, destination, copyOpts...)
+			fa = llb.Copy(*fromState, src, destination, copyOpts...)
 		} else {
-			fa = fa.Copy(fromState, src, destination, copyOpts...)
+			fa = fa.Copy(*fromState, src, destination, copyOpts...)
 		}
 	}
 
@@ -386,22 +389,15 @@ func (target *Target) Logf(msg string, values ...interface{}) string {
 	return fmt.Sprintf("[%s] %s"+msg, v...)
 }
 
-// Marshal returns a solveable LLB definition and JSON image configuration for
-// this target
-func (target *Target) Marshal(ctx context.Context) (*llb.Definition, []byte, error) {
+// Marshal returns a solveable LLB definition and OCI image for this target.
+func (target *Target) Marshal(ctx context.Context) (*llb.Definition, *oci.Image, error) {
 	def, err := target.state.Marshal(ctx)
 
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to marshal LLB state to protobuf")
 	}
 
-	imageCfg, err := json.Marshal(target.image)
-
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to marshal image config")
-	}
-
-	return def, imageCfg, nil
+	return def, target.image, nil
 }
 
 // WriteTo marshals the target state to protobuf and writes it to the given
@@ -425,16 +421,9 @@ func (target *Target) String() string {
 	return target.Name
 }
 
-// BuildPlatform returns either the build platform from the [build.Options] or
-// the default platform.
+// BuildPlatform returns the build platform.
 func (target *Target) BuildPlatform() oci.Platform {
-	if target.Options.BuildPlatform != nil {
-		return *target.Options.BuildPlatform
-	}
-
-	// this is a bit of defensive programming as target.Options.BuildPlatform
-	// should never be nil in practice
-	return platforms.DefaultSpec()
+	return target.Options.BuildPlatform
 }
 
 // Platform returns either the target platform given explicitly at
@@ -443,7 +432,7 @@ func (target *Target) Platform() oci.Platform {
 	if target.platform != nil {
 		return *target.platform
 	} else if len(target.Options.TargetPlatforms) > 0 {
-		return *target.Options.TargetPlatforms[0]
+		return target.Options.TargetPlatforms[0]
 	}
 
 	// this is a bit of defensive programming as target.Options.TargetPlatforms
